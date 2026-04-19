@@ -245,7 +245,7 @@ class SongListWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      "settings.ordered".tr(),
+                      "player.sequential".tr(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -288,7 +288,7 @@ class SongListWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      "settings.shuffle".tr(),
+                      "player.shuffle".tr(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,

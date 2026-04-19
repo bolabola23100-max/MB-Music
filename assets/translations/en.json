@@ -138,5 +138,10 @@
     "album": "Album",
     "duration": "Duration",
     "path": "Path"
+  },
+  "sort": {
+    "oldest_first": "Oldest First",
+    "newest_first": "Newest First"
   }
 }
+

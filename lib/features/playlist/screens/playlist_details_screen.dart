@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:music/core/constants/app_colors.dart';
@@ -165,19 +166,20 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  items: const [
+                  items: [
                     PopupMenuItem(
                       value: SongSortOption.oldestFirst,
                       child: MenuRow(
                         icon: Icons.arrow_upward_rounded,
-                        label: 'الأقدم أولاً  ',
+                        label: 'sort.oldest_first'.tr(),
                       ),
                     ),
+
                     PopupMenuItem(
                       value: SongSortOption.newestFirst,
                       child: MenuRow(
                         icon: Icons.arrow_downward_rounded,
-                        label: 'الأحدث أولاً',
+                        label: 'sort.newest_first'.tr(),
                       ),
                     ),
                   ],
@@ -258,6 +260,8 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
     return Padding(padding: const EdgeInsets.only(right: 10), child: c());
   }
 
+  void _playOrderedOnly() => _play(0);
+
   Container c() {
     return Container(
       height: 50,
@@ -268,38 +272,37 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ✅ الجزء الأيمن - تشغيل بالترتيب
           Material(
             color: AppColors.blue.withValues(alpha: 0.4),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(15),
-              bottomLeft: Radius.circular(15),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadiusDirectional.only(
+                topStart: Radius.circular(15),
+                bottomStart: Radius.circular(15),
+              ),
             ),
             child: InkWell(
-              onTap: () => _play(0),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
+              onTap: _playOrderedOnly,
+              customBorder: const RoundedRectangleBorder(
+                borderRadius: BorderRadiusDirectional.only(
+                  topStart: Radius.circular(15),
+                  bottomStart: Radius.circular(15),
+                ),
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  // border: Border.all(color: Colors.grey),
-                ),
                 alignment: Alignment.center,
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.play_arrow_rounded,
                       color: Colors.white,
                       size: 24,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
-                      "بالترتيب",
-                      style: TextStyle(
+                      "player.sequential".tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -314,27 +317,35 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
           // ✅ الجزء الأيسر - تشغيل عشوائي
           Material(
             color: AppColors.blue.withValues(alpha: 0.6),
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(15),
-              bottomRight: Radius.circular(15),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadiusDirectional.only(
+                topEnd: Radius.circular(15),
+                bottomEnd: Radius.circular(15),
+              ),
             ),
             child: InkWell(
               onTap: _playRandomOnlyKeepOrder,
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomRight: Radius.circular(15),
+              customBorder: const RoundedRectangleBorder(
+                borderRadius: BorderRadiusDirectional.only(
+                  topEnd: Radius.circular(15),
+                  bottomEnd: Radius.circular(15),
+                ),
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 alignment: Alignment.center,
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.shuffle_rounded, color: Colors.white, size: 24),
-                    SizedBox(width: 4),
+                    const Icon(
+                      Icons.shuffle_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      "عشوائي",
-                      style: TextStyle(
+                      "player.shuffle".tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
