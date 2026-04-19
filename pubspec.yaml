@@ -1,0 +1,36 @@
+name: music
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_svg: ^2.2.3
+  on_audio_query: ^2.9.0
+  permission_handler: ^12.0.1
+  just_audio: ^0.10.5
+  audio_service: ^0.18.15
+  share_plus: ^12.0.1
+  shared_preferences: ^2.5.4
+  audio_session: ^0.2.3
+  device_info_plus: ^10.1.2
+  image_picker: ^1.2.1
+  easy_localization: ^3.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/img/
+    - assets/svg/
+    - assets/translations/
