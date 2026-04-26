@@ -7,7 +7,7 @@ import 'package:music/core/widgets/sort_button.dart';
 import 'package:music/features/settings/settings.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class HomeAppBarWidget extends StatelessWidget {
+class HomeAppBarWidget extends StatefulWidget {
   final List<SongModel> songs;
   final AudioService audioService;
 
@@ -26,6 +26,13 @@ class HomeAppBarWidget extends StatelessWidget {
   });
 
   @override
+  State<HomeAppBarWidget> createState() => _HomeAppBarWidgetState();
+}
+
+class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
+  bool isAscending = true;
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -37,7 +44,10 @@ class HomeAppBarWidget extends StatelessWidget {
             onPressed: () {
               AppNavigator.push(
                 context,
-                SettingsScreen(songs: songs, audioService: audioService),
+                SettingsScreen(
+                  songs: widget.songs,
+                  audioService: widget.audioService,
+                ),
               );
             },
           ),
@@ -46,11 +56,23 @@ class HomeAppBarWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsetsDirectional.only(end: 16, top: 10),
           child: SortButton(
-            songs: displaySongs,
-            onSongsSorted: onDisplaySongsChanged, // ✅ ابعت للـ Parent
+            isAscending: isAscending,
+            onPressed: () {
+              setState(() {
+                isAscending = !isAscending;
+              });
+
+              widget.onDisplaySongsChanged(sortSongs());
+            },
           ),
         ),
       ],
     );
+  }
+
+  List<SongModel> sortSongs() {
+    return isAscending
+        ? [...widget.songs]
+        : [...widget.songs].reversed.toList();
   }
 }

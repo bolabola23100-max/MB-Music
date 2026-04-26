@@ -1,5 +1,4 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -28,188 +27,203 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late PageController _pageController;
+
+  int _localIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _localIndex = context.read<HomeCubit>().state.currentIndex;
+    _pageController = PageController(initialPage: _localIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final AudioService audioService = AudioService();
     final FavoritesService favoritesService = FavoritesService();
 
-    return DefaultTabController(
-      length: 5,
-      child: BlocBuilder<HomeCubit, HomeState>(
-        builder: (context, state) {
-          final cubit = context.read<HomeCubit>();
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.black.withValues(alpha: 0.5),
-                  AppColors.black,
-                ],
-              ),
-            ),
-            child: Scaffold(
-              extendBody: true,
-              backgroundColor: Colors.transparent,
-              bottomNavigationBar: CurvedNavigationBar(
-                backgroundColor: Colors.blueAccent,
-                buttonBackgroundColor: Colors.black26,
-                items: <Widget>[
-                  Icon(Icons.add, size: 30),
-                  Icon(Icons.list, size: 30),
-                  Icon(Icons.compare_arrows, size: 30),
-                ],
-                onTap: (index) {
-                  cubit.updateCurrentIndex(index);
-                },
-              ),
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    HomeAppBarWidget(
-                      songs: state.songs,
-                      audioService: audioService,
-                      displaySongs: state.displaySongs,
-                      onDisplaySongsChanged: (sorted) {
-                        cubit.updateDisplaySongs(sorted);
-                      },
-                    ),
-                    Expanded(
-                      child: _buildTabView(
-                        context,
-                        state,
-                        audioService,
-                        favoritesService,
-                      ),
-                    ),
-                  ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.black.withValues(alpha: 0.5), AppColors.black],
+        ),
+      ),
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        bottomNavigationBar: BlocSelector<HomeCubit, HomeState, int>(
+          selector: (state) => state.currentIndex,
+          builder: (context, currentIndex) {
+            _localIndex = currentIndex;
+            return _buildBottomNavigationBar(context, currentIndex);
+          },
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              BlocBuilder<HomeCubit, HomeState>(
+                buildWhen: (p, c) =>
+                    p.songs != c.songs || p.displaySongs != c.displaySongs,
+                builder: (context, state) => HomeAppBarWidget(
+                  songs: state.songs,
+                  audioService: audioService,
+                  displaySongs: state.displaySongs,
+                  onDisplaySongsChanged: (sorted) {
+                    context.read<HomeCubit>().updateDisplaySongs(sorted);
+                  },
                 ),
               ),
-            ),
-          );
+              Expanded(
+                child: RepaintBoundary(
+                  child: BlocListener<HomeCubit, HomeState>(
+                    listenWhen: (p, c) => p.currentIndex != c.currentIndex,
+                    listener: (context, state) {
+                      if (_pageController.hasClients) {
+                        final currentPage = _pageController.page?.round() ?? 0;
+                        if (currentPage != state.currentIndex) {
+                          _pageController.jumpToPage(state.currentIndex);
+                        }
+                      }
+                    },
+                    child: _buildPageView(
+                      context,
+                      audioService,
+                      favoritesService,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar(BuildContext context, int currentIndex) {
+    return RepaintBoundary(
+      child: CurvedNavigationBar(
+        key: const ValueKey('curved_nav_bar'),
+        index: _localIndex,
+        height: 60,
+        backgroundColor: Colors.transparent,
+        color: AppColors.gray.withValues(alpha: 0.4),
+        buttonBackgroundColor: AppColors.blue,
+        animationDuration: const Duration(milliseconds: 300),
+        animationCurve: Curves.easeOutCubic,
+        items: <Widget>[
+          _buildNavItem(AppIcons.sounds, _localIndex == 0, isSvg: false),
+          _buildNavItem(AppIcons.song, _localIndex == 1),
+          _buildNavItem(AppIcons.favorite, _localIndex == 2),
+          _buildNavItem(AppIcons.playlist, _localIndex == 3),
+          _buildNavItem(AppIcons.search, _localIndex == 4),
+        ],
+        onTap: (index) {
+          if (index != _localIndex) {
+            setState(() {
+              _localIndex = index;
+            });
+            context.read<HomeCubit>().updateCurrentIndex(index);
+          }
         },
       ),
     );
   }
 
-  // Widget _buildBottomNavigationBar(BuildContext context, int currentIndex) {
-  //   return Builder(
-  //     builder: (context) {
-  //       final tabController = DefaultTabController.of(context);
-  //       return BottomNavigationBar(
-  //         currentIndex: currentIndex,
-  //         onTap: (index) {
-  //           context.read<HomeCubit>().updateCurrentIndex(index);
-  //           tabController.animateTo(index);
-  //         },
-  //         type: BottomNavigationBarType.fixed,
-  //         backgroundColor: Colors.transparent,
-  //         elevation: 0,
-  //         selectedItemColor: AppColors.blue,
-  //         unselectedItemColor: Colors.grey,
-  //         items: [
-  //           BottomNavigationBarItem(
-  //             icon: Image.asset(
-  //               AppIcons.sounds,
-  //               color: currentIndex == 0 ? AppColors.blue : AppColors.white,
-  //               height: 20,
-  //               width: 20,
-  //             ),
-  //             label: 'songs'.tr(),
-  //           ),
-  //           BottomNavigationBarItem(
-  //             icon: SvgPicture.asset(
-  //               AppIcons.song,
-  //               colorFilter: ColorFilter.mode(
-  //                 currentIndex == 1 ? AppColors.blue : AppColors.white,
-  //                 BlendMode.srcIn,
-  //               ),
-  //             ),
-  //             label: 'sounds'.tr(),
-  //           ),
-  //           BottomNavigationBarItem(
-  //             icon: SvgPicture.asset(
-  //               AppIcons.favorite,
-  //               colorFilter: ColorFilter.mode(
-  //                 currentIndex == 2 ? AppColors.blue : AppColors.white,
-  //                 BlendMode.srcIn,
-  //               ),
-  //             ),
-  //             label: 'favorite'.tr(),
-  //           ),
-  //           BottomNavigationBarItem(
-  //             icon: SvgPicture.asset(
-  //               AppIcons.playlist,
-  //               colorFilter: ColorFilter.mode(
-  //                 currentIndex == 3 ? AppColors.blue : AppColors.white,
-  //                 BlendMode.srcIn,
-  //               ),
-  //             ),
-  //             label: 'playlists'.tr(),
-  //           ),
-  //           BottomNavigationBarItem(
-  //             icon: SvgPicture.asset(
-  //               AppIcons.search,
-  //               colorFilter: ColorFilter.mode(
-  //                 currentIndex == 4 ? AppColors.blue : AppColors.white,
-  //                 BlendMode.srcIn,
-  //               ),
-  //             ),
-  //             label: 'search'.tr(),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  Widget _buildNavItem(String iconPath, bool isSelected, {bool isSvg = true}) {
+    final Color color = isSelected ? AppColors.black : AppColors.white;
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: isSvg
+          ? SvgPicture.asset(
+              iconPath,
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            )
+          : Image.asset(iconPath, height: 24, width: 24, color: color),
+    );
+  }
 
-  Widget _buildTabView(
+  Widget _buildPageView(
     BuildContext context,
-    HomeState state,
     AudioService audioService,
     FavoritesService favoritesService,
   ) {
     final cubit = context.read<HomeCubit>();
-    return ValueListenableBuilder<Set<int>>(
-      valueListenable: favoritesService.favoriteIdsNotifier,
-      builder: (context, favoriteIds, _) => TabBarView(
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          SongListWidget(
-            key: ValueKey("songs_${state.displaySongs.length}"),
+    return PageView(
+      controller: _pageController,
+      physics: const BouncingScrollPhysics(),
+      onPageChanged: (index) {
+        if (index != _localIndex) {
+          setState(() {
+            _localIndex = index;
+          });
+          context.read<HomeCubit>().updateCurrentIndex(index);
+        }
+      },
+      children: [
+        BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.displaySongs != c.displaySongs,
+          builder: (context, state) => SongListWidget(
+            key: const PageStorageKey("songs_list"),
             songs: state.displaySongs,
             audioService: audioService,
-            isFavoriteChecker: (s) => favoriteIds.contains(s.id),
+            isFavoriteChecker: (s) =>
+                favoritesService.favoriteIdsNotifier.value.contains(s.id),
             onToggleFavorite: (s) => favoritesService.toggleFavorite(s.id),
             onOptionSelected: cubit.handleSort,
             isTitle: false,
             openPlayerOnSongTap: true,
             onDeleteSongs: cubit.onDeleteSongs,
+            isf: false,
           ),
-          SoundsScreen(
-            key: ValueKey("sounds_${state.sounds.length}"),
+        ),
+        BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.sounds != c.sounds,
+          builder: (context, state) => SoundsScreen(
+            key: const PageStorageKey("sounds_screen"),
             songs: state.sounds,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
           ),
-          FavoritesScreen(
-            key: ValueKey("favs_${favoriteIds.length}_${state.songs.length}"),
+        ),
+        BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.songs != c.songs,
+          builder: (context, state) => FavoritesScreen(
+            key: const PageStorageKey("favs_screen"),
             allSongs: state.songs,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
           ),
-          const PlaylistsScreen(),
-          SearchScreen(
-            key: ValueKey("search_${state.songs.length}"),
+        ),
+        const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
+        BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.songs != c.songs,
+          builder: (context, state) => SearchScreen(
+            key: const PageStorageKey("search_screen"),
             allSongs: state.songs,
             onDeleteSongs: cubit.onDeleteSongs,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

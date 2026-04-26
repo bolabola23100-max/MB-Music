@@ -88,6 +88,7 @@ class PlayerView extends StatelessWidget {
                       state.currentIndex,
                       state.customTitle,
                       state.customArtist,
+                      audioService,
                     ),
                     AppSeekBar(audioService: audioService, isT: true),
                     _buildControlsSection(
@@ -150,27 +151,31 @@ class PlayerView extends StatelessWidget {
     String? customArtPath,
     AudioService audioService,
   ) {
-    final safeIndex = currentIndex.clamp(0, songs.length - 1);
-    return Stack(
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 5, right: 10),
-            child: VinylWidget(audioService: audioService, size: 130),
-          ),
-        ),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 140),
-            child: AppArtwork(
-              id: songs[safeIndex].id,
-              size: 150,
-              borderRadius: 20,
-              customArtPath: customArtPath,
+    return ValueListenableBuilder<int?>(
+      valueListenable: audioService.currentSongIdNotifier,
+      builder: (context, currentSongId, _) {
+        return Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 5, right: 10),
+                child: VinylWidget(audioService: audioService, size: 130),
+              ),
             ),
-          ),
-        ),
-      ],
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 140),
+                child: AppArtwork(
+                  id: currentSongId ?? songs[currentIndex.clamp(0, songs.length - 1)].id,
+                  size: 150,
+                  borderRadius: 20,
+                  customArtPath: customArtPath,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -179,15 +184,21 @@ class PlayerView extends StatelessWidget {
     int currentIndex,
     String? customTitle,
     String? customArtist,
+    AudioService audioService,
   ) {
-    final safeIndex = currentIndex.clamp(0, songs.length - 1);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-      child: SongTitleWidget(
-        songs: songs,
-        currentIndex: safeIndex,
-        customTitle: customTitle,
-        customArtist: customArtist,
+      child: ValueListenableBuilder<String?>(
+        valueListenable: audioService.currentTitleNotifier,
+        builder: (context, title, _) => ValueListenableBuilder<String?>(
+          valueListenable: audioService.currentArtistNotifier,
+          builder: (context, artist, _) => SongTitleWidget(
+            songs: songs,
+            currentIndex: currentIndex.clamp(0, songs.length - 1),
+            customTitle: customTitle ?? title,
+            customArtist: customArtist ?? artist,
+          ),
+        ),
       ),
     );
   }
@@ -293,7 +304,7 @@ class PlayerView extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 25),
                   ValueListenableBuilder<PlaybackMode>(
                     valueListenable: audioService.playbackModeNotifier,
                     builder: (context, mode, _) {
@@ -308,18 +319,6 @@ class PlayerView extends StatelessWidget {
                               audioService.setPlaybackMode(
                                 PlaybackMode.sequential,
                               );
-                              final queue = audioService.currentQueue;
-                              if (queue.isNotEmpty) {
-                                final first = queue[0];
-                                audioService.playSong(
-                                  first.data,
-                                  title: first.title,
-                                  artist: first.artist,
-                                  index: 0,
-                                  songId: first.id,
-                                  queue: queue,
-                                );
-                              }
                               setSheetState(() {});
                             },
                           ),
@@ -345,17 +344,17 @@ class PlayerView extends StatelessWidget {
                               audioService.shuffledQueue = List<SongModel>.from(
                                 audioService.currentQueue,
                               )..shuffle();
+
                               if (audioService.shuffledQueue.isNotEmpty) {
                                 final first = audioService.shuffledQueue[0];
-                                final originalIndex = audioService.currentQueue
-                                    .indexOf(first);
+                                // ✅ Pass the shuffled queue so the player follows this order
                                 audioService.playSong(
                                   first.data,
                                   title: first.title,
                                   artist: first.artist,
-                                  index: originalIndex,
+                                  index: 0,
                                   songId: first.id,
-                                  queue: audioService.currentQueue,
+                                  queue: audioService.shuffledQueue,
                                 );
                               }
                               setSheetState(() {});
@@ -382,63 +381,76 @@ class PlayerView extends StatelessWidget {
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 300,
-                      child: ValueListenableBuilder<PlaybackMode>(
-                        valueListenable: audioService.playbackModeNotifier,
-                        builder: (context, mode, _) {
-                          List<SongModel> displayQueue;
-                          if (mode == PlaybackMode.repeatOne) {
-                            final currentId =
-                                audioService.currentSongIdNotifier.value;
-                            displayQueue = audioService.currentQueue
-                                .where((s) => s.id == currentId)
-                                .toList();
-                          } else if (mode == PlaybackMode.shuffle) {
-                            displayQueue = audioService.shuffledQueue.isEmpty
-                                ? audioService.currentQueue
-                                : audioService.shuffledQueue;
-                          } else {
-                            displayQueue = audioService.currentQueue;
-                          }
+                      child: ValueListenableBuilder<List<SongModel>>(
+                        valueListenable: audioService.currentQueueNotifier,
+                        builder: (context, currentQueue, _) {
+                          return ValueListenableBuilder<List<SongModel>>(
+                            valueListenable: audioService.shuffledQueueNotifier,
+                            builder: (context, shuffledQueue, _) {
+                              return ValueListenableBuilder<PlaybackMode>(
+                                valueListenable:
+                                    audioService.playbackModeNotifier,
+                                builder: (context, mode, _) {
+                                  List<SongModel> displayQueue;
+                                  if (mode == PlaybackMode.repeatOne) {
+                                    final currentId = audioService
+                                        .currentSongIdNotifier
+                                        .value;
+                                    displayQueue = currentQueue
+                                        .where((s) => s.id == currentId)
+                                        .toList();
+                                  } else if (mode == PlaybackMode.shuffle) {
+                                    displayQueue = shuffledQueue.isEmpty
+                                        ? currentQueue
+                                        : shuffledQueue;
+                                  } else {
+                                    displayQueue = currentQueue;
+                                  }
 
-                          return ValueListenableBuilder<int?>(
-                            valueListenable: audioService.currentSongIdNotifier,
-                            builder: (context, currentSongId, _) {
-                              return ValueListenableBuilder<bool>(
-                                valueListenable: audioService.isPlayingNotifier,
-                                builder: (context, isPlaying, _) {
-                                  return ListView.builder(
-                                    itemCount: displayQueue.length,
-                                    itemBuilder: (context, index) {
-                                      final song = displayQueue[index];
-                                      final isCurrentSong =
-                                          song.id == currentSongId;
-                                      return SongTileWidget(
-                                        song: song,
-                                        isCurrent: isCurrentSong,
-                                        isPlaying: isPlaying,
-                                        onTap: () {
-                                          final originalIndex = audioService
-                                              .currentQueue
-                                              .indexOf(song);
-                                          audioService.playSong(
-                                            song.data,
-                                            title: song.title,
-                                            artist: song.artist,
-                                            index: originalIndex,
-                                            songId: song.id,
-                                            queue: audioService.currentQueue,
-                                          );
-                                          Navigator.pop(context);
-                                        },
-                                        onMoreTap: () {
-                                          Navigator.pop(context);
-                                          AppNavigator.push(
-                                            context,
-                                            PlayerScreen(
-                                              songs: audioService.currentQueue,
-                                              index: audioService.currentQueue
-                                                  .indexOf(song),
-                                            ),
+                                  return ValueListenableBuilder<int?>(
+                                    valueListenable:
+                                        audioService.currentSongIdNotifier,
+                                    builder: (context, currentSongId, _) {
+                                      return ValueListenableBuilder<bool>(
+                                        valueListenable:
+                                            audioService.isPlayingNotifier,
+                                        builder: (context, isPlaying, _) {
+                                          return ListView.builder(
+                                            itemCount: displayQueue.length,
+                                            itemBuilder: (context, index) {
+                                              final song = displayQueue[index];
+                                              final isCurrentSong =
+                                                  song.id == currentSongId;
+                                              return SongTileWidget(
+                                                song: song,
+                                                isCurrent: isCurrentSong,
+                                                isPlaying: isPlaying,
+                                                onTap: () {
+                                                  final playIndex = displayQueue
+                                                      .indexOf(song);
+                                                  audioService.playSong(
+                                                    song.data,
+                                                    title: song.title,
+                                                    artist: song.artist,
+                                                    index: playIndex,
+                                                    songId: song.id,
+                                                    queue: displayQueue,
+                                                  );
+                                                  Navigator.pop(context);
+                                                },
+                                                onMoreTap: () {
+                                                  Navigator.pop(context);
+                                                  AppNavigator.push(
+                                                    context,
+                                                    PlayerScreen(
+                                                      songs: displayQueue,
+                                                      index: displayQueue
+                                                          .indexOf(song),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            },
                                           );
                                         },
                                       );
@@ -472,7 +484,7 @@ class PlayerView extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.blue.withValues(alpha: 0.15)
@@ -499,7 +511,7 @@ class PlayerView extends StatelessWidget {
                 color: isSelected
                     ? AppColors.blue
                     : AppColors.white.withValues(alpha: 0.4),
-                fontSize: 12,
+                fontSize: 10,
               ),
             ),
           ],

@@ -134,18 +134,38 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: ValueListenableBuilder<String?>(
-                              valueListenable:
-                                  widget.audioService.currentTitleNotifier,
-                              builder: (context, title, _) => Text(
-                                _customTitle ?? title ?? 'Unknown',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.white,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ValueListenableBuilder<String?>(
+                                  valueListenable:
+                                      widget.audioService.currentTitleNotifier,
+                                  builder: (context, title, _) => Text(
+                                    _customTitle ?? title ?? 'Unknown',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: AppColors.white,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                ValueListenableBuilder<String?>(
+                                  valueListenable:
+                                      widget.audioService.currentArtistNotifier,
+                                  builder: (context, artist, _) => Text(
+                                    artist ?? 'Unknown',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.white.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           Row(

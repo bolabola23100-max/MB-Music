@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
@@ -50,36 +48,41 @@ class SongListWidget extends StatelessWidget {
   Future<void> _playOrderedOnly() async {
     if (songs.isEmpty) return;
 
-    onOptionSelected?.call(SongSortOption.orderedPlay);
-
-    final queue = List<SongModel>.from(songs);
-    final first = queue[0];
-
-    await audioService.playSong(
-      first.data,
-      title: first.title,
-      artist: first.artist,
-      index: 0,
-      songId: first.id,
-      queue: queue,
-    );
+    if (onOptionSelected != null) {
+      onOptionSelected?.call(SongSortOption.orderedPlay);
+    } else {
+      final queue = List<SongModel>.from(songs);
+      final first = queue[0];
+      await audioService.playSong(
+        first.data,
+        title: first.title,
+        artist: first.artist,
+        index: 0,
+        songId: first.id,
+        queue: queue,
+      );
+    }
   }
 
   Future<void> _playRandomOnlyKeepOrder() async {
     if (songs.isEmpty) return;
 
-    final queue = List<SongModel>.from(songs);
-    final randomIndex = Random().nextInt(queue.length);
-    final song = queue[randomIndex];
-
-    await audioService.playSong(
-      song.data,
-      title: song.title,
-      artist: song.artist,
-      index: randomIndex,
-      songId: song.id,
-      queue: queue,
-    );
+    if (onOptionSelected != null) {
+      onOptionSelected?.call(SongSortOption.shufflePlay);
+    } else {
+      final queue = List<SongModel>.from(songs);
+      queue.shuffle();
+      final song = queue[0];
+      audioService.setPlaybackMode(PlaybackMode.sequential);
+      await audioService.playSong(
+        song.data,
+        title: song.title,
+        artist: song.artist,
+        index: 0,
+        songId: song.id,
+        queue: queue,
+      );
+    }
   }
 
   @override

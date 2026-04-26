@@ -25,8 +25,21 @@ class AudioService {
   final ValueNotifier<PlaybackMode> playbackModeNotifier =
       ValueNotifier<PlaybackMode>(PlaybackMode.sequential);
 
-  List<SongModel> currentQueue = [];
-  List<SongModel> shuffledQueue = [];
+  final ValueNotifier<List<SongModel>> currentQueueNotifier =
+      ValueNotifier<List<SongModel>>([]);
+  final ValueNotifier<List<SongModel>> originalQueueNotifier =
+      ValueNotifier<List<SongModel>>([]);
+  final ValueNotifier<List<SongModel>> shuffledQueueNotifier =
+      ValueNotifier<List<SongModel>>([]);
+
+  List<SongModel> get currentQueue => currentQueueNotifier.value;
+  set currentQueue(List<SongModel> value) => currentQueueNotifier.value = value;
+
+  List<SongModel> get originalQueue => originalQueueNotifier.value;
+  set originalQueue(List<SongModel> value) => originalQueueNotifier.value = value;
+
+  List<SongModel> get shuffledQueue => shuffledQueueNotifier.value;
+  set shuffledQueue(List<SongModel> value) => shuffledQueueNotifier.value = value;
 
   Future<void> init() async {
     if (_initialized) return;

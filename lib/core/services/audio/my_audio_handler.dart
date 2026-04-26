@@ -128,6 +128,28 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void setPlaybackMode(app_service.PlaybackMode mode) {
     _playbackMode = mode;
+
+    // ✅ لو رجعنا للوضع الترتيبي، رجع القائمة لأصلها
+    if (mode == app_service.PlaybackMode.sequential) {
+      final audioService = app_service.AudioService();
+      if (audioService.originalQueue.isNotEmpty) {
+        setQueue(audioService.originalQueue);
+        audioService.currentQueue = audioService.originalQueue;
+
+        final firstSong = audioService.originalQueue[0];
+        playSongFromQueue(
+          path: firstSong.data,
+          index: 0,
+          title: firstSong.title,
+          artist: firstSong.artist,
+          songId: firstSong.id,
+          duration: firstSong.duration != null
+              ? Duration(milliseconds: firstSong.duration!)
+              : null,
+        );
+      }
+    }
+
     _player.setLoopMode(
       mode == app_service.PlaybackMode.repeatOne ? LoopMode.one : LoopMode.off,
     );
@@ -225,9 +247,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_queue.isEmpty) return;
 
     final currentIndex = mediaItem.value?.extras?['index'] as int? ?? 0;
-    int nextIndex = _playbackMode == app_service.PlaybackMode.shuffle
-        ? (DateTime.now().millisecondsSinceEpoch % _queue.length)
-        : (currentIndex + offset + _queue.length) % _queue.length;
+    int nextIndex = (currentIndex + offset + _queue.length) % _queue.length;
 
     final s = _queue[nextIndex];
     playSongFromQueue(
