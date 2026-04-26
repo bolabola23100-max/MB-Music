@@ -1,12 +1,11 @@
-import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
-import 'package:music/core/services/song_edit/song_edit_service.dart';
 import 'package:music/core/widgets/app_artwork.dart';
 import 'package:music/core/widgets/app_seek_bar.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
@@ -17,119 +16,102 @@ import 'package:music/features/player/widgets/sleep_timer_widget.dart';
 import 'package:music/features/home/widgets/song_title_widget.dart';
 import 'package:music/features/playlist/widgets/add_to_playlist_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:music/features/player/cubit/player_cubit.dart';
+import 'package:music/features/player/cubit/player_state.dart';
 
-class PlayerScreen extends StatefulWidget {
+class PlayerScreen extends StatelessWidget {
   final List<SongModel> songs;
   final int index;
 
   const PlayerScreen({super.key, required this.songs, required this.index});
 
   @override
-  State<PlayerScreen> createState() => _PlayerScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PlayerCubit(songs: songs, index: index),
+      child: const PlayerView(),
+    );
+  }
 }
 
-class _PlayerScreenState extends State<PlayerScreen> {
-  final audioService = AudioService();
-  bool isPlaying = true;
-  late int currentIndex;
-  StreamSubscription<bool>? _playingSubscription;
-  double offsetY = 0;
-  bool canDrag = false;
-
-  String? _customTitle;
-  String? _customArtist;
-  String? _customArtPath;
-
-  @override
-  void initState() {
-    super.initState();
-    currentIndex = widget.index;
-    audioService.currentIndexNotifier.addListener(_onIndexChanged);
-    _playingSubscription = audioService.player.playingStream.listen((playing) {
-      if (mounted) setState(() => isPlaying = playing);
-    });
-    SongEditService().editNotifier.addListener(_onEditChanged);
-    _loadEdit();
-  }
-
-  @override
-  void dispose() {
-    audioService.currentIndexNotifier.removeListener(_onIndexChanged);
-    SongEditService().editNotifier.removeListener(_onEditChanged);
-    _playingSubscription?.cancel();
-    super.dispose();
-  }
-
-  void _onEditChanged() => _loadEdit();
-
-  void _onIndexChanged() {
-    if (mounted) {
-      final newIndex = audioService.currentIndexNotifier.value ?? currentIndex;
-      if (newIndex >= 0 && newIndex < widget.songs.length) {
-        setState(() => currentIndex = newIndex);
-        _loadEdit();
-      }
-    }
-  }
-
-  Future<void> _loadEdit() async {
-    final safeIndex = currentIndex.clamp(0, widget.songs.length - 1);
-    final songId = widget.songs[safeIndex].id;
-    final edit = await SongEditService().getEdit(songId);
-    if (mounted) {
-      setState(() {
-        _customTitle = edit?['title'];
-        _customArtist = edit?['artist'];
-        _customArtPath = edit?['artPath'];
-      });
-    }
-  }
+class PlayerView extends StatelessWidget {
+  const PlayerView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: ui.TextDirection.ltr,
-      child: GestureDetector(
-        onVerticalDragStart: (details) {
-          canDrag = details.globalPosition.dy < 400;
-        },
-        onVerticalDragUpdate: (details) {
-          if (!canDrag) return;
-          if (details.delta.dy > 0) {
-            setState(() => offsetY += details.delta.dy);
-          }
-        },
-        onVerticalDragEnd: (details) {
-          if (!canDrag) return;
-          if (offsetY > 200 || details.primaryVelocity! > 1000) {
-            Navigator.pop(context);
-          } else {
-            setState(() => offsetY = 0);
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          transform: Matrix4.translationValues(0, offsetY, 0),
-          child: Scaffold(
-            appBar: _buildAppBar(context),
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                _buildArtworkSection(context),
-                const SizedBox(height: 50),
-                _buildInfoSection(),
-                AppSeekBar(audioService: audioService, isT: true),
-                _buildControlsSection(),
-              ],
+    final audioService = AudioService();
+
+    return BlocBuilder<PlayerCubit, PlayerState>(
+      builder: (context, state) {
+        final cubit = context.read<PlayerCubit>();
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: GestureDetector(
+            onVerticalDragStart: (details) {
+              cubit.setCanDrag(details.globalPosition.dy < 400);
+            },
+            onVerticalDragUpdate: (details) {
+              if (!state.canDrag) return;
+              cubit.updateDrag(details.delta.dy);
+            },
+            onVerticalDragEnd: (details) {
+              if (!state.canDrag) return;
+              if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+                Navigator.pop(context);
+              } else {
+                cubit.resetDrag();
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              transform: Matrix4.translationValues(0, state.offsetY, 0),
+              child: Scaffold(
+                appBar: _buildAppBar(
+                  context,
+                  state.songs,
+                  state.currentIndex,
+                  audioService,
+                ),
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildArtworkSection(
+                      state.songs,
+                      state.currentIndex,
+                      state.customArtPath,
+                      audioService,
+                    ),
+                    const SizedBox(height: 50),
+                    _buildInfoSection(
+                      state.songs,
+                      state.currentIndex,
+                      state.customTitle,
+                      state.customArtist,
+                    ),
+                    AppSeekBar(audioService: audioService, isT: true),
+                    _buildControlsSection(
+                      context,
+                      state.songs,
+                      state.currentIndex,
+                      audioService,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(
+    BuildContext context,
+    List<SongModel> songs,
+    int currentIndex,
+    AudioService audioService,
+  ) {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: true,
@@ -146,10 +128,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
           icon: const Icon(Icons.more_vert, color: AppColors.white),
           onPressed: () {
             final favoritesService = FavoritesService();
-            final safeIndex = currentIndex.clamp(0, widget.songs.length - 1);
+            final safeIndex = currentIndex.clamp(0, songs.length - 1);
             SongOptionsBottomSheet.show(
               context,
-              song: widget.songs[safeIndex],
+              song: songs[safeIndex],
               index: safeIndex,
               audioService: audioService,
               isFavoriteChecker: (s) => favoritesService.isFavorite(s.id),
@@ -162,8 +144,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  Widget _buildArtworkSection(BuildContext context) {
-    final safeIndex = currentIndex.clamp(0, widget.songs.length - 1);
+  Widget _buildArtworkSection(
+    List<SongModel> songs,
+    int currentIndex,
+    String? customArtPath,
+    AudioService audioService,
+  ) {
+    final safeIndex = currentIndex.clamp(0, songs.length - 1);
     return Stack(
       children: [
         Center(
@@ -176,10 +163,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
           child: Padding(
             padding: const EdgeInsets.only(right: 140),
             child: AppArtwork(
-              id: widget.songs[safeIndex].id,
+              id: songs[safeIndex].id,
               size: 150,
               borderRadius: 20,
-              customArtPath: _customArtPath,
+              customArtPath: customArtPath,
             ),
           ),
         ),
@@ -187,20 +174,30 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  Widget _buildInfoSection() {
-    final safeIndex = currentIndex.clamp(0, widget.songs.length - 1);
+  Widget _buildInfoSection(
+    List<SongModel> songs,
+    int currentIndex,
+    String? customTitle,
+    String? customArtist,
+  ) {
+    final safeIndex = currentIndex.clamp(0, songs.length - 1);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
       child: SongTitleWidget(
-        songs: widget.songs,
+        songs: songs,
         currentIndex: safeIndex,
-        customTitle: _customTitle,
-        customArtist: _customArtist,
+        customTitle: customTitle,
+        customArtist: customArtist,
       ),
     );
   }
 
-  Widget _buildControlsSection() {
+  Widget _buildControlsSection(
+    BuildContext context,
+    List<SongModel> songs,
+    int currentIndex,
+    AudioService audioService,
+  ) {
     return Column(
       children: [
         PlayerControlsWidget(
@@ -230,7 +227,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   }
                   return IconButton(
                     icon: Icon(icon, color: AppColors.white, size: 28),
-                    onPressed: () => _showPlaybackModeSheet(context, mode),
+                    onPressed: () =>
+                        _showPlaybackModeSheet(context, mode, audioService),
                   );
                 },
               ),
@@ -241,14 +239,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   size: 28,
                 ),
                 onPressed: () {
-                  final safeIndex = currentIndex.clamp(
-                    0,
-                    widget.songs.length - 1,
-                  );
+                  final safeIndex = currentIndex.clamp(0, songs.length - 1);
                   showDialog(
                     context: context,
                     builder: (_) =>
-                        AddToPlaylistDialog(songs: [widget.songs[safeIndex]]),
+                        AddToPlaylistDialog(songs: [songs[safeIndex]]),
                   );
                 },
               ),
@@ -260,9 +255,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  // ─── Bottom Sheet ─────────────────────────────────────────────────────────────
-
-  void _showPlaybackModeSheet(BuildContext context, PlaybackMode currentMode) {
+  void _showPlaybackModeSheet(
+    BuildContext context,
+    PlaybackMode currentMode,
+    AudioService audioService,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -279,7 +276,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Handle bar
                   Container(
                     width: 40,
                     height: 4,
@@ -289,7 +285,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-
                   Text(
                     'player.playback_mode'.tr(),
                     style: const TextStyle(
@@ -299,8 +294,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // ─── 3 Mode Buttons ─────────────────────────────────────────
                   ValueListenableBuilder<PlaybackMode>(
                     valueListenable: audioService.playbackModeNotifier,
                     builder: (context, mode, _) {
@@ -372,10 +365,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       );
                     },
                   ),
-
                   const SizedBox(height: 20),
-
-                  // ─── Songs Queue List ────────────────────────────────────────
                   if (audioService.currentQueue.isNotEmpty) ...[
                     Divider(color: AppColors.white.withValues(alpha: 0.1)),
                     const SizedBox(height: 8),
@@ -462,7 +452,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       ),
                     ),
                   ],
-
                   const SizedBox(height: 8),
                 ],
               ),
@@ -473,7 +462,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  // ─── Mode Button Widget ───────────────────────────────────────────────────────
   Widget _buildModeButton({
     required IconData icon,
     required String label,

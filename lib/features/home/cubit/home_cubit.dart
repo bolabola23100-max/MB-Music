@@ -1,0 +1,127 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/favorites/favorites_service.dart';
+import 'package:music/core/services/hidden_songs_service.dart';
+import 'package:music/core/services/playlist/playlist_service.dart';
+import 'package:music/features/home/widgets/song_list_widget.dart';
+import 'package:on_audio_query/on_audio_query.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'home_state.dart';
+
+class HomeCubit extends Cubit<HomeState> {
+  final OnAudioQuery _audioQuery = OnAudioQuery();
+  final AudioService _audioService = AudioService();
+  final FavoritesService _favoritesService = FavoritesService();
+
+  HomeCubit() : super(const HomeState());
+
+  Future<void> initData() async {
+    emit(state.copyWith(status: HomeStatus.loading));
+    try {
+      await [
+        Permission.storage,
+        Permission.audio,
+        Permission.notification,
+      ].request();
+
+      await HiddenSongsService().init();
+
+      final queried = await _audioQuery.querySongs(
+        sortType: SongSortType.DATE_ADDED,
+        orderType: OrderType.DESC_OR_GREATER,
+        uriType: UriType.EXTERNAL,
+      );
+
+      final songsList = HiddenSongsService().filterHidden(queried, (s) => s.id);
+
+      final filtered = songsList
+          .where((s) => (s.duration ?? 0) >= 60000)
+          .toList();
+      final filteredSounds = songsList
+          .where((s) => (s.duration ?? 0) < 60000)
+          .toList();
+
+      emit(state.copyWith(
+        status: HomeStatus.success,
+        originalSongs: List.from(filtered),
+        songs: List.from(filtered),
+        displaySongs: List.from(filtered),
+        sounds: List.from(filteredSounds),
+      ));
+    } catch (e) {
+      emit(state.copyWith(status: HomeStatus.failure));
+    }
+  }
+
+  void handleSort(SongSortOption option) async {
+    List<SongModel> newList = List.from(
+      state.displaySongs.isNotEmpty ? state.displaySongs : state.songs,
+    );
+
+    if (option == SongSortOption.newestFirst) {
+      newList = List.from(state.originalSongs);
+    } else if (option == SongSortOption.oldestFirst) {
+      newList = List.from(state.originalSongs.reversed);
+    } else if (option == SongSortOption.shufflePlay) {
+      newList = List.from(state.displaySongs.isNotEmpty ? state.displaySongs : state.songs);
+      newList.shuffle();
+      _audioService.currentQueue = newList;
+    } else if (option == SongSortOption.orderedPlay) {
+      newList = List.from(state.displaySongs.isNotEmpty ? state.displaySongs : state.songs);
+      _audioService.currentQueue = newList;
+    }
+
+    emit(state.copyWith(displaySongs: newList));
+
+    if (option == SongSortOption.orderedPlay ||
+        option == SongSortOption.shufflePlay) {
+      if (newList.isNotEmpty) await playAtIndex(0);
+    }
+  } 
+  
+
+  Future<void> playAtIndex(int index) async {
+    final s = state.displaySongs[index];
+    await _audioService.playSong(
+      s.data,
+      title: s.title,
+      artist: s.artist,
+      index: index,
+      songId: s.id,
+      queue: state.displaySongs,
+    );
+  }
+
+  Future<void> onDeleteSongs(List<SongModel> deletedSongs) async {
+    final deletedIds = deletedSongs.map((s) => s.id).toSet();
+    final playlistService = PlaylistService();
+
+    for (final song in deletedSongs) {
+      if (_favoritesService.isFavorite(song.id)) {
+        await _favoritesService.toggleFavorite(song.id);
+      }
+      await playlistService.removeSongFromAllPlaylists(song.id);
+    }
+
+    await HiddenSongsService().hideSongs(deletedIds);
+
+    emit(state.copyWith(
+      originalSongs: state.originalSongs
+          .where((s) => !deletedIds.contains(s.id))
+          .toList(),
+      songs: state.songs.where((s) => !deletedIds.contains(s.id)).toList(),
+      displaySongs: state.displaySongs
+          .where((s) => !deletedIds.contains(s.id))
+          .toList(),
+      sounds: state.sounds.where((s) => !deletedIds.contains(s.id)).toList(),
+    ));
+  }
+
+  void updateCurrentIndex(int index) {
+    emit(state.copyWith(currentIndex: index));
+  }
+
+  void updateDisplaySongs(List<SongModel> sorted) {
+    emit(state.copyWith(displaySongs: sorted));
+  }
+}

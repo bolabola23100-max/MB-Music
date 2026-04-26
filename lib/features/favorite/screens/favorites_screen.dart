@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/features/favorite/cubit/favorite_cubit.dart';
+import 'package:music/features/favorite/cubit/favorite_state.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({
@@ -20,31 +22,25 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final favoritesService = FavoritesService();
+    return BlocProvider(
+      create: (context) => FavoriteCubit(allSongs: allSongs),
+      child: BlocBuilder<FavoriteCubit, FavoriteState>(
+        builder: (context, state) {
+          if (state.favoriteSongs.isEmpty) {
+            return const _EmptyFavoritesView();
+          }
 
-    return ValueListenableBuilder<Set<int>>(
-      valueListenable: favoritesService.favoriteIdsNotifier,
-      builder: (context, favoriteIds, _) {
-        final favoriteSongs = allSongs
-            .where((song) => favoriteIds.contains(song.id))
-            .toList();
-
-        if (favoriteSongs.isEmpty) {
-          return const _EmptyFavoritesView();
-        }
-
-        return SongListWidget(
-          songs: favoriteSongs,
-          audioService: audioService,
-          isFavoriteChecker: (song) => favoriteIds.contains(song.id),
-          onToggleFavorite: (song) async {
-            await favoritesService.toggleFavorite(song.id);
-          },
-          onDeleteSongs: onDeleteSongs,
-          title: "favorites_title".tr(),
-          subtitle: "favorite_songs_subtitle".tr(),
-        );
-      },
+          return SongListWidget(
+            songs: state.favoriteSongs,
+            audioService: audioService,
+            isFavoriteChecker: (song) => state.favoriteIds.contains(song.id),
+            onToggleFavorite: (song) => context.read<FavoriteCubit>().toggleFavorite(song.id),
+            onDeleteSongs: onDeleteSongs,
+            title: "favorites_title".tr(),
+            subtitle: "favorite_songs_subtitle".tr(),
+          );
+        },
+      ),
     );
   }
 }

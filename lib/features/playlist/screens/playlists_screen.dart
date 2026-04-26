@@ -1,58 +1,33 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/models/playlist_model.dart';
-import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:music/features/playlist/screens/playlist_details_screen.dart';
 import 'package:music/features/playlist/widgets/empty_playlists_state.dart';
 import 'package:music/features/playlist/widgets/playlist_dialogs.dart';
 import 'package:music/features/playlist/widgets/playlist_grid.dart';
 import 'package:music/features/playlist/widgets/playlist_menu_bottom_sheet.dart';
+import 'package:music/features/playlist/cubit/playlist_cubit.dart';
+import 'package:music/features/playlist/cubit/playlist_state.dart';
 
-class PlaylistsScreen extends StatefulWidget {
+class PlaylistsScreen extends StatelessWidget {
   const PlaylistsScreen({super.key});
 
   @override
-  State<PlaylistsScreen> createState() => _PlaylistsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PlaylistCubit()..loadPlaylists(),
+      child: const PlaylistsView(),
+    );
+  }
 }
 
-class _PlaylistsScreenState extends State<PlaylistsScreen> {
-  final PlaylistService _playlistService = PlaylistService();
-  List<PlaylistModels> _playlists = [];
-  Map<int, List<int>> _playlistThumbnails = {};
-  bool _isLoading = true;
+class PlaylistsView extends StatelessWidget {
+  const PlaylistsView({super.key});
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPlaylists();
-  }
-
-  Future<void> _loadPlaylists() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
-    try {
-      final playlists = await _playlistService.getPlaylists();
-      final Map<int, List<int>> thumbnails = {};
-      for (final p in playlists) {
-        if (p.id != null) {
-          final songs = await _playlistService.getPlaylistSongs(p.id!);
-          thumbnails[p.id!] = songs.take(4).map((s) => s.songId).toList();
-        }
-      }
-      if (mounted) {
-        setState(() {
-          _playlists = playlists;
-          _playlistThumbnails = thumbnails;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _showPlaylistMenu(PlaylistModels playlist) {
+  void _showPlaylistMenu(BuildContext context, PlaylistModels playlist) {
+    final cubit = context.read<PlaylistCubit>();
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.gray,
@@ -63,11 +38,11 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
         playlist: playlist,
         onRename: () {
           Navigator.pop(context);
-          PlaylistDialogs.showRenameDialog(context, playlist, _loadPlaylists);
+          PlaylistDialogs.showRenameDialog(context, playlist, cubit.loadPlaylists);
         },
         onDelete: () {
           Navigator.pop(context);
-          PlaylistDialogs.showDeleteDialog(context, playlist, _loadPlaylists);
+          PlaylistDialogs.showDeleteDialog(context, playlist, cubit.loadPlaylists);
         },
       ),
     );
@@ -75,50 +50,53 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.gray.withValues(alpha: .01),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            _buildHeader(),
-
-            const SizedBox(height: 15),
-            _buildBody(),
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () =>
-            PlaylistDialogs.showCreateDialog(context, _loadPlaylists),
-        backgroundColor: const Color(0xFF00C8FF),
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.black, size: 30),
-      ),
+    return BlocBuilder<PlaylistCubit, PlaylistState>(
+      builder: (context, state) {
+        final cubit = context.read<PlaylistCubit>();
+        return Scaffold(
+          backgroundColor: AppColors.gray.withValues(alpha: .01),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                _buildHeader(),
+                const SizedBox(height: 15),
+                _buildBody(context, state),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => PlaylistDialogs.showCreateDialog(context, cubit.loadPlaylists),
+            backgroundColor: const Color(0xFF00C8FF),
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add, color: Colors.black, size: 30),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading)
-      return Center(
+  Widget _buildBody(BuildContext context, PlaylistState state) {
+    if (state.status == PlaylistStatus.loading) {
+      return const Center(
         child: Padding(
           padding: EdgeInsets.only(top: 50),
           child: CircularProgressIndicator(color: AppColors.blue),
         ),
       );
-    if (_playlists.isEmpty) return const EmptyPlaylistsState();
+    }
+    if (state.playlists.isEmpty) return const EmptyPlaylistsState();
     return PlaylistGrid(
-      playlists: _playlists,
-      thumbnails: _playlistThumbnails,
+      playlists: state.playlists,
+      thumbnails: state.thumbnails,
       onTap: (p) => Navigator.push(
         context,
         MaterialPageRoute(builder: (c) => PlaylistDetailsScreen(playlist: p)),
-      ).then((_) => _loadPlaylists()),
-      onLongPress: _showPlaylistMenu,
+      ).then((_) => context.read<PlaylistCubit>().loadPlaylists()),
+      onLongPress: (p) => _showPlaylistMenu(context, p),
     );
   }
 
