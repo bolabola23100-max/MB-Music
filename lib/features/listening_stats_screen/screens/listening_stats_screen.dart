@@ -73,7 +73,9 @@ class _ListeningStatsViewState extends State<ListeningStatsView> {
 
         return GestureDetector(
           onVerticalDragStart: (details) {
-            if (_scrollController.hasClients && _scrollController.offset <= 0) {
+            if (_scrollController.hasClients &&
+                _scrollController.positions.isNotEmpty &&
+                _scrollController.offset <= 0) {
               cubit.setCanDrag(true);
             } else {
               cubit.setCanDrag(false);

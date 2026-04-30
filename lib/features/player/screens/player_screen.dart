@@ -166,7 +166,9 @@ class PlayerView extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(right: 140),
                 child: AppArtwork(
-                  id: currentSongId ?? songs[currentIndex.clamp(0, songs.length - 1)].id,
+                  id:
+                      currentSongId ??
+                      songs[currentIndex.clamp(0, songs.length - 1)].id,
                   size: 150,
                   borderRadius: 20,
                   customArtPath: customArtPath,
@@ -341,21 +343,49 @@ class PlayerView extends StatelessWidget {
                               audioService.setPlaybackMode(
                                 PlaybackMode.shuffle,
                               );
-                              audioService.shuffledQueue = List<SongModel>.from(
-                                audioService.currentQueue,
-                              )..shuffle();
 
-                              if (audioService.shuffledQueue.isNotEmpty) {
-                                final first = audioService.shuffledQueue[0];
-                                // ✅ Pass the shuffled queue so the player follows this order
-                                audioService.playSong(
-                                  first.data,
-                                  title: first.title,
-                                  artist: first.artist,
-                                  index: 0,
-                                  songId: first.id,
-                                  queue: audioService.shuffledQueue,
+                              final currentQueue = List<SongModel>.from(
+                                audioService.currentQueue,
+                              );
+                              final currentId =
+                                  audioService.currentSongIdNotifier.value;
+
+                              SongModel? currentSong;
+                              if (currentId != null) {
+                                try {
+                                  currentSong = currentQueue.firstWhere(
+                                    (s) => s.id == currentId,
+                                  );
+                                } catch (_) {}
+                              }
+
+                              if (currentSong != null) {
+                                currentQueue.removeWhere(
+                                  (s) => s.id == currentId,
                                 );
+                                currentQueue.shuffle();
+                                currentQueue.insert(0, currentSong);
+
+                                audioService.shuffledQueue = currentQueue;
+                                audioService.updateQueueAndKeepPlaying(
+                                  currentQueue,
+                                  0,
+                                );
+                              } else {
+                                currentQueue.shuffle();
+                                audioService.shuffledQueue = currentQueue;
+
+                                if (currentQueue.isNotEmpty) {
+                                  final first = currentQueue[0];
+                                  audioService.playSong(
+                                    first.data,
+                                    title: first.title,
+                                    artist: first.artist,
+                                    index: 0,
+                                    songId: first.id,
+                                    queue: currentQueue,
+                                  );
+                                }
                               }
                               setSheetState(() {});
                             },

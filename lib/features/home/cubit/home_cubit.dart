@@ -125,10 +125,32 @@ class HomeCubit extends Cubit<HomeState> {
     } else if (option == SongSortOption.oldestFirst) {
       newList = List.from(state.originalSongs.reversed);
     } else if (option == SongSortOption.shufflePlay) {
+      final currentSongId = _audioService.currentSongIdNotifier.value;
       newList = List.from(
         state.displaySongs.isNotEmpty ? state.displaySongs : state.songs,
       );
-      newList.shuffle();
+
+      SongModel? currentSong;
+      if (currentSongId != null) {
+        try {
+          currentSong = newList.firstWhere((s) => s.id == currentSongId);
+        } catch (_) {}
+      }
+
+      if (currentSong != null) {
+        newList.removeWhere((s) => s.id == currentSongId);
+        newList.shuffle();
+        newList.insert(0, currentSong);
+
+        _audioService.originalQueue = List.from(state.originalSongs);
+        _audioService.updateQueueAndKeepPlaying(newList, 0);
+
+        emit(state.copyWith(displaySongs: newList));
+        return; // Skip the playAtIndex call at the end
+      } else {
+        newList.shuffle();
+      }
+
       _audioService.originalQueue = List.from(state.originalSongs);
       _audioService.currentQueue = newList;
     } else if (option == SongSortOption.orderedPlay) {

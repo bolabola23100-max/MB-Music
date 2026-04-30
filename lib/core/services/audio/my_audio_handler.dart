@@ -126,27 +126,31 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  void updateQueueAndIndex(List<SongModel> newQueue, int newIndex) {
+    _queue = newQueue;
+    queue.add(
+      newQueue
+          .map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist))
+          .toList(),
+    );
+
+    if (mediaItem.value != null) {
+      final item = mediaItem.value!;
+      final newExtras = Map<String, dynamic>.from(item.extras ?? {});
+      newExtras['index'] = newIndex;
+      mediaItem.add(item.copyWith(extras: newExtras));
+    }
+  }
+
   void setPlaybackMode(app_service.PlaybackMode mode) {
     _playbackMode = mode;
 
-    // ✅ لو رجعنا للوضع الترتيبي، رجع القائمة لأصلها
+    // ✅ بيغير القائمة بس من غير ما يبدأ أغنية جديدة
     if (mode == app_service.PlaybackMode.sequential) {
       final audioService = app_service.AudioService();
       if (audioService.originalQueue.isNotEmpty) {
         setQueue(audioService.originalQueue);
         audioService.currentQueue = audioService.originalQueue;
-
-        final firstSong = audioService.originalQueue[0];
-        playSongFromQueue(
-          path: firstSong.data,
-          index: 0,
-          title: firstSong.title,
-          artist: firstSong.artist,
-          songId: firstSong.id,
-          duration: firstSong.duration != null
-              ? Duration(milliseconds: firstSong.duration!)
-              : null,
-        );
       }
     }
 
@@ -164,7 +168,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     int? songId,
     Duration? duration,
   }) async {
-    // ✅ جيب التعديلات لو موجودة
     String finalTitle = title;
     String? finalArtist = artist;
 
@@ -211,7 +214,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     } catch (e) {
       log('❌ Error playing song: $e');
-      // Update state to show we stopped
       _broadcastState(false);
     }
   }
@@ -260,17 +262,16 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  // ✅ 3 controls بس - بيشتغل على كل الأجهزة حتى القديمة
   void _broadcastState(bool playing) {
     playbackState.add(
       playbackState.value.copyWith(
         controls: [
-          _getModeControl(),
-          MediaControl.skipToPrevious,
-          playing ? MediaControl.pause : MediaControl.play,
-          MediaControl.skipToNext,
-          _favoriteControl,
+          MediaControl.skipToPrevious, // 0
+          playing ? MediaControl.pause : MediaControl.play, // 1
+          MediaControl.skipToNext, // 2
         ],
-        androidCompactActionIndices: const [1, 2, 3],
+        androidCompactActionIndices: const [0, 1, 2],
         processingState:
             const {
               ProcessingState.idle: AudioProcessingState.idle,
@@ -297,7 +298,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   static const _kActionMode = 'toggle_mode';
   static const _kActionFavorite = 'toggle_favorite';
 
-  MediaControl _getModeControl() {
+  MediaControl getModeControl() {
     String icon;
     String label;
     switch (_playbackMode) {
@@ -320,7 +321,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  MediaControl get _favoriteControl {
+  MediaControl get favoriteControl {
     final songId = mediaItem.value?.extras?['songId'] as int?;
     final isFav = songId != null && FavoritesService().isFavorite(songId);
     return MediaControl.custom(

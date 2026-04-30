@@ -18,10 +18,17 @@ class AudioService {
   final ValueNotifier<int?> currentIndexNotifier = ValueNotifier<int?>(null);
   final ValueNotifier<int?> currentSongIdNotifier = ValueNotifier<int?>(null);
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier<bool>(false);
-  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier<String?>(null);
-  final ValueNotifier<String?> currentArtistNotifier = ValueNotifier<String?>(null);
-  final ValueNotifier<String?> currentPathNotifier = ValueNotifier<String?>(null);
-  final ValueNotifier<Duration?> sleepTimerRemainingNotifier = ValueNotifier<Duration?>(null);
+  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier<String?>(
+    null,
+  );
+  final ValueNotifier<String?> currentArtistNotifier = ValueNotifier<String?>(
+    null,
+  );
+  final ValueNotifier<String?> currentPathNotifier = ValueNotifier<String?>(
+    null,
+  );
+  final ValueNotifier<Duration?> sleepTimerRemainingNotifier =
+      ValueNotifier<Duration?>(null);
   final ValueNotifier<PlaybackMode> playbackModeNotifier =
       ValueNotifier<PlaybackMode>(PlaybackMode.sequential);
 
@@ -36,23 +43,27 @@ class AudioService {
   set currentQueue(List<SongModel> value) => currentQueueNotifier.value = value;
 
   List<SongModel> get originalQueue => originalQueueNotifier.value;
-  set originalQueue(List<SongModel> value) => originalQueueNotifier.value = value;
+  set originalQueue(List<SongModel> value) =>
+      originalQueueNotifier.value = value;
 
   List<SongModel> get shuffledQueue => shuffledQueueNotifier.value;
-  set shuffledQueue(List<SongModel> value) => shuffledQueueNotifier.value = value;
+  set shuffledQueue(List<SongModel> value) =>
+      shuffledQueueNotifier.value = value;
 
   Future<void> init() async {
     if (_initialized) return;
 
     _handler = await as_pkg.AudioService.init(
       builder: () => MyAudioHandler(),
-      config: as_pkg.AudioServiceConfig(
-        androidNotificationChannelId: 'com.music.app.channel.audio',
-        androidNotificationChannelName: 'Music Playback',
+      config: const as_pkg.AudioServiceConfig(
+        androidNotificationChannelId: 'com.example.music.audio',
+        androidNotificationChannelName: 'MBMusic',
         androidNotificationChannelDescription: 'Music player controls',
-        androidNotificationOngoing: false,
-        androidStopForegroundOnPause: false,
-        androidNotificationIcon: 'drawable/ic_stat_music',
+
+        androidNotificationOngoing: true, // ✅ الـ notification مش بتتمسح
+        androidStopForegroundOnPause: true, // ✅ لازم true مع ongoing
+
+        androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
       ),
     );
@@ -108,12 +119,23 @@ class AudioService {
   Future<void> seek(Duration position) async => _handler.seek(position);
   Future<void> playNext() async => _handler.skipToNext();
   Future<void> playPrevious() async => _handler.skipToPrevious();
-  Future<void> setSleepTimer(Duration duration) async => _handler.setSleepTimer(duration);
+  Future<void> setSleepTimer(Duration duration) async =>
+      _handler.setSleepTimer(duration);
   Future<void> stopSleepTimer() async => _handler.stopSleepTimer();
 
   void setPlaybackMode(PlaybackMode mode) {
     playbackModeNotifier.value = mode;
     _handler.setPlaybackMode(mode);
+  }
+
+  void updateQueueAndKeepPlaying(List<SongModel> newQueue, int newIndex) {
+    currentQueue = newQueue;
+    _handler.updateQueueAndIndex(newQueue, newIndex);
+  }
+
+  void setQueue(List<SongModel> queue) {
+    currentQueue = queue;
+    _handler.setQueue(queue);
   }
 
   void togglePlaybackMode() {
@@ -137,6 +159,7 @@ class AudioService {
   Duration? get duration => _handler.rawPlayer.duration;
   Duration get position => _handler.rawPlayer.position;
   Stream<Duration> get positionStream => _handler.rawPlayer.positionStream;
-  Stream<PlayerState> get playerStateStream => _handler.rawPlayer.playerStateStream;
+  Stream<PlayerState> get playerStateStream =>
+      _handler.rawPlayer.playerStateStream;
   AudioPlayer get player => _handler.rawPlayer;
 }

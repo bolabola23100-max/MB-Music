@@ -1,22 +1,26 @@
-import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:music/core/constants/app_colors.dart';
-import 'package:music/core/services/cache_helper.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/audio/permission_service.dart';
+import 'package:music/core/services/cache_helper.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/features/onboarding/screens/splash_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await CacheHelper.init();
 
   try {
-    await _requestPermissions();
+    // ✅ 1. اطلب الصلاحيات الأول
+    await PermissionService.requestAudioPermissions();
+    await PermissionService.requestNotificationPermission();
+
+    // ✅ 2. حمل الـ favorites
     await FavoritesService().loadFavorites();
+
+    // ✅ 3. init الـ AudioService (اللي فيه الـ config الكامل)
     await AudioService().init();
 
     runApp(
@@ -41,20 +45,6 @@ void main() async {
   }
 }
 
-Future<void> _requestPermissions() async {
-  if (Platform.isAndroid) {
-    final androidInfo = await DeviceInfoPlugin().androidInfo;
-    final sdkInt = androidInfo.version.sdkInt;
-
-    if (sdkInt >= 33) {
-      await Permission.audio.request();
-      await Permission.notification.request();
-    } else {
-      await Permission.storage.request();
-    }
-  }
-}
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -67,7 +57,7 @@ class MainApp extends StatelessWidget {
       locale: context.locale,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.black,
+        scaffoldBackgroundColor: Colors.transparent,
         primaryColor: AppColors.white,
         textSelectionTheme: const TextSelectionThemeData(
           cursorColor: AppColors.blue,
@@ -80,7 +70,7 @@ class MainApp extends StatelessWidget {
           bodySmall: TextStyle(color: AppColors.white),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.black,
+          backgroundColor: Colors.transparent,
           iconTheme: IconThemeData(color: AppColors.white),
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(

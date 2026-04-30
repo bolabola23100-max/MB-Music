@@ -15,24 +15,22 @@ class SettingsScreen extends StatelessWidget {
     super.key,
     required this.songs,
     required this.audioService,
+    required this.onRescan,
   });
 
   final List<SongModel> songs;
   final AudioService audioService;
-
-  Future<void> rescanLibrary() async {
-    // Logic for library rescan
-  }
+  final VoidCallback onRescan;
 
   @override
   Widget build(BuildContext context) {
+    final languageCode = context.locale.languageCode;
     return BlocProvider(
-      create: (context) =>
-          SettingsCubit()..updateLanguage(context.locale.languageCode),
+      create: (context) => SettingsCubit()..updateLanguage(languageCode),
       child: SettingsView(
         songs: songs,
         audioService: audioService,
-        rescanLibrary: rescanLibrary,
+        onRescan: onRescan,
       ),
     );
   }
@@ -41,13 +39,13 @@ class SettingsScreen extends StatelessWidget {
 class SettingsView extends StatelessWidget {
   final List<SongModel> songs;
   final AudioService audioService;
-  final Future<void> Function() rescanLibrary;
+  final VoidCallback onRescan;
 
   const SettingsView({
     super.key,
     required this.songs,
     required this.audioService,
-    required this.rescanLibrary,
+    required this.onRescan,
   });
 
   @override
@@ -146,11 +144,11 @@ class SettingsView extends StatelessWidget {
                 icon: Icons.refresh_rounded,
                 title: 'settings.re_scan_library'.tr(),
                 subtitle: 'settings.re_scan_library_desc'.tr(),
-                onTap: () async {
+                onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('settings.refreshing_library'.tr())),
                   );
-                  await rescanLibrary();
+                  onRescan();
                 },
               ),
               const SizedBox(height: 20),
@@ -226,7 +224,6 @@ class SettingsView extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: AppColors.gray.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(20),
@@ -235,52 +232,55 @@ class SettingsView extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.blue.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.blue.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: AppColors.blue, size: 22),
                 ),
-                child: Icon(icon, color: AppColors.blue, size: 22),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: AppColors.white.withValues(alpha: 0.5),
-                          fontSize: 12,
+                        title,
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
                         ),
                       ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: AppColors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              if (trailing != null)
-                trailing
-              else if (onTap != null)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.white.withValues(alpha: 0.2),
-                ),
-            ],
+                const SizedBox(width: 8),
+                if (trailing != null)
+                  trailing
+                else if (onTap != null)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.white.withValues(alpha: 0.2),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -545,8 +545,8 @@ class SettingsView extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
-          context.setLocale(Locale(languageCode));
+        onTap: () async {
+          await context.setLocale(Locale(languageCode));
           cubit.updateLanguage(languageCode);
           Navigator.pop(context);
         },

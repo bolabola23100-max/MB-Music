@@ -88,6 +88,7 @@ class _HomeViewState extends State<HomeView> {
                   onDisplaySongsChanged: (sorted) {
                     context.read<HomeCubit>().updateDisplaySongs(sorted);
                   },
+                  onRescan: () => context.read<HomeCubit>().initData(),
                 ),
               ),
               Expanded(

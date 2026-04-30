@@ -28,7 +28,10 @@ class PlaylistDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => PlaylistDetailsCubit(playlistId: playlist.id!),
-      child: PlaylistDetailsView(playlist: playlist, onOptionSelected: onOptionSelected),
+      child: PlaylistDetailsView(
+        playlist: playlist,
+        onOptionSelected: onOptionSelected,
+      ),
     );
   }
 }
@@ -74,8 +77,6 @@ class PlaylistDetailsView extends StatelessWidget {
         final cubit = context.read<PlaylistDetailsCubit>();
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
             title: Text(
               playlist.name,
               style: const TextStyle(
@@ -89,33 +90,51 @@ class PlaylistDetailsView extends StatelessWidget {
                 child: IconButton(
                   icon: SvgPicture.asset(AppIcons.icon, width: 15, height: 15),
                   onPressed: () async {
-                    final RenderBox button = context.findRenderObject() as RenderBox;
-                    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+                    final RenderBox button =
+                        context.findRenderObject() as RenderBox;
+                    final RenderBox overlay =
+                        Overlay.of(context).context.findRenderObject()
+                            as RenderBox;
 
                     final RelativeRect position = RelativeRect.fromRect(
                       Rect.fromPoints(
-                        button.localToGlobal(Offset(button.size.width - 60, 60), ancestor: overlay),
-                        button.localToGlobal(Offset(button.size.width, 60), ancestor: overlay),
+                        button.localToGlobal(
+                          Offset(button.size.width - 60, 60),
+                          ancestor: overlay,
+                        ),
+                        button.localToGlobal(
+                          Offset(button.size.width, 60),
+                          ancestor: overlay,
+                        ),
                       ),
                       Offset.zero & overlay.size,
                     );
 
-                    final SongSortOption? result = await showMenu<SongSortOption>(
-                      context: context,
-                      position: position,
-                      color: const Color(0xFF1E1E1E),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      items: [
-                        PopupMenuItem(
-                          value: SongSortOption.oldestFirst,
-                          child: MenuRow(icon: Icons.arrow_upward_rounded, label: 'sort.oldest_first'.tr()),
-                        ),
-                        PopupMenuItem(
-                          value: SongSortOption.newestFirst,
-                          child: MenuRow(icon: Icons.arrow_downward_rounded, label: 'sort.newest_first'.tr()),
-                        ),
-                      ],
-                    );
+                    final SongSortOption? result =
+                        await showMenu<SongSortOption>(
+                          context: context,
+                          position: position,
+                          color: const Color(0xFF1E1E1E),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          items: [
+                            PopupMenuItem(
+                              value: SongSortOption.oldestFirst,
+                              child: MenuRow(
+                                icon: Icons.arrow_upward_rounded,
+                                label: 'sort.oldest_first'.tr(),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: SongSortOption.newestFirst,
+                              child: MenuRow(
+                                icon: Icons.arrow_downward_rounded,
+                                label: 'sort.newest_first'.tr(),
+                              ),
+                            ),
+                          ],
+                        );
 
                     if (result != null) {
                       cubit.sortSongs(result);
@@ -127,12 +146,17 @@ class PlaylistDetailsView extends StatelessWidget {
             ],
           ),
           body: state.status == PlaylistDetailsStatus.loading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.blue))
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.blue),
+                )
               : Column(
                   children: [
                     _buildHeader(cubit),
                     Expanded(child: _buildList(state, audioService)),
-                    MiniPlayerWidget(songs: state.songs, audioService: audioService),
+                    MiniPlayerWidget(
+                      songs: state.songs,
+                      audioService: audioService,
+                    ),
                   ],
                 ),
         );
@@ -203,7 +227,11 @@ class PlaylistDetailsView extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 label,
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -230,8 +258,16 @@ class PlaylistDetailsView extends StatelessWidget {
                   isCurrent: currentId == s.id,
                   isPlaying: isPlaying,
                   onTap: () => cubit.play(index),
-                  onMoreTap: () => _showOptions(context, state.playlistSongs[index], playlist.id!),
-                  onLongPress: () => _showOptions(context, state.playlistSongs[index], playlist.id!),
+                  onMoreTap: () => _showOptions(
+                    context,
+                    state.playlistSongs[index],
+                    playlist.id!,
+                  ),
+                  onLongPress: () => _showOptions(
+                    context,
+                    state.playlistSongs[index],
+                    playlist.id!,
+                  ),
                 );
               },
             ),

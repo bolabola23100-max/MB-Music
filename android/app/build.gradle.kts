@@ -12,8 +12,8 @@ android {
     defaultConfig {
         applicationId = "com.example.music"
 
-        // عشان يشتغل على Android 8 (API 26) لازم minSdk <= 26
-        // وخليه 21 عشان يغطي أجهزة أكتر
+        // ✅ 21 = Android 5 - بيغطي 99% من الأجهزة
+        // audio_service و permission_handler محتاجين 21 على الأقل
         minSdk = flutter.minSdkVersion
 
         targetSdk = 36
@@ -37,8 +37,6 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-
-            // للتجربة فقط. لما تنزل على Play Store اعمل keystore حقيقي
             signingConfig = signingConfigs.getByName("debug")
         }
         getByName("debug") {
