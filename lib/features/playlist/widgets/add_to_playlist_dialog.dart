@@ -199,7 +199,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                                 width: 45,
                                 height: 45,
                                 decoration: BoxDecoration(
-                                  color: AppColors.blue.withValues(alpha: 0.15),
+                                  color: AppColors.blue.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(

@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.music"
+    namespace = "com.mbmusic.player"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.example.music"
+        applicationId = "com.mbmusic.player"
 
         // ✅ 21 = Android 5 - بيغطي 99% من الأجهزة
         // audio_service و permission_handler محتاجين 21 على الأقل

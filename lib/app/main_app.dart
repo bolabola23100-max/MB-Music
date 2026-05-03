@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppColors.black,
           selectedItemColor: AppColors.white,
-          unselectedItemColor: AppColors.white.withValues(alpha: 0.6),
+          unselectedItemColor: AppColors.white.withOpacity(0.6),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

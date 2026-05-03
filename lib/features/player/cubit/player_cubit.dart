@@ -42,6 +42,7 @@ class PlayerCubit extends Cubit<PlayerState> {
   }
 
   Future<void> loadEdit() async {
+    if (state.songs.isEmpty) return;
     final safeIndex = state.currentIndex.clamp(0, state.songs.length - 1);
     final songId = state.songs[safeIndex].id;
     final edit = await SongEditService().getEdit(songId);

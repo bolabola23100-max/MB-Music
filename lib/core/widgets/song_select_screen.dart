@@ -451,7 +451,7 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.blue.withValues(alpha: 0.10)
+                            ? AppColors.blue.withOpacity(0.10)
                             : Colors.transparent,
                       ),
                       child: Row(
@@ -552,7 +552,7 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
         border: Border.all(
           color: isSelected
               ? AppColors.blue
-              : AppColors.white.withValues(alpha: 0.30),
+              : AppColors.white.withOpacity(0.30),
           width: 1.5,
         ),
       ),
@@ -569,7 +569,7 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
     return IconButton(
       onPressed: onPressed,
       icon: Icon(icon),
-      color: AppColors.blue.withValues(alpha: 0.9),
+      color: AppColors.blue.withOpacity(0.9),
     );
   }
 }

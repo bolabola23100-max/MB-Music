@@ -14,7 +14,7 @@ class EmptyPlaylistsState extends StatelessWidget {
           Icon(
             Icons.playlist_add_rounded,
             size: 80,
-            color: AppColors.white.withValues(alpha: 0.1),
+            color: AppColors.white.withOpacity(0.1),
           ),
           const SizedBox(height: 15),
           Text(

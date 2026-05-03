@@ -135,7 +135,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
               Text(
                 'اضغط لتغيير الصورة',
                 style: TextStyle(
-                  color: AppColors.white.withValues(alpha: 0.5),
+                  color: AppColors.white.withOpacity(0.5),
                   fontSize: 12,
                 ),
               ),
@@ -147,7 +147,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                 decoration: InputDecoration(
                   labelText: 'Song Title',
                   labelStyle: TextStyle(
-                    color: AppColors.white.withValues(alpha: 0.6),
+                    color: AppColors.white.withOpacity(0.6),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -167,7 +167,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                 decoration: InputDecoration(
                   labelText: 'Artist',
                   labelStyle: TextStyle(
-                    color: AppColors.white.withValues(alpha: 0.6),
+                    color: AppColors.white.withOpacity(0.6),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),

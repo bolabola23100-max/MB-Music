@@ -56,7 +56,7 @@ class PlayerView extends StatelessWidget {
             },
             onVerticalDragEnd: (details) {
               if (!state.canDrag) return;
-              if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+              if (state.offsetY > 200 || (details.primaryVelocity ?? 0) > 1000) {
                 Navigator.pop(context);
               } else {
                 cubit.resetDrag();
@@ -151,31 +151,44 @@ class PlayerView extends StatelessWidget {
     String? customArtPath,
     AudioService audioService,
   ) {
-    return ValueListenableBuilder<int?>(
-      valueListenable: audioService.currentSongIdNotifier,
-      builder: (context, currentSongId, _) {
-        return Stack(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 5, right: 10),
-                child: VinylWidget(audioService: audioService, size: 130),
-              ),
-            ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 140),
-                child: AppArtwork(
-                  id:
-                      currentSongId ??
-                      songs[currentIndex.clamp(0, songs.length - 1)].id,
-                  size: 150,
-                  borderRadius: 20,
-                  customArtPath: customArtPath,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isTablet = screenWidth > 600;
+        final artworkSize = isTablet ? 300.0 : 150.0;
+        final vinylSize = isTablet ? 260.0 : 130.0;
+        final horizontalOffset = isTablet ? 250.0 : 140.0;
+
+        return ValueListenableBuilder<int?>(
+          valueListenable: audioService.currentSongIdNotifier,
+          builder: (context, currentSongId, _) {
+            return Stack(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 5, right: 10),
+                    child: VinylWidget(
+                      audioService: audioService,
+                      size: vinylSize,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: horizontalOffset),
+                    child: AppArtwork(
+                      id:
+                          currentSongId ??
+                          songs[currentIndex.clamp(0, songs.length - 1)].id,
+                      size: artworkSize,
+                      borderRadius: isTablet ? 40 : 20,
+                      customArtPath: customArtPath,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -294,7 +307,7 @@ class PlayerView extends StatelessWidget {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.2),
+                      color: AppColors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -396,7 +409,7 @@ class PlayerView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   if (audioService.currentQueue.isNotEmpty) ...[
-                    Divider(color: AppColors.white.withValues(alpha: 0.1)),
+                    Divider(color: AppColors.white.withOpacity(0.1)),
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
@@ -517,8 +530,8 @@ class PlayerView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.blue.withValues(alpha: 0.15)
-              : AppColors.white.withValues(alpha: 0.05),
+              ? AppColors.blue.withOpacity(0.15)
+              : AppColors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? AppColors.blue : Colors.transparent,
@@ -531,7 +544,7 @@ class PlayerView extends StatelessWidget {
               icon,
               color: isSelected
                   ? AppColors.blue
-                  : AppColors.white.withValues(alpha: 0.4),
+                  : AppColors.white.withOpacity(0.4),
               size: 26,
             ),
             const SizedBox(height: 6),
@@ -540,7 +553,7 @@ class PlayerView extends StatelessWidget {
               style: TextStyle(
                 color: isSelected
                     ? AppColors.blue
-                    : AppColors.white.withValues(alpha: 0.4),
+                    : AppColors.white.withOpacity(0.4),
                 fontSize: 10,
               ),
             ),

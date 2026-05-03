@@ -75,7 +75,7 @@ class _StatTileRow extends StatelessWidget {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Colors.white.withOpacity(0.5),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.1,

@@ -23,13 +23,13 @@ Widget languageOption(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.blue.withValues(alpha: 0.1)
-              : AppColors.white.withValues(alpha: 0.05),
+              ? AppColors.blue.withOpacity(0.1)
+              : AppColors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? AppColors.blue.withValues(alpha: 0.5)
-                : AppColors.white.withValues(alpha: 0.05),
+                ? AppColors.blue.withOpacity(0.5)
+                : AppColors.white.withOpacity(0.05),
           ),
         ),
         child: Row(
@@ -52,7 +52,7 @@ Widget languageOption(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.2),
+                    color: AppColors.white.withOpacity(0.2),
                   ),
                 ),
               ),

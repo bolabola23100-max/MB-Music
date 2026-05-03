@@ -19,14 +19,21 @@ class PlaylistGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth > 900
+        ? 6
+        : screenWidth > 600
+            ? 4
+            : 3;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 30,
-        childAspectRatio: 0.55,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 20,
+        childAspectRatio: 0.6,
       ),
       itemCount: playlists.length,
       itemBuilder: (context, index) {
@@ -62,15 +69,15 @@ class PlaylistCard extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Mosaic Cover
-          SizedBox(
-            height: 90,
-            width: 90,
+          AspectRatio(
+            aspectRatio: 1,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(20),
                 color: AppColors.gray,
               ),
               clipBehavior: Clip.antiAlias,
@@ -93,7 +100,7 @@ class PlaylistCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: AppColors.white.withValues(alpha: 0.4),
+              color: AppColors.white.withOpacity(0.4),
               letterSpacing: 1,
             ),
           ),
@@ -114,20 +121,31 @@ class _PlaylistMosaic extends StatelessWidget {
       return Center(
         child: Icon(
           Icons.music_note_rounded,
-          color: AppColors.white.withValues(alpha: 0.1),
+          color: AppColors.white.withOpacity(0.1),
           size: 50,
         ),
       );
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Row(
-            children: [Expanded(child: AppArtwork(id: songIds[0], size: 100))],
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppArtwork(
+                      id: songIds[0],
+                      size: constraints.maxWidth,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

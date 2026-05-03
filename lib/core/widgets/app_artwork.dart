@@ -35,7 +35,7 @@ class AppArtwork extends StatelessWidget {
         boxShadow: isCurrent
             ? [
                 BoxShadow(
-                  color: AppColors.blue.withValues(alpha: 0.25),
+                  color: AppColors.blue.withOpacity(0.25),
                   blurRadius: 3,
                   spreadRadius: 1,
                 ),

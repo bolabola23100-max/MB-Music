@@ -15,6 +15,8 @@ class SortButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         transitionBuilder: (child, animation) =>
@@ -22,15 +24,17 @@ class SortButton extends StatelessWidget {
         child: SizedBox(
           width: 70,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 isAscending ? Icons.arrow_upward : Icons.arrow_downward,
                 key: ValueKey(isAscending),
                 color: AppColors.blue,
+                size: 20,
               ),
               Text(
                 isAscending ? "الأحدث" : "الأقدم",
-                style: TextStyle(fontSize: 12, color: AppColors.blue),
+                style: TextStyle(fontSize: 10, color: AppColors.blue),
               ),
             ],
           ),

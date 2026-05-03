@@ -45,7 +45,7 @@ class StatsHeroDisplay extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withOpacity(0.5),
             fontSize: 13,
             fontWeight: FontWeight.w600,
             letterSpacing: 4,
@@ -69,7 +69,7 @@ class _HeroGlowEffect extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.blue.withValues(alpha: 0.08),
+            color: AppColors.blue.withOpacity(0.08),
             spreadRadius: 35,
             blurRadius: 60,
           ),

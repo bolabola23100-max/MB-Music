@@ -59,7 +59,7 @@ class _StatItemCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: AppColors.white.withValues(alpha: 0.75),
+              color: AppColors.white.withOpacity(0.75),
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,

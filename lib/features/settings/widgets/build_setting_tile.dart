@@ -15,10 +15,10 @@ Widget buildSettingTile({
       borderRadius: BorderRadius.circular(20),
       child: Ink(
         decoration: BoxDecoration(
-          color: AppColors.gray.withValues(alpha: 0.4),
+          color: AppColors.gray.withOpacity(0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.white.withValues(alpha: 0.05),
+            color: AppColors.white.withOpacity(0.05),
             width: 1,
           ),
         ),
@@ -29,7 +29,7 @@ Widget buildSettingTile({
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.blue.withValues(alpha: 0.08),
+                  color: AppColors.blue.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: AppColors.blue, size: 22),
@@ -53,7 +53,7 @@ Widget buildSettingTile({
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: AppColors.white.withValues(alpha: 0.5),
+                          color: AppColors.white.withOpacity(0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -67,7 +67,7 @@ Widget buildSettingTile({
               else if (onTap != null)
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.white.withValues(alpha: 0.2),
+                  color: AppColors.white.withOpacity(0.2),
                 ),
             ],
           ),

@@ -79,15 +79,19 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
     switch (option) {
       case SongSortOption.oldestFirst:
         sortedSongs.sort((a, b) {
-          final aDate = state.playlistSongs.firstWhere((ps) => ps.songId == a.id).addedAt;
-          final bDate = state.playlistSongs.firstWhere((ps) => ps.songId == b.id).addedAt;
+          final aPs = state.playlistSongs.where((ps) => ps.songId == a.id);
+          final bPs = state.playlistSongs.where((ps) => ps.songId == b.id);
+          final aDate = aPs.isNotEmpty ? aPs.first.addedAt : DateTime.now();
+          final bDate = bPs.isNotEmpty ? bPs.first.addedAt : DateTime.now();
           return (aDate ?? DateTime.now()).compareTo(bDate ?? DateTime.now());
         });
         break;
       case SongSortOption.newestFirst:
         sortedSongs.sort((a, b) {
-          final aDate = state.playlistSongs.firstWhere((ps) => ps.songId == a.id).addedAt;
-          final bDate = state.playlistSongs.firstWhere((ps) => ps.songId == b.id).addedAt;
+          final aPs = state.playlistSongs.where((ps) => ps.songId == a.id);
+          final bPs = state.playlistSongs.where((ps) => ps.songId == b.id);
+          final aDate = aPs.isNotEmpty ? aPs.first.addedAt : DateTime.now();
+          final bDate = bPs.isNotEmpty ? bPs.first.addedAt : DateTime.now();
           return (bDate ?? DateTime.now()).compareTo(aDate ?? DateTime.now());
         });
         break;

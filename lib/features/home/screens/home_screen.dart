@@ -56,13 +56,19 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final AudioService audioService = AudioService();
     final FavoritesService favoritesService = FavoritesService();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth > 1200
+        ? screenWidth * 0.2
+        : screenWidth > 800
+            ? screenWidth * 0.1
+            : 0.0;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.black.withValues(alpha: 0.5), AppColors.black],
+          colors: [AppColors.black.withOpacity(0.5), AppColors.black],
         ),
       ),
       child: Scaffold(
@@ -76,8 +82,10 @@ class _HomeViewState extends State<HomeView> {
           },
         ),
         body: SafeArea(
-          child: Column(
-            children: [
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              children: [
               BlocBuilder<HomeCubit, HomeState>(
                 buildWhen: (p, c) =>
                     p.songs != c.songs || p.displaySongs != c.displaySongs,
@@ -115,8 +123,9 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBottomNavigationBar(BuildContext context, int currentIndex) {
     return RepaintBoundary(
@@ -125,7 +134,7 @@ class _HomeViewState extends State<HomeView> {
         index: _localIndex,
         height: 60,
         backgroundColor: Colors.transparent,
-        color: AppColors.gray.withValues(alpha: 0.4),
+        color: AppColors.gray.withOpacity(0.4),
         buttonBackgroundColor: AppColors.blue,
         animationDuration: const Duration(milliseconds: 800),
         animationCurve: Curves.easeOutCubic,

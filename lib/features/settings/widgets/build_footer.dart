@@ -14,7 +14,7 @@ Widget buildFooter() {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.blue.withValues(alpha: 0.1),
+                color: AppColors.blue.withOpacity(0.1),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -43,7 +43,7 @@ Widget buildFooter() {
         Text(
           'settings.made_with_love'.tr(),
           style: TextStyle(
-            color: AppColors.white.withValues(alpha: 0.5),
+            color: AppColors.white.withOpacity(0.5),
             fontSize: 12,
           ),
         ),

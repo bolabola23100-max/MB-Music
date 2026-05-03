@@ -220,7 +220,7 @@ class SongListWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Material(
-            color: AppColors.blue.withValues(alpha: 0.4),
+            color: AppColors.blue.withOpacity(0.4),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadiusDirectional.only(
                 topStart: Radius.circular(15),
@@ -263,7 +263,7 @@ class SongListWidget extends StatelessWidget {
 
           // ✅ الجزء الأيسر - تشغيل عشوائي
           Material(
-            color: AppColors.blue.withValues(alpha: 0.6),
+            color: AppColors.blue.withOpacity(0.6),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadiusDirectional.only(
                 topEnd: Radius.circular(15),

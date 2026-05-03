@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 
 class MainButton extends StatelessWidget {

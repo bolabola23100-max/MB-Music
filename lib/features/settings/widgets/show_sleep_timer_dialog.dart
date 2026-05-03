@@ -15,7 +15,7 @@ void showSleepTimerDialog(BuildContext context, SettingsCubit cubit) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.gray.withValues(alpha: 0.5),
+          color: AppColors.gray.withOpacity(0.5),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         ),
         child: Column(
@@ -25,7 +25,7 @@ void showSleepTimerDialog(BuildContext context, SettingsCubit cubit) {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.2),
+                color: AppColors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -42,7 +42,7 @@ void showSleepTimerDialog(BuildContext context, SettingsCubit cubit) {
             Text(
               'settings.automatically_stop_playback_after'.tr(),
               style: TextStyle(
-                color: AppColors.white.withValues(alpha: 0.6),
+                color: AppColors.white.withOpacity(0.6),
                 fontSize: 14,
               ),
             ),

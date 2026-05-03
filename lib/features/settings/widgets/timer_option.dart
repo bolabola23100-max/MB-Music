@@ -20,9 +20,9 @@ Widget timerOption(
     borderRadius: BorderRadius.circular(16),
     child: Container(
       decoration: BoxDecoration(
-        color: AppColors.black.withValues(alpha: 0.5),
+        color: AppColors.black.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.white.withOpacity(0.1)),
       ),
       child: Center(
         child: Text(

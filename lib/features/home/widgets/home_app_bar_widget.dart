@@ -44,7 +44,7 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
         Padding(
           padding: const EdgeInsetsDirectional.only(start: 16, top: 10),
           child: IconButton(
-            icon: Icon(Icons.grade, color: AppColors.blue, size: 25),
+            icon: Icon(Icons.settings, color: AppColors.blue, size: 25),
             onPressed: () {
               final snackBar = SnackBar(
                 content: Text("settings_coming_soon".tr()),

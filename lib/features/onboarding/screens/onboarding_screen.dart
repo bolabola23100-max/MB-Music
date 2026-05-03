@@ -124,8 +124,8 @@ class _LangButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.blue.withValues(alpha: 0.15)
-              : AppColors.white.withValues(alpha: 0.05),
+              ? AppColors.blue.withOpacity(0.15)
+              : AppColors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? AppColors.blue : Colors.transparent,
@@ -143,7 +143,7 @@ class _LangButton extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: isSelected
                     ? AppColors.blue
-                    : AppColors.white.withValues(alpha: 0.5),
+                    : AppColors.white.withOpacity(0.5),
               ),
             ),
           ],

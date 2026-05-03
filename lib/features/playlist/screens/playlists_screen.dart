@@ -10,6 +10,7 @@ import 'package:music/features/playlist/widgets/playlist_grid.dart';
 import 'package:music/features/playlist/widgets/playlist_menu_bottom_sheet.dart';
 import 'package:music/features/playlist/cubit/playlist_cubit.dart';
 import 'package:music/features/playlist/cubit/playlist_state.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
 
 class PlaylistsScreen extends StatelessWidget {
   const PlaylistsScreen({super.key});
@@ -38,11 +39,19 @@ class PlaylistsView extends StatelessWidget {
         playlist: playlist,
         onRename: () {
           Navigator.pop(context);
-          PlaylistDialogs.showRenameDialog(context, playlist, cubit.loadPlaylists);
+          PlaylistDialogs.showRenameDialog(
+            context,
+            playlist,
+            cubit.loadPlaylists,
+          );
         },
         onDelete: () {
           Navigator.pop(context);
-          PlaylistDialogs.showDeleteDialog(context, playlist, cubit.loadPlaylists);
+          PlaylistDialogs.showDeleteDialog(
+            context,
+            playlist,
+            cubit.loadPlaylists,
+          );
         },
       ),
     );
@@ -52,9 +61,9 @@ class PlaylistsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PlaylistCubit, PlaylistState>(
       builder: (context, state) {
-        final cubit = context.read<PlaylistCubit>();
+        // final cubit = context.read<PlaylistCubit>();
         return Scaffold(
-          backgroundColor: AppColors.gray.withValues(alpha: .01),
+          backgroundColor: AppColors.gray.withOpacity(0.01),
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -69,7 +78,17 @@ class PlaylistsView extends StatelessWidget {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => PlaylistDialogs.showCreateDialog(context, cubit.loadPlaylists),
+            onPressed: () => PlaylistDialogs.showCreateDialog(context, (id) {
+              final cubit = context.read<PlaylistCubit>();
+              final homeCubit = context.read<HomeCubit>();
+              cubit.loadPlaylists();
+              PlaylistDialogs.showAddSongsDialog(
+                context,
+                id,
+                homeCubit.state.songs,
+                cubit.loadPlaylists,
+              );
+            }),
             backgroundColor: const Color(0xFF00C8FF),
             shape: const CircleBorder(),
             child: const Icon(Icons.add, color: Colors.black, size: 30),
