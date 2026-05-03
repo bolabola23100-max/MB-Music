@@ -74,7 +74,6 @@ class _SearchBodyState extends State<SearchBody> {
     return BlocBuilder<SearchCubit, SearchState>(
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: AppColors.gray.withValues(alpha: .01),
           body: Column(
             children: [
               Padding(

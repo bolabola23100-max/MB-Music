@@ -127,7 +127,7 @@ class _HomeViewState extends State<HomeView> {
         backgroundColor: Colors.transparent,
         color: AppColors.gray.withValues(alpha: 0.4),
         buttonBackgroundColor: AppColors.blue,
-        animationDuration: const Duration(milliseconds: 300),
+        animationDuration: const Duration(milliseconds: 800),
         animationCurve: Curves.easeOutCubic,
         items: <Widget>[
           _buildNavItem(AppIcons.sounds, _localIndex == 0, isSvg: false),
@@ -145,21 +145,6 @@ class _HomeViewState extends State<HomeView> {
           }
         },
       ),
-    );
-  }
-
-  Widget _buildNavItem(String iconPath, bool isSelected, {bool isSvg = true}) {
-    final Color color = isSelected ? AppColors.black : AppColors.white;
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: isSvg
-          ? SvgPicture.asset(
-              iconPath,
-              height: 24,
-              width: 24,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            )
-          : Image.asset(iconPath, height: 24, width: 24, color: color),
     );
   }
 
@@ -227,4 +212,19 @@ class _HomeViewState extends State<HomeView> {
       ],
     );
   }
+}
+
+Widget _buildNavItem(String iconPath, bool isSelected, {bool isSvg = true}) {
+  final Color color = isSelected ? AppColors.black : AppColors.white;
+  return Padding(
+    padding: const EdgeInsets.all(4.0),
+    child: isSvg
+        ? SvgPicture.asset(
+            iconPath,
+            height: 24,
+            width: 24,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          )
+        : Image.asset(iconPath, height: 24, width: 24, color: color),
+  );
 }

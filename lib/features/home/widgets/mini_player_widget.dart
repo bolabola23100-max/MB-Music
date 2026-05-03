@@ -76,7 +76,11 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
         return Directionality(
           textDirection: TextDirection.ltr,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsetsDirectional.only(
+              end: 10,
+              start: 10,
+              bottom: 20,
+            ),
             child: GestureDetector(
               onTap: () {
                 final index =
@@ -98,7 +102,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: AppColors.gray.withValues(alpha: 0.6),
+                  color: AppColors.gray.withValues(alpha: 0.16),
                 ),
                 padding: const EdgeInsets.only(left: 10, right: 10, top: 8),
                 child: Column(
@@ -161,7 +165,9 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.white.withValues(alpha: 0.7),
+                                      color: AppColors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
                                     ),
                                   ),
                                 ),
