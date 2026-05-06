@@ -1,11 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
-import 'package:music/core/constants/app_icons.dart';
-// import 'package:music/core/routing/app_navigator.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/widgets/sort_button.dart';
-// import 'package:music/features/settings/settings.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class HomeAppBarWidget extends StatefulWidget {
@@ -46,25 +44,20 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
           child: IconButton(
             icon: Icon(Icons.settings, color: AppColors.blue, size: 25),
             onPressed: () {
-              final snackBar = SnackBar(
-                content: Text("settings_coming_soon".tr()),
-                backgroundColor: AppColors.blue,
-                duration: Duration(seconds: 2),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-              // AppNavigator.push(
-              //   context,
-              //   SettingsScreen(
-              //     songs: widget.songs,
-              //     audioService: widget.audioService,
-              //     onRescan: widget.onRescan,
-              //   ),
-              // );
+              MySnackBar(
+                context: context,
+              ).showSnackBar("settings_coming_soon".tr(), AppColors.blue);
             },
           ),
         ),
-        Image.asset(AppIcons.mbMusic, width: 70),
+        Text(
+          "MB Music",
+          style: TextStyle(
+            color: AppColors.blue,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         Padding(
           padding: const EdgeInsetsDirectional.only(end: 16, top: 10),
           child: SortButton(

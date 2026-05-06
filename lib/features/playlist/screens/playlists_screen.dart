@@ -47,11 +47,9 @@ class PlaylistsView extends StatelessWidget {
         },
         onDelete: () {
           Navigator.pop(context);
-          PlaylistDialogs.showDeleteDialog(
-            context,
-            playlist,
-            cubit.loadPlaylists,
-          );
+          PlaylistDialogs.showDeleteDialog(context, playlist, () {
+            cubit.loadPlaylists();
+          });
         },
       ),
     );
@@ -61,9 +59,8 @@ class PlaylistsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PlaylistCubit, PlaylistState>(
       builder: (context, state) {
-        // final cubit = context.read<PlaylistCubit>();
         return Scaffold(
-          backgroundColor: AppColors.gray.withOpacity(0.01),
+          backgroundColor: AppColors.gray.withValues(alpha: 0.01),
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -115,7 +112,9 @@ class PlaylistsView extends StatelessWidget {
         context,
         MaterialPageRoute(builder: (c) => PlaylistDetailsScreen(playlist: p)),
       ).then((_) => context.read<PlaylistCubit>().loadPlaylists()),
-      onLongPress: (p) => _showPlaylistMenu(context, p),
+      onLongPress: (p) {
+        _showPlaylistMenu(context, p);
+      },
     );
   }
 

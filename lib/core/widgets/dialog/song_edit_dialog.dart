@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -45,11 +46,9 @@ class _SongEditDialogState extends State<SongEditDialog> {
     final status = await Permission.photos.request();
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('يجب السماح بالوصول للصور'),
-            backgroundColor: Colors.red,
-          ),
+        MySnackBar(context: context).showSnackBar(
+          'يجب السماح بالوصول للصور',
+          Colors.red,
         );
       }
       return;

@@ -8,6 +8,7 @@ import 'package:music/features/playlist/widgets/add_to_playlist_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 
 class SongOptionsBottomSheet extends StatelessWidget {
   static void show(
@@ -92,15 +93,11 @@ class SongOptionsBottomSheet extends StatelessWidget {
   }
 
   void _showFavoriteSnackBar(BuildContext context, bool isFavorite) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isFavorite
-              ? "options.removed_from_fav".tr(args: [song.title])
-              : "options.added_to_fav".tr(args: [song.title]),
-        ),
-        backgroundColor: isFavorite ? Colors.orange : Colors.green,
-      ),
+    MySnackBar(context: context).showSnackBar(
+      isFavorite
+          ? "options.removed_from_fav".tr(args: [song.title])
+          : "options.added_to_fav".tr(args: [song.title]),
+      isFavorite ? Colors.orange : Colors.green,
     );
   }
 
@@ -135,6 +132,24 @@ class SongOptionsBottomSheet extends StatelessWidget {
             onTap: () async {
               Navigator.pop(context);
               await _playSong();
+            },
+          ),
+          // ADD THIS
+          ListTile(
+            leading: const Icon(Icons.queue_play_next, color: Colors.white),
+            title: Text(
+              "options.play_next".tr(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              audioService.addToPlayNext(song);
+              if (context.mounted) {
+                MySnackBar(context: context).showSnackBar(
+                  "options.added_to_queue".tr(args: [song.title]),
+                  AppColors.blue,
+                );
+              }
             },
           ),
           ListTile(
@@ -217,8 +232,7 @@ class SongOptionsBottomSheet extends StatelessWidget {
                       style: const TextStyle(color: Colors.white),
                     ),
                     content: Text(
-                      "options.delete_confirm_content"
-                          .tr(args: [song.title]),
+                      "options.delete_confirm_content".tr(args: [song.title]),
                       style: const TextStyle(color: Colors.grey),
                     ),
                     actions: [
@@ -238,10 +252,6 @@ class SongOptionsBottomSheet extends StatelessWidget {
                 );
 
                 if (ok == true) {
-                  final messenger = context.mounted
-                      ? ScaffoldMessenger.of(context)
-                      : null;
-
                   if (context.mounted) Navigator.pop(context);
 
                   final deleteResult = await SongDeleteService.deleteSongs([
@@ -253,19 +263,18 @@ class SongOptionsBottomSheet extends StatelessWidget {
                       await onDeleteSongs!([song]);
                     }
 
-                    messenger?.showSnackBar(
-                      SnackBar(
-                        content: Text("options.delete_success".tr()),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    if (context.mounted) {
+                      MySnackBar(
+                        context: context,
+                      ).showSnackBar("options.delete_success".tr(), Colors.red);
+                    }
                   } else {
-                    messenger?.showSnackBar(
-                      SnackBar(
-                        content: Text("options.delete_failed".tr()),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
+                    if (context.mounted) {
+                      MySnackBar(context: context).showSnackBar(
+                        "options.delete_failed".tr(),
+                        Colors.orange,
+                      );
+                    }
                   }
                 }
               },

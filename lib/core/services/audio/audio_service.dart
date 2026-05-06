@@ -113,6 +113,11 @@ class AudioService {
     );
   }
 
+  // ADD THIS
+  void addToPlayNext(SongModel song) {
+    _handler.addToPlayNext(song);
+  }
+
   Future<void> pause() async => _handler.pause();
   Future<void> resume() async => _handler.play();
   Future<void> stop() async => _handler.stop();

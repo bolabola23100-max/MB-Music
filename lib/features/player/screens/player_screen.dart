@@ -8,6 +8,7 @@ import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/core/widgets/app_artwork.dart';
 import 'package:music/core/widgets/app_seek_bar.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
 import 'package:music/core/widgets/vinyl_widget.dart';
 import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
@@ -56,7 +57,8 @@ class PlayerView extends StatelessWidget {
             },
             onVerticalDragEnd: (details) {
               if (!state.canDrag) return;
-              if (state.offsetY > 200 || (details.primaryVelocity ?? 0) > 1000) {
+              if (state.offsetY > 200 ||
+                  (details.primaryVelocity ?? 0) > 1000) {
                 Navigator.pop(context);
               } else {
                 cubit.resetDrag();
@@ -270,7 +272,12 @@ class PlayerView extends StatelessWidget {
                     context: context,
                     builder: (_) =>
                         AddToPlaylistDialog(songs: [songs[safeIndex]]),
-                  );
+                  ).then((_) {
+                    MySnackBar(context: context).showSnackBar(
+                      "playlist_dialogs.add_to_playlist".tr(),
+                      AppColors.blue,
+                    );
+                  });
                 },
               ),
               SleepTimerWidget(audioService: audioService),

@@ -4,6 +4,7 @@ import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:on_audio_query/on_audio_query.dart' hide PlaylistModel;
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 
 class AddToPlaylistDialog extends StatefulWidget {
   final List<SongModel> songs;
@@ -90,17 +91,11 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                     widget.songs,
                   );
                   Navigator.pop(context);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "playlist_dialogs.create_and_add_success".tr(args: [
-                          controller.text,
-                          addedCount.toString(),
-                        ]),
-                      ),
-                      backgroundColor: Colors.green,
+                  MySnackBar(context: context).showSnackBar(
+                    "playlist_dialogs.create_and_add_success".tr(
+                      args: [controller.text, addedCount.toString()],
                     ),
+                    Colors.green,
                   );
                 }
               }
@@ -119,7 +114,10 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         "playlist_dialogs.add_to_playlist".tr(),
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: _isLoading
           ? const SizedBox(
@@ -199,7 +197,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                                 width: 45,
                                 height: 45,
                                 decoration: BoxDecoration(
-                                  color: AppColors.blue.withOpacity(0.15),
+                                  color: AppColors.blue.withValues(alpha: .15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
@@ -218,29 +216,25 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                                 style: TextStyle(color: Colors.grey[500]),
                               ),
                               onTap: () async {
-                                final addedCount =
-                                    await _service.addSongsToPlaylist(
-                                  playlist.id!,
-                                  widget.songs,
-                                );
+                                final addedCount = await _service
+                                    .addSongsToPlaylist(
+                                      playlist.id!,
+                                      widget.songs,
+                                    );
                                 Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      addedCount > 0
-                                          ? "playlist_dialogs.added_items".tr(
-                                              args: [
-                                                addedCount.toString(),
-                                                playlist.name
-                                              ],
-                                            )
-                                          : "playlist_dialogs.items_already_exist"
-                                              .tr(),
-                                    ),
-                                    backgroundColor: addedCount > 0
-                                        ? AppColors.blue
-                                        : Colors.orange,
-                                  ),
+                                MySnackBar(context: context).showSnackBar(
+                                  addedCount > 0
+                                      ? "playlist_dialogs.added_items".tr(
+                                          args: [
+                                            addedCount.toString(),
+                                            playlist.name,
+                                          ],
+                                        )
+                                      : "playlist_dialogs.items_already_exist"
+                                            .tr(),
+                                  addedCount > 0
+                                      ? AppColors.blue
+                                      : Colors.orange,
                                 );
                               },
                             ),

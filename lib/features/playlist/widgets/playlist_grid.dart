@@ -100,7 +100,7 @@ class PlaylistCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: AppColors.white.withOpacity(0.4),
+              color: AppColors.white.withValues(alpha: .4),
               letterSpacing: 1,
             ),
           ),
@@ -121,7 +121,7 @@ class _PlaylistMosaic extends StatelessWidget {
       return Center(
         child: Icon(
           Icons.music_note_rounded,
-          color: AppColors.white.withOpacity(0.1),
+          color: AppColors.white.withValues(alpha: .1),
           size: 50,
         ),
       );

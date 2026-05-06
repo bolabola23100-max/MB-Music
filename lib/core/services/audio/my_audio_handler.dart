@@ -126,6 +126,46 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  // ADD THIS
+  void addToPlayNext(SongModel song) {
+    if (_queue.isEmpty) {
+      setQueue([song]);
+      playSongFromQueue(
+        path: song.data,
+        index: 0,
+        title: song.title,
+        artist: song.artist,
+        songId: song.id,
+        duration: song.duration != null
+            ? Duration(milliseconds: song.duration!)
+            : null,
+      );
+    } else {
+      final currentIndex = mediaItem.value?.extras?['index'] as int? ?? 0;
+      _queue.insert(currentIndex + 1, song);
+
+      // Update the queue list in the handler to reflect the change
+      queue.add(
+        _queue
+            .map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist))
+            .toList(),
+      );
+
+      if (!_player.playing && _player.processingState == ProcessingState.idle) {
+        playSongFromQueue(
+          path: song.data,
+          index: currentIndex + 1,
+          title: song.title,
+          artist: song.artist,
+          songId: song.id,
+          duration: song.duration != null
+              ? Duration(milliseconds: song.duration!)
+              : null,
+        );
+      }
+    }
+  }
+
   void updateQueueAndIndex(List<SongModel> newQueue, int newIndex) {
     _queue = newQueue;
     queue.add(

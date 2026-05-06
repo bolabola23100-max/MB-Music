@@ -60,8 +60,8 @@ class _HomeViewState extends State<HomeView> {
     final horizontalPadding = screenWidth > 1200
         ? screenWidth * 0.2
         : screenWidth > 800
-            ? screenWidth * 0.1
-            : 0.0;
+        ? screenWidth * 0.1
+        : 0.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -86,46 +86,47 @@ class _HomeViewState extends State<HomeView> {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
-              BlocBuilder<HomeCubit, HomeState>(
-                buildWhen: (p, c) =>
-                    p.songs != c.songs || p.displaySongs != c.displaySongs,
-                builder: (context, state) => HomeAppBarWidget(
-                  songs: state.songs,
-                  audioService: audioService,
-                  displaySongs: state.displaySongs,
-                  onDisplaySongsChanged: (sorted) {
-                    context.read<HomeCubit>().updateDisplaySongs(sorted);
-                  },
-                  onRescan: () => context.read<HomeCubit>().initData(),
-                ),
-              ),
-              Expanded(
-                child: RepaintBoundary(
-                  child: BlocListener<HomeCubit, HomeState>(
-                    listenWhen: (p, c) => p.currentIndex != c.currentIndex,
-                    listener: (context, state) {
-                      if (_pageController.hasClients) {
-                        final currentPage = _pageController.page?.round() ?? 0;
-                        if (currentPage != state.currentIndex) {
-                          _pageController.jumpToPage(state.currentIndex);
-                        }
-                      }
+                BlocBuilder<HomeCubit, HomeState>(
+                  buildWhen: (p, c) =>
+                      p.songs != c.songs || p.displaySongs != c.displaySongs,
+                  builder: (context, state) => HomeAppBarWidget(
+                    songs: state.songs,
+                    audioService: audioService,
+                    displaySongs: state.displaySongs,
+                    onDisplaySongsChanged: (sorted) {
+                      context.read<HomeCubit>().updateDisplaySongs(sorted);
                     },
-                    child: _buildPageView(
-                      context,
-                      audioService,
-                      favoritesService,
+                    onRescan: () => context.read<HomeCubit>().initData(),
+                  ),
+                ),
+                Expanded(
+                  child: RepaintBoundary(
+                    child: BlocListener<HomeCubit, HomeState>(
+                      listenWhen: (p, c) => p.currentIndex != c.currentIndex,
+                      listener: (context, state) {
+                        if (_pageController.hasClients) {
+                          final currentPage =
+                              _pageController.page?.round() ?? 0;
+                          if (currentPage != state.currentIndex) {
+                            _pageController.jumpToPage(state.currentIndex);
+                          }
+                        }
+                      },
+                      child: _buildPageView(
+                        context,
+                        audioService,
+                        favoritesService,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBottomNavigationBar(BuildContext context, int currentIndex) {
     return RepaintBoundary(
@@ -134,7 +135,7 @@ class _HomeViewState extends State<HomeView> {
         index: _localIndex,
         height: 60,
         backgroundColor: Colors.transparent,
-        color: AppColors.gray.withOpacity(0.4),
+        color: AppColors.gray.withValues(alpha: 0.4),
         buttonBackgroundColor: AppColors.blue,
         animationDuration: const Duration(milliseconds: 800),
         animationCurve: Curves.easeOutCubic,

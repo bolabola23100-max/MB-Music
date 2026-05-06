@@ -3,6 +3,7 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class PlaylistDialogs {
@@ -139,6 +140,12 @@ class PlaylistDialogs {
               await _playlistService.deletePlaylist(playlist.id!);
               Navigator.pop(context);
               onDeleted();
+              if (context.mounted) {
+                MySnackBar(context: context).showSnackBar(
+                  "Playlist '${playlist.name}' deleted",
+                  AppColors.red,
+                );
+              }
             },
             child: Text(
               "options.delete".tr(),
@@ -227,6 +234,10 @@ class _AddSongsViewState extends State<_AddSongsView> {
                     if (mounted) {
                       Navigator.pop(context);
                       widget.onDone();
+                      MySnackBar(context: context).showSnackBar(
+                        "${_selectedIds.length} songs added to playlist!",
+                        AppColors.blue,
+                      );
                     }
                   },
                   child: Text(

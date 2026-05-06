@@ -75,7 +75,8 @@
     "delete_success": "Song deleted successfully ✓",
     "delete_failed": "Delete cancelled or failed",
     "added_to_fav": "{} added to favorites ❤️",
-    "removed_from_fav": "{} removed from favorites"
+    "removed_from_fav": "{} removed from favorites",
+    "added_to_queue": "{} added to queue"
   },
   "stats": {
     "insights": "Song Insights",

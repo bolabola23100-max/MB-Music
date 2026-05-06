@@ -11,6 +11,7 @@ import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
 import 'package:music/features/playlist/widgets/add_to_playlist_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 
 class SongSelectScreen extends StatefulWidget {
   static void show(
@@ -70,12 +71,9 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
 
   void _showFavoriteSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppColors.red : Colors.green,
-      ),
-    );
+    MySnackBar(
+      context: context,
+    ).showSnackBar(message, isError ? AppColors.red : Colors.green);
   }
 
   @override
@@ -250,10 +248,7 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
         }
       } else {
         if (mounted) {
-          _showFavoriteSnackBar(
-            "options.delete_failed".tr(),
-            isError: true,
-          );
+          _showFavoriteSnackBar("options.delete_failed".tr(), isError: true);
         }
       }
     }
@@ -292,7 +287,9 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
           children: [
             ListTile(
               title: Text(
-                "selection.items_selected".tr(args: [selected.length.toString()]),
+                "selection.items_selected".tr(
+                  args: [selected.length.toString()],
+                ),
                 style: const TextStyle(
                   color: AppColors.white,
                   fontWeight: FontWeight.bold,
@@ -362,8 +359,8 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
           title: Text(
             _isSelecting
                 ? (count == 1
-                    ? "selection.item_selected".tr()
-                    : "selection.items_selected".tr(args: [count.toString()]))
+                      ? "selection.item_selected".tr()
+                      : "selection.items_selected".tr(args: [count.toString()]))
                 : "common.select".tr(),
             style: const TextStyle(
               color: AppColors.white,

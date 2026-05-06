@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
@@ -174,8 +175,9 @@ class _ListeningStatsViewState extends State<ListeningStatsView> {
                   playlist: false,
                 );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('stats.not_found'.tr())),
+                MySnackBar(context: context).showSnackBar(
+                  'stats.not_found'.tr(),
+                  AppColors.blue,
                 );
               }
             },

@@ -15,6 +15,7 @@ import 'package:music/features/settings/widgets/show_sleep_timer_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/features/settings/cubit/settings_cubit.dart';
 import 'package:music/features/settings/cubit/settings_state.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -107,11 +108,9 @@ class SettingsView extends StatelessWidget {
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('settings.equalizer_feature_coming_soon'.tr()),
-                behavior: SnackBarBehavior.floating,
-              ),
+            MySnackBar(context: context).showSnackBar(
+              'settings.equalizer_feature_coming_soon'.tr(),
+              AppColors.blue,
             );
           },
         ),
@@ -138,12 +137,9 @@ class SettingsView extends StatelessWidget {
           title: 'settings.hidden_songs'.tr(),
           subtitle: 'settings.hidden_songs_desc'.tr(),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'settings.hidden_songs_management_coming_soon'.tr(),
-                ),
-              ),
+            MySnackBar(context: context).showSnackBar(
+              'settings.hidden_songs_management_coming_soon'.tr(),
+              AppColors.blue,
             );
           },
         ),
@@ -152,8 +148,9 @@ class SettingsView extends StatelessWidget {
           title: 'settings.re_scan_library'.tr(),
           subtitle: 'settings.re_scan_library_desc'.tr(),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('settings.refreshing_library'.tr())),
+            MySnackBar(context: context).showSnackBar(
+              'settings.refreshing_library'.tr(),
+              AppColors.blue,
             );
             onRescan();
           },

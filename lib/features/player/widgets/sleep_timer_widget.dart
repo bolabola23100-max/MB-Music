@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 
 class SleepTimerWidget extends StatefulWidget {
   final AudioService audioService;
@@ -30,14 +31,9 @@ class _SleepTimerWidgetState extends State<SleepTimerWidget> {
       onTap: () {
         Navigator.pop(context);
         widget.audioService.setSleepTimer(Duration(minutes: minutes));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "sleep_timer_status".tr(args: [minutes.toString()]),
-            ),
-            backgroundColor: AppColors.blue,
-            duration: const Duration(seconds: 2),
-          ),
+        MySnackBar(context: context).showSnackBar(
+          "sleep_timer_status".tr(args: [minutes.toString()]),
+          AppColors.blue,
         );
       },
     );

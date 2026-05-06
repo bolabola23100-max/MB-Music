@@ -75,7 +75,8 @@
     "delete_success": "تم حذف الأغنية بنجاح ✓",
     "delete_failed": "تم إلغاء الحذف أو فشلت العملية",
     "added_to_fav": "تم إضافة {} للمفضلة ❤️",
-    "removed_from_fav": "تم إزالة {} من المفضلة"
+    "removed_from_fav": "تم إزالة {} من المفضلة",
+    "added_to_queue": "تم إضافة {} إلى قائمة التشغيل القادمة"
   },
   "stats": {
     "insights": "إحصائيات الأغاني",
@@ -143,7 +144,5 @@
     "oldest_first": "الأقدم أولاً",
     "newest_first": "الأحدث أولاً"
   },
-    "settings_coming_soon": "الإعدادات قريباً!"
-
+  "settings_coming_soon": "الإعدادات قريباً!"
 }
-
