@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
+import 'package:music/core/constants/app_icons.dart';
 import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/widgets/sort_button.dart';
@@ -10,10 +11,8 @@ class HomeAppBarWidget extends StatefulWidget {
   final List<SongModel> songs;
   final AudioService audioService;
 
-  /// الليست اللي بتتعرض حاليًا
   final List<SongModel> displaySongs;
 
-  /// callback يرجّع الليست بعد الترتيب للـ Parent
   final ValueChanged<List<SongModel>> onDisplaySongsChanged;
 
   final VoidCallback onRescan;
@@ -50,16 +49,12 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
             },
           ),
         ),
-        Text(
-          "MB Music",
-          style: TextStyle(
-            color: AppColors.blue,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Center(child: Image.asset(AppIcons.logo, width: 70)),
         ),
         Padding(
-          padding: const EdgeInsetsDirectional.only(end: 16, top: 10),
+          padding: const EdgeInsetsDirectional.only(end: 12, top: 10),
           child: SortButton(
             isAscending: isAscending,
             onPressed: () {
