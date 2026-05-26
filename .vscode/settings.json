@@ -161,5 +161,8 @@
     "وضع",
     "يتم"
   ],
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "emulator.emulatorPath": "E:\\Android\\Sdk\\emulator",
+  "emulator.emulatorPathMac": "~/Library/Android/sdk/emulator",
+  "emulator.emulatorPathLinux": "~/Android/Sdk/emulator"
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -7,8 +8,10 @@ import 'package:music/core/widgets/app_artwork.dart';
 import 'package:music/core/widgets/app_seek_bar.dart';
 import 'package:music/core/widgets/play_pause_button.dart';
 import 'package:music/core/widgets/vinyl_widget.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
 import 'package:music/features/player/screens/player_screen.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+
 
 class MiniPlayerWidget extends StatefulWidget {
   final List<SongModel> songs;
@@ -26,6 +29,7 @@ class MiniPlayerWidget extends StatefulWidget {
 
 class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
   String? _customTitle;
+  String? _customArtist;
   String? _customArtPath;
   int? _lastSongId;
 
@@ -49,12 +53,23 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
       _loadEdit(widget.audioService.currentSongIdNotifier.value);
 
   Future<void> _loadEdit(int? songId) async {
-    if (songId == null) return;
+    if (songId == null) {
+      if (mounted) {
+        setState(() {
+          _customTitle = null;
+          _customArtist = null;
+          _customArtPath = null;
+          _lastSongId = null;
+        });
+      }
+      return;
+    }
     _lastSongId = songId;
     final edit = await SongEditService().getEdit(songId);
     if (mounted) {
       setState(() {
         _customTitle = edit?['title'];
+        _customArtist = edit?['artist'];
         _customArtPath = edit?['artPath'];
       });
     }
@@ -87,6 +102,11 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                     widget.audioService.currentIndexNotifier.value ?? 0;
                 final currentQueue = widget.audioService.currentQueue;
 
+                Future<void> Function(List<SongModel>)? onDelete;
+                try {
+                  onDelete = context.read<HomeCubit>().onDeleteSongs;
+                } catch (_) {}
+
                 AppNavigator.push(
                   context,
                   PlayerScreen(
@@ -94,6 +114,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                         ? currentQueue
                         : widget.songs,
                     index: index,
+                    onDeleteSongs: onDelete,
                   ),
                 );
               },
@@ -160,7 +181,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                                   valueListenable:
                                       widget.audioService.currentArtistNotifier,
                                   builder: (context, artist, _) => Text(
-                                    artist ?? 'Unknown',
+                                    _customArtist ?? artist ?? 'Unknown',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(

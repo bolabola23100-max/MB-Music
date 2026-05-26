@@ -28,9 +28,9 @@ class PlayerState extends Equatable {
     bool? isPlaying,
     double? offsetY,
     bool? canDrag,
-    String? customTitle,
-    String? customArtist,
-    String? customArtPath,
+    String? Function()? customTitle,
+    String? Function()? customArtist,
+    String? Function()? customArtPath,
   }) {
     return PlayerState(
       songs: songs ?? this.songs,
@@ -38,9 +38,9 @@ class PlayerState extends Equatable {
       isPlaying: isPlaying ?? this.isPlaying,
       offsetY: offsetY ?? this.offsetY,
       canDrag: canDrag ?? this.canDrag,
-      customTitle: customTitle ?? this.customTitle,
-      customArtist: customArtist ?? this.customArtist,
-      customArtPath: customArtPath ?? this.customArtPath,
+      customTitle: customTitle != null ? customTitle() : this.customTitle,
+      customArtist: customArtist != null ? customArtist() : this.customArtist,
+      customArtPath: customArtPath != null ? customArtPath() : this.customArtPath,
     );
   }
 

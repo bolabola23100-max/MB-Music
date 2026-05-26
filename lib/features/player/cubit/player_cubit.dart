@@ -16,6 +16,7 @@ class PlayerCubit extends Cubit<PlayerState> {
 
   void _init() {
     _audioService.currentIndexNotifier.addListener(_onIndexChanged);
+    _audioService.currentQueueNotifier.addListener(_onQueueChanged);
     _playingSubscription = _audioService.player.playingStream.listen((playing) {
       emit(state.copyWith(isPlaying: playing));
     });
@@ -26,12 +27,43 @@ class PlayerCubit extends Cubit<PlayerState> {
   @override
   Future<void> close() {
     _audioService.currentIndexNotifier.removeListener(_onIndexChanged);
+    _audioService.currentQueueNotifier.removeListener(_onQueueChanged);
     SongEditService().editNotifier.removeListener(_onEditChanged);
     _playingSubscription?.cancel();
     return super.close();
   }
 
   void _onEditChanged() => loadEdit();
+
+  void _onQueueChanged() {
+    final newQueue = _audioService.currentQueue;
+    if (newQueue.isEmpty) {
+      emit(const PlayerState(songs: [], currentIndex: 0, isPlaying: false));
+      return;
+    }
+
+    final currentSongId = _audioService.currentSongIdNotifier.value;
+    final stillExists = newQueue.any((s) => s.id == currentSongId);
+
+    emit(state.copyWith(songs: newQueue));
+
+    if (!stillExists && newQueue.isNotEmpty) {
+      // The current song was deleted — play the next one in the new queue
+      final oldIndex = state.currentIndex;
+      final newIndex = oldIndex.clamp(0, newQueue.length - 1);
+      final nextSong = newQueue[newIndex];
+      _audioService.playSong(
+        nextSong.data,
+        title: nextSong.title,
+        artist: nextSong.artist,
+        index: newIndex,
+        songId: nextSong.id,
+        queue: newQueue,
+      );
+    } else {
+      _onIndexChanged();
+    }
+  }
 
   void _onIndexChanged() {
     final newIndex = _audioService.currentIndexNotifier.value ?? state.currentIndex;
@@ -47,9 +79,9 @@ class PlayerCubit extends Cubit<PlayerState> {
     final songId = state.songs[safeIndex].id;
     final edit = await SongEditService().getEdit(songId);
     emit(state.copyWith(
-      customTitle: edit?['title'],
-      customArtist: edit?['artist'],
-      customArtPath: edit?['artPath'],
+      customTitle: () => edit?['title'],
+      customArtist: () => edit?['artist'],
+      customArtPath: () => edit?['artPath'],
     ));
   }
 

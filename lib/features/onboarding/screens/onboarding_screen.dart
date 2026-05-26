@@ -35,7 +35,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const Spacer(),
 
               // ─── Logo ─────────────────────────────────────────────────────
-              Image.asset(AppIcons.logo, height: 220, fit: BoxFit.contain),
+              Hero(
+                tag: "logo",
+                child: Image.asset(
+                  AppIcons.logo,
+                  height: 220,
+                  fit: BoxFit.contain,
+                ),
+              ),
               const SizedBox(height: 48),
 
               // ─── Language Buttons ─────────────────────────────────────────

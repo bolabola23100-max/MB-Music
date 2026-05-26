@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/app/error_app.dart';
@@ -23,8 +25,14 @@ Future<void> main() async {
         supportedLocales: const [Locale('en'), Locale('ar')],
         path: 'assets/translations',
         fallbackLocale: const Locale('en'),
+
         saveLocale: true,
-        child: const MainApp(),
+        child: Builder(
+          builder: (context) => Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: const MainApp(),
+          ),
+        ),
       ),
     );
   } catch (e, s) {
@@ -34,7 +42,12 @@ Future<void> main() async {
         path: 'assets/translations',
         fallbackLocale: const Locale('en'),
         saveLocale: true,
-        child: ErrorApp(error: e.toString(), stack: s.toString()),
+        child: Builder(
+          builder: (context) => Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: ErrorApp(error: e.toString(), stack: s.toString()),
+          ),
+        ),
       ),
     );
   }

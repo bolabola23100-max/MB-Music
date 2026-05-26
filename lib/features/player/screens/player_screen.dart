@@ -23,20 +23,28 @@ import 'package:music/features/player/cubit/player_state.dart';
 class PlayerScreen extends StatelessWidget {
   final List<SongModel> songs;
   final int index;
+  final Future<void> Function(List<SongModel> songs)? onDeleteSongs;
 
-  const PlayerScreen({super.key, required this.songs, required this.index});
+  const PlayerScreen({
+    super.key,
+    required this.songs,
+    required this.index,
+    this.onDeleteSongs,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => PlayerCubit(songs: songs, index: index),
-      child: const PlayerView(),
+      child: PlayerView(onDeleteSongs: onDeleteSongs),
     );
   }
 }
 
 class PlayerView extends StatelessWidget {
-  const PlayerView({super.key});
+  final Future<void> Function(List<SongModel> songs)? onDeleteSongs;
+
+  const PlayerView({super.key, this.onDeleteSongs});
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +52,15 @@ class PlayerView extends StatelessWidget {
 
     return BlocBuilder<PlayerCubit, PlayerState>(
       builder: (context, state) {
+        if (state.songs.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+          return const Scaffold(body: SizedBox.shrink());
+        }
+
         final cubit = context.read<PlayerCubit>();
         return Directionality(
           textDirection: ui.TextDirection.ltr,
@@ -140,6 +157,7 @@ class PlayerView extends StatelessWidget {
               isFavoriteChecker: (s) => favoritesService.isFavorite(s.id),
               onToggleFavorite: (s) => favoritesService.toggleFavorite(s.id),
               playlist: false,
+              onDeleteSongs: onDeleteSongs,
             );
           },
         ),

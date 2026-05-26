@@ -24,23 +24,58 @@ class FavoritesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => FavoriteCubit(allSongs: allSongs),
-      child: BlocBuilder<FavoriteCubit, FavoriteState>(
-        builder: (context, state) {
-          if (state.favoriteSongs.isEmpty) {
-            return const _EmptyFavoritesView();
-          }
-
-          return SongListWidget(
-            songs: state.favoriteSongs,
-            audioService: audioService,
-            isFavoriteChecker: (song) => state.favoriteIds.contains(song.id),
-            onToggleFavorite: (song) => context.read<FavoriteCubit>().toggleFavorite(song.id),
-            onDeleteSongs: onDeleteSongs,
-            title: "favorites_title".tr(),
-            subtitle: "favorite_songs_subtitle".tr(),
-          );
-        },
+      child: FavoritesContextHandler(
+        allSongs: allSongs,
+        audioService: audioService,
+        onDeleteSongs: onDeleteSongs,
       ),
+    );
+  }
+}
+
+class FavoritesContextHandler extends StatefulWidget {
+  final List<SongModel> allSongs;
+  final AudioService audioService;
+  final Future<void> Function(List<SongModel> songs)? onDeleteSongs;
+
+  const FavoritesContextHandler({
+    super.key,
+    required this.allSongs,
+    required this.audioService,
+    this.onDeleteSongs,
+  });
+
+  @override
+  State<FavoritesContextHandler> createState() => _FavoritesContextHandlerState();
+}
+
+class _FavoritesContextHandlerState extends State<FavoritesContextHandler> {
+  @override
+  void didUpdateWidget(FavoritesContextHandler oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.allSongs != oldWidget.allSongs) {
+      context.read<FavoriteCubit>().updateAllSongs(widget.allSongs);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FavoriteCubit, FavoriteState>(
+      builder: (context, state) {
+        if (state.favoriteSongs.isEmpty) {
+          return const _EmptyFavoritesView();
+        }
+
+        return SongListWidget(
+          songs: state.favoriteSongs,
+          audioService: widget.audioService,
+          isFavoriteChecker: (song) => state.favoriteIds.contains(song.id),
+          onToggleFavorite: (song) => context.read<FavoriteCubit>().toggleFavorite(song.id),
+          onDeleteSongs: widget.onDeleteSongs,
+          title: "favorites_title".tr(),
+          subtitle: "favorite_songs_subtitle".tr(),
+        );
+      },
     );
   }
 }

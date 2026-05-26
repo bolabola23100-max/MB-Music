@@ -101,7 +101,41 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     FavoritesService().favoriteIdsNotifier.addListener(
       () => _broadcastState(_player.playing),
     );
+    SongEditService().editNotifier.addListener(_onSongEdited);
     _broadcastState(false);
+  }
+
+  Future<void> _onSongEdited() async {
+    final currentItem = mediaItem.value;
+    if (currentItem == null) return;
+    final songId = currentItem.extras?['songId'] as int?;
+    if (songId != null) {
+      final edit = await SongEditService().getEdit(songId);
+      if (edit != null) {
+        final newTitle = edit['title'] ?? currentItem.title;
+        final newArtist = edit['artist'] ?? currentItem.artist;
+        final newArtPath = edit['artPath'] as String?;
+
+        final updatedItem = currentItem.copyWith(
+          title: newTitle,
+          artist: newArtist,
+          artUri: newArtPath != null
+              ? Uri.file(newArtPath)
+              : Uri.parse('content://media/external/audio/media/$songId/albumart'),
+        );
+        mediaItem.add(updatedItem);
+
+        // Also update persistent metadata
+        await AudioPersistenceHelper.saveSongMetadata(
+          path: currentItem.id,
+          title: newTitle,
+          artist: newArtist,
+          songId: songId,
+          index: currentItem.extras?['index'] as int? ?? 0,
+          duration: currentItem.duration,
+        );
+      }
+    }
   }
 
   void setQueue(List<SongModel> songs) {

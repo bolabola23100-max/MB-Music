@@ -147,7 +147,7 @@ class SongListWidget extends StatelessWidget {
                 valueListenable: audioService.isPlayingNotifier,
                 builder: (context, isPlaying, _) {
                   return ListView.builder(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.only(bottom: 100),
                     itemCount: songs.length,
                     itemBuilder: (context, index) {
                       final song = songs[index];
@@ -162,7 +162,11 @@ class SongListWidget extends StatelessWidget {
                           if (openPlayerOnSongTap && context.mounted) {
                             AppNavigator.push(
                               context,
-                              PlayerScreen(songs: queue, index: index),
+                              PlayerScreen(
+                                songs: queue,
+                                index: index,
+                                onDeleteSongs: onDeleteSongs,
+                              ),
                             );
                           }
 

@@ -140,8 +140,8 @@ class _HomeViewState extends State<HomeView> {
         animationDuration: const Duration(milliseconds: 800),
         animationCurve: Curves.easeOutCubic,
         items: <Widget>[
-          _buildNavItem(AppIcons.sounds, _localIndex == 0, isSvg: false),
-          _buildNavItem(AppIcons.song, _localIndex == 1),
+          _buildNavItem(AppIcons.song, _localIndex == 0),
+          _buildNavItem(AppIcons.sounds, _localIndex == 1, isSvg: false),
           _buildNavItem(AppIcons.favorite, _localIndex == 2),
           _buildNavItem(AppIcons.playlist, _localIndex == 3),
           _buildNavItem(AppIcons.search, _localIndex == 4),

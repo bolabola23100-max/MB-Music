@@ -63,6 +63,7 @@ class _SongTileWidgetState extends State<SongTileWidget> {
     return GestureDetector(
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

@@ -26,7 +26,7 @@ class SearchScreen extends StatelessWidget {
   }
 }
 
-class SearchContextHandler extends StatelessWidget {
+class SearchContextHandler extends StatefulWidget {
   final List<SongModel> allSongs;
   final Future<void> Function(List<SongModel> songs)? onDeleteSongs;
 
@@ -37,14 +37,21 @@ class SearchContextHandler extends StatelessWidget {
   });
 
   @override
+  State<SearchContextHandler> createState() => _SearchContextHandlerState();
+}
+
+class _SearchContextHandlerState extends State<SearchContextHandler> {
+  @override
+  void didUpdateWidget(SearchContextHandler oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.allSongs != oldWidget.allSongs) {
+      context.read<SearchCubit>().updateAllSongs(widget.allSongs);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Listen for changes in allSongs to update the cubit
-    return BlocListener<SearchCubit, SearchState>(
-      listenWhen: (previous, current) =>
-          false, // We use this purely to react to widget prop changes
-      listener: (context, state) {},
-      child: SearchBody(onDeleteSongs: onDeleteSongs),
-    );
+    return SearchBody(onDeleteSongs: widget.onDeleteSongs);
   }
 }
 

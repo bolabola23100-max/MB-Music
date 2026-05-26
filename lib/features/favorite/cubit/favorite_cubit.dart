@@ -5,7 +5,7 @@ import 'favorite_state.dart';
 
 class FavoriteCubit extends Cubit<FavoriteState> {
   final FavoritesService _favoritesService = FavoritesService();
-  final List<SongModel> _allSongs;
+  List<SongModel> _allSongs;
 
   FavoriteCubit({required List<SongModel> allSongs})
       : _allSongs = allSongs,
@@ -25,6 +25,11 @@ class FavoriteCubit extends Cubit<FavoriteState> {
       favoriteSongs: favoriteSongs,
       favoriteIds: favoriteIds,
     ));
+  }
+
+  void updateAllSongs(List<SongModel> allSongs) {
+    _allSongs = allSongs;
+    _onFavoritesChanged();
   }
 
   Future<void> toggleFavorite(int songId) async {

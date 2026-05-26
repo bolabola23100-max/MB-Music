@@ -23,7 +23,7 @@ class HomeCubit extends Cubit<HomeState> {
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 10),
+      const Duration(seconds: 3),
       (_) => silentRefresh(),
     );
   }
@@ -93,22 +93,47 @@ class HomeCubit extends Cubit<HomeState> {
           .where((s) => (s.duration ?? 0) < 60000)
           .toList();
 
-      // Only update if there's a change in the number of songs
-      if (filtered.length != state.songs.length ||
-          filteredSounds.length != state.sounds.length) {
+      // Check if IDs have changed, not just count
+      final currentIds = state.songs.map((s) => s.id).toSet();
+      final newIds = filtered.map((s) => s.id).toSet();
+      final soundCurrentIds = state.sounds.map((s) => s.id).toSet();
+      final soundNewIds = filteredSounds.map((s) => s.id).toSet();
+
+      if (!currentIds.containsAll(newIds) ||
+          !newIds.containsAll(currentIds) ||
+          !soundCurrentIds.containsAll(soundNewIds) ||
+          !soundNewIds.containsAll(soundCurrentIds)) {
+        final newFiltered = List<SongModel>.from(filtered);
+        final newSounds = List<SongModel>.from(filteredSounds);
+
         emit(
           state.copyWith(
-            originalSongs: List.from(filtered),
-            songs: List.from(filtered),
-            displaySongs: List.from(filtered),
-            sounds: List.from(filteredSounds),
+            originalSongs: newFiltered,
+            songs: newFiltered,
+            displaySongs: newFiltered,
+            sounds: newSounds,
           ),
         );
 
-        // Update the audio service queues too
-        _audioService.originalQueue = List.from(filtered);
-        // We don't overwrite currentQueue automatically to avoid interrupting playback flow,
-        // but the UI will now show the new songs.
+        _audioService.originalQueue = newFiltered;
+
+        // Sync currentQueue: keep playing songs that still exist, remove deleted
+        final existingIds = newIds;
+        final currentQueue = _audioService.currentQueue;
+        if (currentQueue.isNotEmpty) {
+          final updatedQueue = currentQueue
+              .where((s) => existingIds.contains(s.id))
+              .toList();
+          if (updatedQueue.length != currentQueue.length) {
+            final currentSongId = _audioService.currentSongIdNotifier.value;
+            final newIdx = updatedQueue.indexWhere((s) => s.id == currentSongId);
+            if (newIdx != -1) {
+              _audioService.updateQueueAndKeepPlaying(updatedQueue, newIdx);
+            } else {
+              _audioService.setQueue(updatedQueue);
+            }
+          }
+        }
       }
     } catch (_) {
       // Fail silently for background refresh
@@ -183,6 +208,10 @@ class HomeCubit extends Cubit<HomeState> {
     final deletedIds = deletedSongs.map((s) => s.id).toSet();
     final playlistService = PlaylistService();
 
+    final currentSongId = _audioService.currentSongIdNotifier.value;
+    final isPlayingDeleted =
+        currentSongId != null && deletedIds.contains(currentSongId);
+
     for (final song in deletedSongs) {
       if (_favoritesService.isFavorite(song.id)) {
         await _favoritesService.toggleFavorite(song.id);
@@ -192,18 +221,49 @@ class HomeCubit extends Cubit<HomeState> {
 
     await HiddenSongsService().hideSongs(deletedIds);
 
+    final newOriginal = state.originalSongs
+        .where((s) => !deletedIds.contains(s.id))
+        .toList();
+    final newSongs = state.songs
+        .where((s) => !deletedIds.contains(s.id))
+        .toList();
+    final newDisplay = state.displaySongs
+        .where((s) => !deletedIds.contains(s.id))
+        .toList();
+    final newSounds = state.sounds
+        .where((s) => !deletedIds.contains(s.id))
+        .toList();
+
     emit(
       state.copyWith(
-        originalSongs: state.originalSongs
-            .where((s) => !deletedIds.contains(s.id))
-            .toList(),
-        songs: state.songs.where((s) => !deletedIds.contains(s.id)).toList(),
-        displaySongs: state.displaySongs
-            .where((s) => !deletedIds.contains(s.id))
-            .toList(),
-        sounds: state.sounds.where((s) => !deletedIds.contains(s.id)).toList(),
+        originalSongs: newOriginal,
+        songs: newSongs,
+        displaySongs: newDisplay,
+        sounds: newSounds,
       ),
     );
+
+    _audioService.originalQueue = newOriginal;
+
+    if (isPlayingDeleted) {
+      if (newDisplay.isEmpty) {
+        // Nothing left to play
+        await _audioService.stop();
+        _audioService.setQueue([]);
+      } else {
+        // Let PlayerCubit auto-skip; just update the queue
+        _audioService.currentQueue = newDisplay;
+      }
+    } else if (currentSongId != null) {
+      final newIndex = newDisplay.indexWhere((s) => s.id == currentSongId);
+      if (newIndex != -1) {
+        _audioService.updateQueueAndKeepPlaying(newDisplay, newIndex);
+      } else {
+        _audioService.setQueue(newDisplay);
+      }
+    } else {
+      _audioService.setQueue(newDisplay);
+    }
   }
 
   void updateCurrentIndex(int index) {
