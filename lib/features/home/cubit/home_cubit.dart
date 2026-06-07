@@ -23,7 +23,9 @@ class HomeCubit extends Cubit<HomeState> {
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 3),
+      // ✅ كان 3 ثوانٍ — querySongs() ثقيلة جداً وتُبطئ التطبيق باستمرار
+      // ✅ 30 ثانية كافية لاكتشاف أغاني جديدة دون تأثير على الأداء
+      const Duration(seconds: 30),
       (_) => silentRefresh(),
     );
   }

@@ -14,4 +14,9 @@ class AppIcons {
   static const String icon = 'assets/svg/Icon.svg';
   static const String search = 'assets/svg/search.svg';
   static const vinylRecord = 'assets/img/vinyl_record.png';
+  // static const ll = 'assets/img/ll.json';
+  static const ll = 'assets/img/runn.json';
+  static const ss = 'assets/svg/ss.svg';
+  static const cc = 'assets/svg/cc.svg';
+  static const stop = 'assets/svg/stop.svg';
 }

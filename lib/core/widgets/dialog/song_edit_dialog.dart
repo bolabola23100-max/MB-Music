@@ -46,10 +46,9 @@ class _SongEditDialogState extends State<SongEditDialog> {
     final status = await Permission.photos.request();
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
-        MySnackBar(context: context).showSnackBar(
-          'يجب السماح بالوصول للصور',
-          Colors.red,
-        );
+        MySnackBar(
+          context: context,
+        ).showSnackBar('يجب السماح بالوصول للصور', Colors.red);
       }
       return;
     }
@@ -134,7 +133,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
               Text(
                 'اضغط لتغيير الصورة',
                 style: TextStyle(
-                  color: AppColors.white.withOpacity(0.5),
+                  color: AppColors.white.withValues(alpha: 0.5),
                   fontSize: 12,
                 ),
               ),
@@ -146,7 +145,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                 decoration: InputDecoration(
                   labelText: 'Song Title',
                   labelStyle: TextStyle(
-                    color: AppColors.white.withOpacity(0.6),
+                    color: AppColors.white.withValues(alpha: 0.6),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -166,7 +165,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                 decoration: InputDecoration(
                   labelText: 'Artist',
                   labelStyle: TextStyle(
-                    color: AppColors.white.withOpacity(0.6),
+                    color: AppColors.white.withValues(alpha: 0.6),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),

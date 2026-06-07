@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
@@ -45,46 +44,6 @@ class SongListWidget extends StatelessWidget {
     this.onDeleteSongs,
   });
 
-  Future<void> _playOrderedOnly() async {
-    if (songs.isEmpty) return;
-
-    if (onOptionSelected != null) {
-      onOptionSelected?.call(SongSortOption.orderedPlay);
-    } else {
-      final queue = List<SongModel>.from(songs);
-      final first = queue[0];
-      await audioService.playSong(
-        first.data,
-        title: first.title,
-        artist: first.artist,
-        index: 0,
-        songId: first.id,
-        queue: queue,
-      );
-    }
-  }
-
-  Future<void> _playRandomOnlyKeepOrder() async {
-    if (songs.isEmpty) return;
-
-    if (onOptionSelected != null) {
-      onOptionSelected?.call(SongSortOption.shufflePlay);
-    } else {
-      final queue = List<SongModel>.from(songs);
-      queue.shuffle();
-      final song = queue[0];
-      audioService.setPlaybackMode(PlaybackMode.sequential);
-      await audioService.playSong(
-        song.data,
-        title: song.title,
-        artist: song.artist,
-        index: 0,
-        songId: song.id,
-        queue: queue,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -112,14 +71,6 @@ class SongListWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                  else
-                    const Spacer(),
-
-                  if (isf)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 40),
-                      child: c(),
                     ),
                 ],
               ),
@@ -140,68 +91,61 @@ class SongListWidget extends StatelessWidget {
         ),
         SizedBox(height: 15),
         Expanded(
-          child: ValueListenableBuilder<int?>(
-            valueListenable: audioService.currentSongIdNotifier,
-            builder: (context, currentSongId, _) {
-              return ValueListenableBuilder<bool>(
-                valueListenable: audioService.isPlayingNotifier,
-                builder: (context, isPlaying, _) {
-                  return ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 100),
-                    itemCount: songs.length,
-                    itemBuilder: (context, index) {
-                      final song = songs[index];
+          // ✅ لا ValueListenableBuilder هنا — كل SongTileWidget يستمع بنفسه
+          // ✅ نتيجة: لما تتغير الأغنية، tile واحد فقط يُعاد بناؤه بدلاً من القائمة كلها
+          child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 100),
+            itemCount: songs.length,
+            // ✅ cacheExtent: يبني الـ tiles مسبقاً خارج الشاشة لتمرير أسلس
+            cacheExtent: 500,
+            itemBuilder: (context, index) {
+              final song = songs[index];
 
-                      return SongTileWidget(
-                        song: song,
-                        isCurrent: currentSongId == song.id,
-                        isPlaying: isPlaying,
-                        onTap: () async {
-                          final queue = List<SongModel>.from(songs);
+              return SongTileWidget(
+                song: song,
+                audioService: audioService,
+                onTap: () async {
+                  final queue = List<SongModel>.from(songs);
 
-                          if (openPlayerOnSongTap && context.mounted) {
-                            AppNavigator.push(
-                              context,
-                              PlayerScreen(
-                                songs: queue,
-                                index: index,
-                                onDeleteSongs: onDeleteSongs,
-                              ),
-                            );
-                          }
+                  if (openPlayerOnSongTap && context.mounted) {
+                    AppNavigator.push(
+                      context,
+                      PlayerScreen(
+                        songs: queue,
+                        index: index,
+                        onDeleteSongs: onDeleteSongs,
+                      ),
+                    );
+                  }
 
-                          await audioService.playSong(
-                            song.data,
-                            title: song.title,
-                            artist: song.artist,
-                            index: index,
-                            songId: song.id,
-                            queue: queue,
-                          );
-                        },
-                        onLongPress: () => SongSelectScreen.show(
-                          context,
-                          songs,
-                          audioService,
-                          isFavoriteChecker,
-                          onToggleFavorite,
-                          initialSelectedSongId: song.id,
-                          onDeleteSongs: onDeleteSongs,
-                        ),
-
-                        onMoreTap: () => SongOptionsBottomSheet.show(
-                          context,
-                          song: song,
-                          index: index,
-                          audioService: audioService,
-                          isFavoriteChecker: isFavoriteChecker,
-                          onToggleFavorite: onToggleFavorite,
-                          onDeleteSongs: onDeleteSongs,
-                        ),
-                      );
-                    },
+                  await audioService.playSong(
+                    song.data,
+                    title: song.title,
+                    artist: song.artist,
+                    index: index,
+                    songId: song.id,
+                    queue: queue,
                   );
                 },
+                onLongPress: () => SongSelectScreen.show(
+                  context,
+                  songs,
+                  audioService,
+                  isFavoriteChecker,
+                  onToggleFavorite,
+                  initialSelectedSongId: song.id,
+                  onDeleteSongs: onDeleteSongs,
+                ),
+
+                onMoreTap: () => SongOptionsBottomSheet.show(
+                  context,
+                  song: song,
+                  index: index,
+                  audioService: audioService,
+                  isFavoriteChecker: isFavoriteChecker,
+                  onToggleFavorite: onToggleFavorite,
+                  onDeleteSongs: onDeleteSongs,
+                ),
               );
             },
           ),
@@ -210,105 +154,6 @@ class SongListWidget extends StatelessWidget {
         if (showMiniPlayer)
           MiniPlayerWidget(songs: songs, audioService: audioService),
       ],
-    );
-  }
-
-  Container c() {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        // border: Border.all(color: Colors.grey),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Material(
-            color: AppColors.blue.withOpacity(0.4),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadiusDirectional.only(
-                topStart: Radius.circular(15),
-                bottomStart: Radius.circular(15),
-              ),
-            ),
-            child: InkWell(
-              onTap: _playOrderedOnly,
-              customBorder: const RoundedRectangleBorder(
-                borderRadius: BorderRadiusDirectional.only(
-                  topStart: Radius.circular(15),
-                  bottomStart: Radius.circular(15),
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "player.sequential".tr(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ✅ الجزء الأيسر - تشغيل عشوائي
-          Material(
-            color: AppColors.blue.withOpacity(0.6),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadiusDirectional.only(
-                topEnd: Radius.circular(15),
-                bottomEnd: Radius.circular(15),
-              ),
-            ),
-            child: InkWell(
-              onTap: _playRandomOnlyKeepOrder,
-              customBorder: const RoundedRectangleBorder(
-                borderRadius: BorderRadiusDirectional.only(
-                  topEnd: Radius.circular(15),
-                  bottomEnd: Radius.circular(15),
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.shuffle_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "player.shuffle".tr(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

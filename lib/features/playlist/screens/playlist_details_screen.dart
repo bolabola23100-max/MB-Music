@@ -213,38 +213,31 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
     return BlocBuilder<PlaylistDetailsCubit, PlaylistDetailsState>(
       builder: (context, state) {
         final cubit = context.read<PlaylistDetailsCubit>();
-        return ValueListenableBuilder<int?>(
-          valueListenable: audioService.currentSongIdNotifier,
-          builder: (context, currentId, _) => ValueListenableBuilder<bool>(
-            valueListenable: audioService.isPlayingNotifier,
-            builder: (context, isPlaying, _) => ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: state.songs.length,
-              itemBuilder: (context, index) {
-                final s = state.songs[index];
-                return SongTileWidget(
-                  song: s,
-                  isCurrent: currentId == s.id,
-                  isPlaying: isPlaying,
-                  onTap: () => cubit.play(index),
-                  onMoreTap: () {
-                    final ps = state.playlistSongs.firstWhere(
-                      (ps) => ps.songId == s.id,
-                      orElse: () => state.playlistSongs[index],
-                    );
-                    _showOptions(context, ps, widget.playlist.id!);
-                  },
-                  onLongPress: () {
-                    final ps = state.playlistSongs.firstWhere(
-                      (ps) => ps.songId == s.id,
-                      orElse: () => state.playlistSongs[index],
-                    );
-                    _showOptions(context, ps, widget.playlist.id!);
-                  },
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: state.songs.length,
+          itemBuilder: (context, index) {
+            final s = state.songs[index];
+            return SongTileWidget(
+              song: s,
+              audioService: audioService,
+              onTap: () => cubit.play(index),
+              onMoreTap: () {
+                final ps = state.playlistSongs.firstWhere(
+                  (ps) => ps.songId == s.id,
+                  orElse: () => state.playlistSongs[index],
                 );
+                _showOptions(context, ps, widget.playlist.id!);
               },
-            ),
-          ),
+              onLongPress: () {
+                final ps = state.playlistSongs.firstWhere(
+                  (ps) => ps.songId == s.id,
+                  orElse: () => state.playlistSongs[index],
+                );
+                _showOptions(context, ps, widget.playlist.id!);
+              },
+            );
+          },
         );
       },
     );

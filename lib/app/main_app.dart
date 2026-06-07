@@ -1,6 +1,9 @@
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
+
 import 'package:music/features/onboarding/screens/splash_screen.dart';
 
 class MainApp extends StatelessWidget {
@@ -13,6 +16,16 @@ class MainApp extends StatelessWidget {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
+
+      // 👇 ده اللي بيثبّت اتجاه التطبيق LTR دايماً
+      // حتى لو اللغة اتغيرت لعربي، الشاشة مش هتتقلب
+      builder: (context, child) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: child!,
+        );
+      },
+
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.transparent,
@@ -34,7 +47,7 @@ class MainApp extends StatelessWidget {
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppColors.black,
           selectedItemColor: AppColors.white,
-          unselectedItemColor: AppColors.white.withOpacity(0.6),
+          unselectedItemColor: AppColors.white.withValues(alpha: 0.6),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

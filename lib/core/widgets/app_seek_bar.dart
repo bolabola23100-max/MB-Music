@@ -69,6 +69,7 @@ class _AppSeekBarState extends State<AppSeekBar>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           MusicWaveform(
             maxWidth: widget.maxWidth,
@@ -90,8 +91,14 @@ class _AppSeekBarState extends State<AppSeekBar>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_formatDuration(position)),
-                Text(_formatDuration(_duration)),
+                Text(
+                  _formatDuration(position),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                Text(
+                  _formatDuration(_duration),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
               ],
             ),
         ],

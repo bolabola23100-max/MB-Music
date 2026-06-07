@@ -10,17 +10,28 @@ class SongEditService {
   static const String _editsKey = 'song_edits';
   final ValueNotifier<int> editNotifier = ValueNotifier(0);
 
+  // ذاكرة مؤقتة للاحتفاظ بالتعديلات في الذاكرة لتسريع الوصول إليها
+  Map<int, Map<String, dynamic>>? _cachedEdits;
+
   Future<SharedPreferences> get _prefs async => await SharedPreferences.getInstance();
 
   Future<Map<int, Map<String, dynamic>>> _getAllEdits() async {
+    if (_cachedEdits != null) {
+      return _cachedEdits!;
+    }
     final prefs = await _prefs;
     final String? editsJson = prefs.getString(_editsKey);
-    if (editsJson == null) return {};
+    if (editsJson == null) {
+      _cachedEdits = {};
+      return _cachedEdits!;
+    }
     try {
       final Map<String, dynamic> decoded = json.decode(editsJson);
-      return decoded.map((key, value) => MapEntry(int.parse(key), Map<String, dynamic>.from(value)));
+      _cachedEdits = decoded.map((key, value) => MapEntry(int.parse(key), Map<String, dynamic>.from(value)));
+      return _cachedEdits!;
     } catch (e) {
-      return {};
+      _cachedEdits = {};
+      return _cachedEdits!;
     }
   }
 
@@ -37,6 +48,7 @@ class SongEditService {
       'artist': artist,
       'artPath': artPath,
     };
+    _cachedEdits = edits;
     
     final prefs = await _prefs;
     // Store with string keys because JSON keys must be strings

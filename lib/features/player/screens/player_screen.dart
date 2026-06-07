@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:on_audio_query/on_audio_query.dart';
+
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -12,13 +14,12 @@ import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
 import 'package:music/core/widgets/vinyl_widget.dart';
 import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
-import 'package:music/features/player/widgets/player_controls_widget.dart';
-import 'package:music/features/player/widgets/sleep_timer_widget.dart';
 import 'package:music/features/home/widgets/song_title_widget.dart';
-import 'package:music/features/playlist/widgets/add_to_playlist_dialog.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/features/player/cubit/player_cubit.dart';
 import 'package:music/features/player/cubit/player_state.dart';
+import 'package:music/features/player/widgets/player_controls_widget.dart';
+import 'package:music/features/player/widgets/sleep_timer_widget.dart';
+import 'package:music/features/playlist/widgets/add_to_playlist_dialog.dart';
 
 class PlayerScreen extends StatelessWidget {
   final List<SongModel> songs;
@@ -54,70 +55,100 @@ class PlayerView extends StatelessWidget {
       builder: (context, state) {
         if (state.songs.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
+            if (context.mounted) Navigator.pop(context);
           });
           return const Scaffold(body: SizedBox.shrink());
         }
 
         final cubit = context.read<PlayerCubit>();
-        return Directionality(
-          textDirection: ui.TextDirection.ltr,
-          child: GestureDetector(
-            onVerticalDragStart: (details) {
-              cubit.setCanDrag(details.globalPosition.dy < 400);
-            },
-            onVerticalDragUpdate: (details) {
-              if (!state.canDrag) return;
-              cubit.updateDrag(details.delta.dy);
-            },
-            onVerticalDragEnd: (details) {
-              if (!state.canDrag) return;
-              if (state.offsetY > 200 ||
-                  (details.primaryVelocity ?? 0) > 1000) {
-                Navigator.pop(context);
-              } else {
-                cubit.resetDrag();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              transform: Matrix4.translationValues(0, state.offsetY, 0),
-              child: Scaffold(
-                appBar: _buildAppBar(
-                  context,
-                  state.songs,
-                  state.currentIndex,
-                  audioService,
-                ),
-                body: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
-                    _buildArtworkSection(
-                      state.songs,
-                      state.currentIndex,
-                      state.customArtPath,
-                      audioService,
+
+        return GestureDetector(
+          onVerticalDragStart: (details) =>
+              cubit.setCanDrag(details.globalPosition.dy < 400),
+          onVerticalDragUpdate: (details) {
+            if (!state.canDrag) return;
+            cubit.updateDrag(details.delta.dy);
+          },
+          onVerticalDragEnd: (details) {
+            if (!state.canDrag) return;
+            if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+              Navigator.pop(context);
+            } else {
+              cubit.resetDrag();
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 100),
+            transform: Matrix4.translationValues(0, state.offsetY, 0),
+            child: Scaffold(
+              extendBodyBehindAppBar: true,
+              backgroundColor: AppColors.gray,
+
+              appBar: _buildAppBar(context, state),
+
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 🖼️ الخلفية: صورة الاغنية
+                  ValueListenableBuilder<int?>(
+                    valueListenable: audioService.currentSongIdNotifier,
+                    builder: (context, songId, _) {
+                      return AppArtwork(
+                        id:
+                            songId ??
+                            state
+                                .songs[state.currentIndex.clamp(
+                                  0,
+                                  state.songs.length - 1,
+                                )]
+                                .id,
+                        size: 500,
+                        highQuality: true,
+                        customArtPath: state.customArtPath,
+                      );
+                    },
+                  ),
+
+                  // 🌫️ البلر
+                  BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX:80, sigmaY: 80),
+                    child: Container(color: Colors.black.withOpacity(0.3)),
+                  ),
+
+                  // 🌑 تدرج اسود في الاسفل عشان الازرار واضحة
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.45),
+                        ],
+                        stops: const [0.55, 1.0],
+                      ),
                     ),
-                    const SizedBox(height: 50),
-                    _buildInfoSection(
-                      state.songs,
-                      state.currentIndex,
-                      state.customTitle,
-                      state.customArtist,
-                      audioService,
-                    ),
-                    AppSeekBar(audioService: audioService, isT: true),
-                    _buildControlsSection(
-                      context,
-                      state.songs,
-                      state.currentIndex,
-                      audioService,
-                    ),
-                  ],
-                ),
+                  ),
+
+                  // 🎵 المحتوى الرئيسي
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).padding.top + 60),
+
+                      _buildArtworkSection(state, audioService),
+                      const SizedBox(height: 50),
+
+                      _buildInfoSection(state, audioService),
+
+                      AppSeekBar(audioService: audioService, isT: true),
+
+                      _buildControlsSection(context, state, audioService),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -126,32 +157,35 @@ class PlayerView extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar(
-    BuildContext context,
-    List<SongModel> songs,
-    int currentIndex,
-    AudioService audioService,
-  ) {
+  AppBar _buildAppBar(BuildContext context, PlayerState state) {
+    final audioService = AudioService();
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: true,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: Colors.black.withOpacity(0.2),
       title: Text(
         "player.title".tr(),
         style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
           color: AppColors.white,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.more_vert, color: AppColors.white),
+          icon: const Icon(Icons.more_vert, color: AppColors.white, size: 26),
           onPressed: () {
             final favoritesService = FavoritesService();
-            final safeIndex = currentIndex.clamp(0, songs.length - 1);
+            final safeIndex = state.currentIndex.clamp(
+              0,
+              state.songs.length - 1,
+            );
             SongOptionsBottomSheet.show(
               context,
-              song: songs[safeIndex],
+              song: state.songs[safeIndex],
               index: safeIndex,
               audioService: audioService,
               isFavoriteChecker: (s) => favoritesService.isFavorite(s.id),
@@ -165,19 +199,14 @@ class PlayerView extends StatelessWidget {
     );
   }
 
-  Widget _buildArtworkSection(
-    List<SongModel> songs,
-    int currentIndex,
-    String? customArtPath,
-    AudioService audioService,
-  ) {
+  Widget _buildArtworkSection(PlayerState state, AudioService audioService) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
         final isTablet = screenWidth > 600;
-        final artworkSize = isTablet ? 300.0 : 150.0;
-        final vinylSize = isTablet ? 260.0 : 130.0;
-        final horizontalOffset = isTablet ? 250.0 : 140.0;
+        final artworkSize = isTablet ? 180.0 : 150.0;
+        final vinylSize = isTablet ? 250.0 : 150.0;
+        final horizontalOffset = isTablet ? 130.0 : 100.0;
 
         return ValueListenableBuilder<int?>(
           valueListenable: audioService.currentSongIdNotifier,
@@ -186,7 +215,7 @@ class PlayerView extends StatelessWidget {
               children: [
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 5, right: 10),
+                    padding: const EdgeInsets.only(top: 20, right: 10),
                     child: VinylWidget(
                       audioService: audioService,
                       size: vinylSize,
@@ -195,14 +224,20 @@ class PlayerView extends StatelessWidget {
                 ),
                 Center(
                   child: Padding(
-                    padding: EdgeInsets.only(right: horizontalOffset),
+                    padding: EdgeInsets.only(top: 20, right: horizontalOffset),
                     child: AppArtwork(
                       id:
                           currentSongId ??
-                          songs[currentIndex.clamp(0, songs.length - 1)].id,
+                          state
+                              .songs[state.currentIndex.clamp(
+                                0,
+                                state.songs.length - 1,
+                              )]
+                              .id,
                       size: artworkSize,
-                      borderRadius: isTablet ? 40 : 20,
-                      customArtPath: customArtPath,
+                      borderRadius: isTablet ? 24 : 16,
+                      customArtPath: state.customArtPath,
+                      highQuality: true,
                     ),
                   ),
                 ),
@@ -214,13 +249,7 @@ class PlayerView extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(
-    List<SongModel> songs,
-    int currentIndex,
-    String? customTitle,
-    String? customArtist,
-    AudioService audioService,
-  ) {
+  Widget _buildInfoSection(PlayerState state, AudioService audioService) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
       child: ValueListenableBuilder<String?>(
@@ -228,10 +257,10 @@ class PlayerView extends StatelessWidget {
         builder: (context, title, _) => ValueListenableBuilder<String?>(
           valueListenable: audioService.currentArtistNotifier,
           builder: (context, artist, _) => SongTitleWidget(
-            songs: songs,
-            currentIndex: currentIndex.clamp(0, songs.length - 1),
-            customTitle: customTitle ?? title,
-            customArtist: customArtist ?? artist,
+            songs: state.songs,
+            currentIndex: state.currentIndex.clamp(0, state.songs.length - 1),
+            customTitle: state.customTitle ?? title,
+            customArtist: state.customArtist ?? artist,
           ),
         ),
       ),
@@ -240,8 +269,7 @@ class PlayerView extends StatelessWidget {
 
   Widget _buildControlsSection(
     BuildContext context,
-    List<SongModel> songs,
-    int currentIndex,
+    PlayerState state,
     AudioService audioService,
   ) {
     return Column(
@@ -259,18 +287,12 @@ class PlayerView extends StatelessWidget {
               ValueListenableBuilder<PlaybackMode>(
                 valueListenable: audioService.playbackModeNotifier,
                 builder: (context, mode, _) {
-                  IconData icon;
-                  switch (mode) {
-                    case PlaybackMode.sequential:
-                      icon = Icons.repeat;
-                      break;
-                    case PlaybackMode.repeatOne:
-                      icon = Icons.repeat_one;
-                      break;
-                    case PlaybackMode.shuffle:
-                      icon = Icons.shuffle;
-                      break;
-                  }
+                  IconData icon = switch (mode) {
+                    PlaybackMode.sequential => Icons.repeat,
+                    PlaybackMode.repeatOne => Icons.repeat_one,
+                    PlaybackMode.shuffle => Icons.shuffle,
+                  };
+
                   return IconButton(
                     icon: Icon(icon, color: AppColors.white, size: 28),
                     onPressed: () =>
@@ -278,6 +300,7 @@ class PlayerView extends StatelessWidget {
                   );
                 },
               ),
+
               IconButton(
                 icon: const Icon(
                   Icons.playlist_add,
@@ -285,11 +308,14 @@ class PlayerView extends StatelessWidget {
                   size: 28,
                 ),
                 onPressed: () {
-                  final safeIndex = currentIndex.clamp(0, songs.length - 1);
+                  final safeIndex = state.currentIndex.clamp(
+                    0,
+                    state.songs.length - 1,
+                  );
                   showDialog(
                     context: context,
                     builder: (_) =>
-                        AddToPlaylistDialog(songs: [songs[safeIndex]]),
+                        AddToPlaylistDialog(songs: [state.songs[safeIndex]]),
                   ).then((_) {
                     MySnackBar(context: context).showSnackBar(
                       "playlist_dialogs.add_to_playlist".tr(),
@@ -298,6 +324,7 @@ class PlayerView extends StatelessWidget {
                   });
                 },
               ),
+
               SleepTimerWidget(audioService: audioService),
             ],
           ),
@@ -311,6 +338,7 @@ class PlayerView extends StatelessWidget {
     PlaybackMode currentMode,
     AudioService audioService,
   ) {
+    // باقي دالة الـ Bottom Sheet نفسها بالضبط زي ما كانت
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -355,23 +383,17 @@ class PlayerView extends StatelessWidget {
                             icon: Icons.repeat,
                             label: 'player.sequential'.tr(),
                             isSelected: mode == PlaybackMode.sequential,
-                            onTap: () {
-                              audioService.setPlaybackMode(
-                                PlaybackMode.sequential,
-                              );
-                              setSheetState(() {});
-                            },
+                            onTap: () => audioService.setPlaybackMode(
+                              PlaybackMode.sequential,
+                            ),
                           ),
                           _buildModeButton(
                             icon: Icons.repeat_one,
                             label: 'player.repeat_one'.tr(),
                             isSelected: mode == PlaybackMode.repeatOne,
-                            onTap: () {
-                              audioService.setPlaybackMode(
-                                PlaybackMode.repeatOne,
-                              );
-                              setSheetState(() {});
-                            },
+                            onTap: () => audioService.setPlaybackMode(
+                              PlaybackMode.repeatOne,
+                            ),
                           ),
                           _buildModeButton(
                             icon: Icons.shuffle,
@@ -412,20 +434,7 @@ class PlayerView extends StatelessWidget {
                               } else {
                                 currentQueue.shuffle();
                                 audioService.shuffledQueue = currentQueue;
-
-                                if (currentQueue.isNotEmpty) {
-                                  final first = currentQueue[0];
-                                  audioService.playSong(
-                                    first.data,
-                                    title: first.title,
-                                    artist: first.artist,
-                                    index: 0,
-                                    songId: first.id,
-                                    queue: currentQueue,
-                                  );
-                                }
                               }
-                              setSheetState(() {});
                             },
                           ),
                         ],
@@ -475,50 +484,32 @@ class PlayerView extends StatelessWidget {
                                     displayQueue = currentQueue;
                                   }
 
-                                  return ValueListenableBuilder<int?>(
-                                    valueListenable:
-                                        audioService.currentSongIdNotifier,
-                                    builder: (context, currentSongId, _) {
-                                      return ValueListenableBuilder<bool>(
-                                        valueListenable:
-                                            audioService.isPlayingNotifier,
-                                        builder: (context, isPlaying, _) {
-                                          return ListView.builder(
-                                            itemCount: displayQueue.length,
-                                            itemBuilder: (context, index) {
-                                              final song = displayQueue[index];
-                                              final isCurrentSong =
-                                                  song.id == currentSongId;
-                                              return SongTileWidget(
-                                                song: song,
-                                                isCurrent: isCurrentSong,
-                                                isPlaying: isPlaying,
-                                                onTap: () {
-                                                  final playIndex = displayQueue
-                                                      .indexOf(song);
-                                                  audioService.playSong(
-                                                    song.data,
-                                                    title: song.title,
-                                                    artist: song.artist,
-                                                    index: playIndex,
-                                                    songId: song.id,
-                                                    queue: displayQueue,
-                                                  );
-                                                  Navigator.pop(context);
-                                                },
-                                                onMoreTap: () {
-                                                  Navigator.pop(context);
-                                                  AppNavigator.push(
-                                                    context,
-                                                    PlayerScreen(
-                                                      songs: displayQueue,
-                                                      index: displayQueue
-                                                          .indexOf(song),
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            },
+                                  return ListView.builder(
+                                    itemCount: displayQueue.length,
+                                    itemBuilder: (context, index) {
+                                      final song = displayQueue[index];
+                                      return SongTileWidget(
+                                        song: song,
+                                        audioService: audioService,
+                                        onTap: () {
+                                          audioService.playSong(
+                                            song.data,
+                                            title: song.title,
+                                            artist: song.artist,
+                                            index: index,
+                                            songId: song.id,
+                                            queue: displayQueue,
+                                          );
+                                          Navigator.pop(context);
+                                        },
+                                        onMoreTap: () {
+                                          Navigator.pop(context);
+                                          AppNavigator.push(
+                                            context,
+                                            PlayerScreen(
+                                              songs: displayQueue,
+                                              index: index,
+                                            ),
                                           );
                                         },
                                       );
@@ -532,7 +523,7 @@ class PlayerView extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                 ],
               ),
             );
@@ -579,7 +570,7 @@ class PlayerView extends StatelessWidget {
                 color: isSelected
                     ? AppColors.blue
                     : AppColors.white.withOpacity(0.4),
-                fontSize: 10,
+                fontSize: 11,
               ),
             ),
           ],

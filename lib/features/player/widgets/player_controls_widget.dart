@@ -4,7 +4,7 @@ import 'package:music/core/constants/app_icons.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/widgets/play_pause_button.dart';
 
-class PlayerControlsWidget extends StatelessWidget {
+class PlayerControlsWidget extends StatefulWidget {
   const PlayerControlsWidget({
     super.key,
     required this.audioService,
@@ -16,6 +16,12 @@ class PlayerControlsWidget extends StatelessWidget {
   final VoidCallback onPlayNext;
   final VoidCallback onPlayPrevious;
 
+  @override
+  State<PlayerControlsWidget> createState() => _PlayerControlsWidgetState();
+}
+
+class _PlayerControlsWidgetState extends State<PlayerControlsWidget> {
+  bool isPlay = true;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -29,14 +35,19 @@ class PlayerControlsWidget extends StatelessWidget {
               height: 40,
               width: 40,
             ),
-            onPressed: onPlayPrevious,
+            onPressed: widget.onPlayPrevious,
           ),
-          const SizedBox(width: 20),
-          PlayPauseButton(audioService: audioService, size: 40),
-          const SizedBox(width: 20),
+          const SizedBox(width: 30),
+          PlayPauseButton(
+            audioService: widget.audioService,
+            size: 40,
+            pauseIcon: Image.asset(AppIcons.pause, height: 40, width: 40),
+            playIcon: Image.asset(AppIcons.playArrow, height: 40, width: 40),
+          ),
+          const SizedBox(width: 30),
           IconButton(
             icon: SvgPicture.asset(AppIcons.skipNext, height: 40, width: 40),
-            onPressed: onPlayNext,
+            onPressed: widget.onPlayNext,
           ),
         ],
       ),

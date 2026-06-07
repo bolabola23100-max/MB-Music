@@ -141,8 +141,9 @@
     "path": "المسار"
   },
   "sort": {
-    "oldest_first": "الأقدم أولاً",
-    "newest_first": "الأحدث أولاً"
+    "oldest_first": "الأقدم",
+    "newest_first": "الأحدث"
   },
   "settings_coming_soon": "الإعدادات قريباً!"
+
 }

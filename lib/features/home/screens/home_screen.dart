@@ -1,9 +1,6 @@
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:music/core/constants/app_colors.dart';
-import 'package:music/core/constants/app_icons.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/features/sounds/screens/sounds_screen.dart';
@@ -36,8 +33,21 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late PageController _pageController;
-
   int _localIndex = 0;
+
+  static const double _circleSize = 44; // 🔥 حجم الدائرة
+  static const double _barHeight = 55; // 🔥 ارتفاع البار
+
+  static const Duration _pageAnimDuration = Duration(milliseconds: 400);
+  static const Curve _pageAnimCurve = Curves.easeInOutCubic;
+
+  static const List<IconData> _icons = [
+    Icons.music_note_rounded,
+    Icons.graphic_eq_rounded,
+    Icons.favorite_rounded,
+    Icons.queue_music_rounded,
+    Icons.search_rounded,
+  ];
 
   @override
   void initState() {
@@ -52,10 +62,36 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
+  Future<void> _animateToPage(int index) async {
+    if (!_pageController.hasClients) return;
+    final currentPage = _pageController.page?.round() ?? 0;
+    if (currentPage == index) return;
+
+    final diff = (index - currentPage).abs();
+    if (diff > 1) {
+      _pageController.jumpToPage(index > currentPage ? index - 1 : index + 1);
+    }
+
+    await _pageController.animateToPage(
+      index,
+      duration: _pageAnimDuration,
+      curve: _pageAnimCurve,
+    );
+  }
+
+  void _onItemTapped(int index) {
+    if (index == _localIndex) return;
+    setState(() => _localIndex = index);
+    _animateToPage(index);
+    context.read<HomeCubit>().updateCurrentIndex(index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final AudioService audioService = AudioService();
-    final FavoritesService favoritesService = FavoritesService();
+    final audioService = AudioService();
+    final favoritesService = FavoritesService();
+    final cubit = context.read<HomeCubit>();
+
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = screenWidth > 1200
         ? screenWidth * 0.2
@@ -68,24 +104,19 @@ class _HomeViewState extends State<HomeView> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.black.withOpacity(0.5), AppColors.black],
+          colors: [Colors.transparent, Colors.transparent],
         ),
       ),
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        bottomNavigationBar: BlocSelector<HomeCubit, HomeState, int>(
-          selector: (state) => state.currentIndex,
-          builder: (context, currentIndex) {
-            _localIndex = currentIndex;
-            return _buildBottomNavigationBar(context, currentIndex);
-          },
-        ),
+        bottomNavigationBar: _buildBottomBar(context),
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
+                // ✅ AppBar
                 BlocBuilder<HomeCubit, HomeState>(
                   buildWhen: (p, c) =>
                       p.songs != c.songs || p.displaySongs != c.displaySongs,
@@ -93,29 +124,24 @@ class _HomeViewState extends State<HomeView> {
                     songs: state.songs,
                     audioService: audioService,
                     displaySongs: state.displaySongs,
-                    onDisplaySongsChanged: (sorted) {
-                      context.read<HomeCubit>().updateDisplaySongs(sorted);
-                    },
-                    onRescan: () => context.read<HomeCubit>().initData(),
+                    onDisplaySongsChanged: cubit.updateDisplaySongs,
+                    onRescan: cubit.initData,
                   ),
                 ),
+
+                // ✅ PageView
                 Expanded(
                   child: RepaintBoundary(
                     child: BlocListener<HomeCubit, HomeState>(
                       listenWhen: (p, c) => p.currentIndex != c.currentIndex,
                       listener: (context, state) {
-                        if (_pageController.hasClients) {
-                          final currentPage =
-                              _pageController.page?.round() ?? 0;
-                          if (currentPage != state.currentIndex) {
-                            _pageController.jumpToPage(state.currentIndex);
-                          }
-                        }
+                        _animateToPage(state.currentIndex);
                       },
                       child: _buildPageView(
                         context,
                         audioService,
                         favoritesService,
+                        cubit,
                       ),
                     ),
                   ),
@@ -128,52 +154,105 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildBottomNavigationBar(BuildContext context, int currentIndex) {
-    return RepaintBoundary(
-      child: CurvedNavigationBar(
-        key: const ValueKey('curved_nav_bar'),
-        index: _localIndex,
-        height: 60,
-        backgroundColor: Colors.transparent,
-        color: AppColors.gray.withValues(alpha: 0.4),
-        buttonBackgroundColor: AppColors.blue,
-        animationDuration: const Duration(milliseconds: 800),
-        animationCurve: Curves.easeOutCubic,
-        items: <Widget>[
-          _buildNavItem(AppIcons.song, _localIndex == 0),
-          _buildNavItem(AppIcons.sounds, _localIndex == 1, isSvg: false),
-          _buildNavItem(AppIcons.favorite, _localIndex == 2),
-          _buildNavItem(AppIcons.playlist, _localIndex == 3),
-          _buildNavItem(AppIcons.search, _localIndex == 4),
-        ],
-        onTap: (index) {
-          if (index != _localIndex) {
-            setState(() {
-              _localIndex = index;
-            });
-            context.read<HomeCubit>().updateCurrentIndex(index);
-          }
-        },
+  // ✅ Bottom Bar
+  Widget _buildBottomBar(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final itemWidth = width / _icons.length;
+    final notchCenterX = itemWidth * _localIndex + itemWidth / 2;
+
+    return SafeArea(
+      child: SizedBox(
+        height: _barHeight + _circleSize / 2,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // ✅ الشكل المحفور (Notch)
+            AnimatedBuilder(
+              animation: AlwaysStoppedAnimation(_localIndex.toDouble()),
+              builder: (_, __) => CustomPaint(
+                painter: _NotchPainter(
+                  color: AppColors.gray.withValues(alpha: 0.4),
+                  notchCenterX: notchCenterX,
+
+                  circleRadius: _circleSize / 2 + 2,
+                  barHeight: _barHeight,
+                ),
+                child: SizedBox(width: width, height: _barHeight),
+              ),
+            ),
+
+            // ✅ أيقونات البار
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SizedBox(
+                height: _barHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_icons.length, (index) {
+                    if (index == _localIndex) {
+                      return SizedBox(width: itemWidth);
+                    }
+                    return SizedBox(
+                      width: itemWidth,
+                      child: GestureDetector(
+                        onTap: () => _onItemTapped(index),
+                        behavior: HitTestBehavior.opaque,
+                        child: Icon(
+                          _icons[index],
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+
+            // ✅ الدائرة الزرقاء المتحركة
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              bottom: _barHeight - _circleSize / 2,
+              left: notchCenterX - _circleSize / 2,
+              child: GestureDetector(
+                onTap: () => _onItemTapped(_localIndex),
+                child: Container(
+                  width: _circleSize,
+                  height: _circleSize,
+                  decoration: BoxDecoration(
+                    color: AppColors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _icons[_localIndex],
+                    size: 22,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  // ✅ PageView
   Widget _buildPageView(
     BuildContext context,
     AudioService audioService,
     FavoritesService favoritesService,
+    HomeCubit cubit,
   ) {
-    final cubit = context.read<HomeCubit>();
     return PageView(
       controller: _pageController,
       physics: const BouncingScrollPhysics(),
       onPageChanged: (index) {
-        if (index != _localIndex) {
-          setState(() {
-            _localIndex = index;
-          });
-          context.read<HomeCubit>().updateCurrentIndex(index);
-        }
+        setState(() => _localIndex = index);
+        cubit.updateCurrentIndex(index);
       },
       children: [
         BlocBuilder<HomeCubit, HomeState>(
@@ -224,17 +303,68 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-Widget _buildNavItem(String iconPath, bool isSelected, {bool isSvg = true}) {
-  final Color color = isSelected ? AppColors.black : AppColors.white;
-  return Padding(
-    padding: const EdgeInsets.all(4.0),
-    child: isSvg
-        ? SvgPicture.asset(
-            iconPath,
-            height: 24,
-            width: 24,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          )
-        : Image.asset(iconPath, height: 24, width: 24, color: color),
-  );
+// ✅ CustomPainter للـ Notch المحفور
+class _NotchPainter extends CustomPainter {
+  final Color color;
+  final double notchCenterX;
+  final double circleRadius;
+  final double barHeight;
+
+  _NotchPainter({
+    required this.color,
+    required this.notchCenterX,
+    required this.circleRadius,
+    required this.barHeight,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+
+    const double notchMargin = 10;
+    final double notchLeft = notchCenterX - circleRadius - notchMargin;
+    final double notchRight = notchCenterX + circleRadius + notchMargin;
+    const double curveDepth = 12;
+
+    path.moveTo(0, 0);
+    path.lineTo(notchLeft - 20, 0);
+
+    // ✅ منحنى يسار
+    path.quadraticBezierTo(notchLeft, 0, notchLeft + 10, curveDepth);
+
+    // ✅ القوس المحفور
+    path.arcToPoint(
+      Offset(notchRight - 10, curveDepth),
+      radius: Radius.circular(circleRadius + notchMargin),
+      clockwise: false,
+    );
+
+    // ✅ منحنى يمين
+    path.quadraticBezierTo(notchRight, 0, notchRight + 20, 0);
+
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, barHeight);
+    path.lineTo(0, barHeight);
+    path.close();
+
+    // ✅ تقويس الزوايا
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, barHeight),
+        const Radius.circular(20),
+      ),
+      paint,
+    );
+
+    // ✅ رسم الـ Notch
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_NotchPainter oldDelegate) =>
+      oldDelegate.notchCenterX != notchCenterX;
 }

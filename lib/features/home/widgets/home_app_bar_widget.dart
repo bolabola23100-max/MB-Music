@@ -51,12 +51,7 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
         ),
         Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Center(
-            child: Hero(
-              tag: "logo",
-              child: Image.asset(AppIcons.logo, width: 70),
-            ),
-          ),
+          child: Center(child: Image.asset(AppIcons.logo, width: 70)),
         ),
         Padding(
           padding: const EdgeInsetsDirectional.only(end: 12, top: 10),

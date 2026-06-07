@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 
@@ -33,7 +34,9 @@ class SortButton extends StatelessWidget {
                 size: 20,
               ),
               Text(
-                isAscending ? "الأحدث" : "الأقدم",
+                isAscending
+                    ? "sort.newest_first".tr()
+                    : "sort.oldest_first".tr(),
                 style: TextStyle(fontSize: 10, color: AppColors.blue),
               ),
             ],

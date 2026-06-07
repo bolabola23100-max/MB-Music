@@ -141,8 +141,8 @@
     "path": "Path"
   },
   "sort": {
-    "oldest_first": "Oldest First",
-    "newest_first": "Newest First"
+    "oldest_first": "Oldest",
+    "newest_first": "Newest"
   },
   "settings_coming_soon": "Settings Coming Soon"
 }

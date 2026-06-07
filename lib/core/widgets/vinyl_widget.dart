@@ -54,6 +54,7 @@ class _VinylWidgetState extends State<VinylWidget>
         AppIcons.vinylRecord,
         width: widget.size,
         height: widget.size,
+        filterQuality: FilterQuality.high,
       ),
     );
   }

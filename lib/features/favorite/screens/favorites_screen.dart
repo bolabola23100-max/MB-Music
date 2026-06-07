@@ -46,7 +46,8 @@ class FavoritesContextHandler extends StatefulWidget {
   });
 
   @override
-  State<FavoritesContextHandler> createState() => _FavoritesContextHandlerState();
+  State<FavoritesContextHandler> createState() =>
+      _FavoritesContextHandlerState();
 }
 
 class _FavoritesContextHandlerState extends State<FavoritesContextHandler> {
@@ -70,10 +71,12 @@ class _FavoritesContextHandlerState extends State<FavoritesContextHandler> {
           songs: state.favoriteSongs,
           audioService: widget.audioService,
           isFavoriteChecker: (song) => state.favoriteIds.contains(song.id),
-          onToggleFavorite: (song) => context.read<FavoriteCubit>().toggleFavorite(song.id),
+          onToggleFavorite: (song) =>
+              context.read<FavoriteCubit>().toggleFavorite(song.id),
           onDeleteSongs: widget.onDeleteSongs,
           title: "favorites_title".tr(),
           subtitle: "favorite_songs_subtitle".tr(),
+          isTitle: false,
         );
       },
     );

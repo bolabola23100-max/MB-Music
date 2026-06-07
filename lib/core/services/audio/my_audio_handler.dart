@@ -13,6 +13,7 @@ import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _preloadPlayer = AudioPlayer();
   late final SleepTimerHandler _sleepHandler;
 
   List<SongModel> _queue = [];
@@ -78,9 +79,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     });
 
-    session.becomingNoisyEventStream.listen((_) {
-      pause();
-    });
+    session.becomingNoisyEventStream.listen((_) => pause());
 
     _sleepHandler.loadPersistentSleepTimer();
     await _restorePlaybackState();
@@ -98,6 +97,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
         mediaItem.add(mediaItem.value!.copyWith(duration: d));
       }
     });
+
     FavoritesService().favoriteIdsNotifier.addListener(
       () => _broadcastState(_player.playing),
     );
@@ -121,11 +121,12 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
           artist: newArtist,
           artUri: newArtPath != null
               ? Uri.file(newArtPath)
-              : Uri.parse('content://media/external/audio/media/$songId/albumart'),
+              : Uri.parse(
+                  'content://media/external/audio/media/$songId/albumart',
+                ),
         );
         mediaItem.add(updatedItem);
 
-        // Also update persistent metadata
         await AudioPersistenceHelper.saveSongMetadata(
           path: currentItem.id,
           title: newTitle,
@@ -139,6 +140,11 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void setQueue(List<SongModel> songs) {
+    if (_queue.length == songs.length &&
+        _queue.isNotEmpty &&
+        _queue.first.id == songs.first.id)
+      return;
+
     _queue = songs;
     queue.add(
       songs
@@ -160,7 +166,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  // ADD THIS
   void addToPlayNext(SongModel song) {
     if (_queue.isEmpty) {
       setQueue([song]);
@@ -178,14 +183,14 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       final currentIndex = mediaItem.value?.extras?['index'] as int? ?? 0;
       _queue.insert(currentIndex + 1, song);
 
-      // Update the queue list in the handler to reflect the change
       queue.add(
         _queue
             .map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist))
             .toList(),
       );
 
-      if (!_player.playing && _player.processingState == ProcessingState.idle) {
+      if (_player.processingState == ProcessingState.idle &&
+          mediaItem.value == null) {
         playSongFromQueue(
           path: song.data,
           index: currentIndex + 1,
@@ -219,7 +224,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   void setPlaybackMode(app_service.PlaybackMode mode) {
     _playbackMode = mode;
 
-    // ✅ بيغير القائمة بس من غير ما يبدأ أغنية جديدة
     if (mode == app_service.PlaybackMode.sequential) {
       final audioService = app_service.AudioService();
       if (audioService.originalQueue.isNotEmpty) {
@@ -278,6 +282,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       await _player.setFilePath(path);
       await _player.play();
+      _preloadNext(index);
 
       if (songId != null) {
         await ListeningStatsService().recordPlay(
@@ -301,6 +306,11 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     await _player.stop();
+    try {
+      await _preloadPlayer.stop();
+    } catch (e) {
+      log('Error stopping preload player: $e');
+    }
     playbackState.add(
       playbackState.value.copyWith(
         processingState: AudioProcessingState.idle,
@@ -323,7 +333,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_queue.isEmpty) return;
 
     final currentIndex = mediaItem.value?.extras?['index'] as int? ?? 0;
-    int nextIndex = (currentIndex + offset + _queue.length) % _queue.length;
+    final nextIndex = (currentIndex + offset + _queue.length) % _queue.length;
 
     final s = _queue[nextIndex];
     playSongFromQueue(
@@ -336,14 +346,13 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  // ✅ 3 controls بس - بيشتغل على كل الأجهزة حتى القديمة
   void _broadcastState(bool playing) {
     playbackState.add(
       playbackState.value.copyWith(
         controls: [
-          MediaControl.skipToPrevious, // 0
-          playing ? MediaControl.pause : MediaControl.play, // 1
-          MediaControl.skipToNext, // 2
+          MediaControl.skipToPrevious,
+          playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
         ],
         androidCompactActionIndices: const [0, 1, 2],
         processingState:
@@ -432,9 +441,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void _toggleFavorite() {
     final songId = mediaItem.value?.extras?['songId'] as int?;
-    if (songId != null) {
-      FavoritesService().toggleFavorite(songId);
-    }
+    if (songId != null) FavoritesService().toggleFavorite(songId);
   }
 
   Future<void> _maybeSavePosition(Duration pos) async {
@@ -487,6 +494,23 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
         log('Error restoring playback: $e');
       }
     }
+  }
+
+  void _preloadNext(int currentIndex) {
+    if (_queue.isEmpty) return;
+    final nextIndex = (currentIndex + 1) % _queue.length;
+    if (nextIndex == currentIndex) return;
+
+    final nextSong = _queue[nextIndex];
+    log('🔄 Preloading next song: ${nextSong.title}');
+
+    _preloadPlayer
+        .setFilePath(nextSong.data)
+        .then((_) => _preloadPlayer.load())
+        .catchError((e) {
+          log('⚠️ Error preloading next song: $e');
+          return null;
+        });
   }
 
   Future<void> setSleepTimer(Duration d) => _sleepHandler.setSleepTimer(d);
