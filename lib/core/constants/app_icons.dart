@@ -1,5 +1,7 @@
 class AppIcons {
   static const String logo = 'assets/img/mb.png';
+  static const String th2 = 'assets/img/th1.png';
+  static const String th1 = 'assets/img/th2.png';
   static const String playArrow = 'assets/svg/playArrow.png';
   static const String pause = 'assets/svg/pause.png';
   static const String skipNext = 'assets/img/skip_next.svg';

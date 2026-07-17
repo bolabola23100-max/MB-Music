@@ -9,18 +9,21 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../../my-release-key.jks")
+            storePassword = "m_01229306370_b_01019204419_mb_music"
+            keyAlias = "my-key-alias"
+            keyPassword ="m_01229306370_b_01019204419_mb_music"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.mbmusic.player"
-
-        // ✅ 21 = Android 5 - بيغطي 99% من الأجهزة
-        // audio_service و permission_handler محتاجين 21 على الأقل
         minSdk = flutter.minSdkVersion
-
         targetSdk = 36
-
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
         multiDexEnabled = true
     }
 
@@ -37,7 +40,7 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")

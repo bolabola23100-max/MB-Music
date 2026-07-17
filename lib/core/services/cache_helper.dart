@@ -10,11 +10,18 @@ class CacheHelper {
 
   // --- Onboarding ---
   static bool get onboardingSeen => _prefs.getBool('onboarding_seen') ?? false;
-  static set onboardingSeen(bool value) => _prefs.setBool('onboarding_seen', value);
+  static set onboardingSeen(bool value) =>
+      _prefs.setBool('onboarding_seen', value);
+
+  // --- Player Theme Style ---
+  static int get playerThemeStyle => _prefs.getInt('player_theme_style') ?? 1;
+  static set playerThemeStyle(int value) =>
+      _prefs.setInt('player_theme_style', value);
 
   // --- Language ---
   static String get languageCode => _prefs.getString('language_code') ?? 'en';
-  static set languageCode(String value) => _prefs.setString('language_code', value);
+  static set languageCode(String value) =>
+      _prefs.setString('language_code', value);
 
   // --- Theme (مثال) ---
   static bool get isDarkMode => _prefs.getBool('is_dark_mode') ?? true;

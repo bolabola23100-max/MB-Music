@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/widgets/player_builder.dart';
 import 'package:music/core/widgets/song_select_screen.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
 
 import 'package:music/features/home/widgets/mini_player_widget.dart';
 import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
 import 'package:music/features/player/screens/player_screen.dart';
+
 import 'package:on_audio_query/on_audio_query.dart';
 
 enum SongSortOption { oldestFirst, newestFirst, orderedPlay, shufflePlay }
@@ -46,113 +48,126 @@ class SongListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
         Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: 16,
-                end: 16,
-                top: 8,
-              ),
-              child: Row(
-                children: [
-                  if (isTitle)
-                    Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.blue,
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.bold,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    start: 16,
+                    end: 16,
+                    top: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      if (isTitle)
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.blue,
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (isTitle)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 16, top: 8),
-                child: Text(
-                  "${songs.length} $subtitle",
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    ],
                   ),
                 ),
-              ),
-          ],
-        ),
-        SizedBox(height: 15),
-        Expanded(
-          // ✅ لا ValueListenableBuilder هنا — كل SongTileWidget يستمع بنفسه
-          // ✅ نتيجة: لما تتغير الأغنية، tile واحد فقط يُعاد بناؤه بدلاً من القائمة كلها
-          child: ListView.builder(
-            padding: const EdgeInsets.only(bottom: 100),
-            itemCount: songs.length,
-            // ✅ cacheExtent: يبني الـ tiles مسبقاً خارج الشاشة لتمرير أسلس
-            cacheExtent: 500,
-            itemBuilder: (context, index) {
-              final song = songs[index];
-
-              return SongTileWidget(
-                song: song,
-                audioService: audioService,
-                onTap: () async {
-                  final queue = List<SongModel>.from(songs);
-
-                  if (openPlayerOnSongTap && context.mounted) {
-                    AppNavigator.push(
-                      context,
-                      PlayerScreen(
-                        songs: queue,
-                        index: index,
-                        onDeleteSongs: onDeleteSongs,
+                if (isTitle)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 16,
+                      top: 8,
+                    ),
+                    child: Text(
+                      "${songs.length} $subtitle",
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 220),
+                itemCount: songs.length,
+                cacheExtent: 500,
+                itemBuilder: (context, index) {
+                  final song = songs[index];
 
-                  await audioService.playSong(
-                    song.data,
-                    title: song.title,
-                    artist: song.artist,
-                    index: index,
-                    songId: song.id,
-                    queue: queue,
+                  return SongTileWidget(
+                    song: song,
+                    audioService: audioService,
+                    onTap: () async {
+                      final queue = List<SongModel>.from(songs);
+
+                      if (openPlayerOnSongTap && context.mounted) {
+                        AppNavigator.push(
+                          context,
+                          PlayerScreen(
+                            songs:songs,
+                            index: index,
+                            onDeleteSongs: onDeleteSongs,
+                          )
+                          // resolvePlayerScreen(
+                          //   songs: queue,
+                          //   index: index,
+                          //   onDeleteSongs: onDeleteSongs,
+                          // ),
+                        );
+                      }
+
+                      await audioService.playSong(
+                        song.data,
+                        title: song.title,
+                        artist: song.artist,
+                        index: index,
+                        songId: song.id,
+                        queue: queue,
+                      );
+                    },
+                    onLongPress: () => SongSelectScreen.show(
+                      context,
+                      songs,
+                      audioService,
+                      isFavoriteChecker,
+                      onToggleFavorite,
+                      initialSelectedSongId: song.id,
+                      onDeleteSongs: onDeleteSongs,
+                    ),
+                    onMoreTap: () => SongOptionsBottomSheet.show(
+                      context,
+                      song: song,
+                      index: index,
+                      audioService: audioService,
+                      isFavoriteChecker: isFavoriteChecker,
+                      onToggleFavorite: onToggleFavorite,
+                      onDeleteSongs: onDeleteSongs,
+                    ),
                   );
                 },
-                onLongPress: () => SongSelectScreen.show(
-                  context,
-                  songs,
-                  audioService,
-                  isFavoriteChecker,
-                  onToggleFavorite,
-                  initialSelectedSongId: song.id,
-                  onDeleteSongs: onDeleteSongs,
-                ),
-
-                onMoreTap: () => SongOptionsBottomSheet.show(
-                  context,
-                  song: song,
-                  index: index,
-                  audioService: audioService,
-                  isFavoriteChecker: isFavoriteChecker,
-                  onToggleFavorite: onToggleFavorite,
-                  onDeleteSongs: onDeleteSongs,
-                ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         ),
 
         if (showMiniPlayer)
-          MiniPlayerWidget(songs: songs, audioService: audioService),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: MiniPlayerWidget(songs: songs, audioService: audioService),
+          ),
       ],
     );
   }

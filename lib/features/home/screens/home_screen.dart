@@ -159,83 +159,72 @@ class _HomeViewState extends State<HomeView> {
     final width = MediaQuery.of(context).size.width;
     final itemWidth = width / _icons.length;
     final notchCenterX = itemWidth * _localIndex + itemWidth / 2;
+    // No SafeArea — Scaffold's extendBody: true lets the bar float freely
+    return SizedBox(
+      height: _barHeight + _circleSize / 2,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // ✅ الشكل المحفور (Notch) — fully transparent background, only path drawn
+          AnimatedBuilder(
+            animation: AlwaysStoppedAnimation(_localIndex.toDouble()),
+            builder: (context, _) => CustomPaint(
+              painter: _NotchPainter(
+                color: AppColors.gray.withValues(alpha: 0.55),
+                notchCenterX: notchCenterX,
+                circleRadius: _circleSize / 2 + 2,
+                barHeight: _barHeight,
+              ),
+              child: SizedBox(width: width, height: _barHeight),
+            ),
+          ),
 
-    return SafeArea(
-      child: SizedBox(
-        height: _barHeight + _circleSize / 2,
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            // ✅ الشكل المحفور (Notch)
-            AnimatedBuilder(
-              animation: AlwaysStoppedAnimation(_localIndex.toDouble()),
-              builder: (_, __) => CustomPaint(
-                painter: _NotchPainter(
-                  color: AppColors.gray.withValues(alpha: 0.4),
-                  notchCenterX: notchCenterX,
-
-                  circleRadius: _circleSize / 2 + 2,
-                  barHeight: _barHeight,
-                ),
-                child: SizedBox(width: width, height: _barHeight),
+          // ✅ أيقونات البار
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: _barHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(_icons.length, (index) {
+                  if (index == _localIndex) {
+                    return SizedBox(width: itemWidth);
+                  }
+                  return SizedBox(
+                    width: itemWidth,
+                    child: GestureDetector(
+                      onTap: () => _onItemTapped(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Icon(_icons[index], size: 24, color: Colors.white),
+                    ),
+                  );
+                }),
               ),
             ),
+          ),
 
-            // ✅ أيقونات البار
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SizedBox(
-                height: _barHeight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_icons.length, (index) {
-                    if (index == _localIndex) {
-                      return SizedBox(width: itemWidth);
-                    }
-                    return SizedBox(
-                      width: itemWidth,
-                      child: GestureDetector(
-                        onTap: () => _onItemTapped(index),
-                        behavior: HitTestBehavior.opaque,
-                        child: Icon(
-                          _icons[index],
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  }),
+          // ✅ الدائرة الزرقاء المتحركة
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            bottom: _barHeight - _circleSize / 2,
+            left: notchCenterX - _circleSize / 2,
+            child: GestureDetector(
+              onTap: () => _onItemTapped(_localIndex),
+              child: Container(
+                width: _circleSize,
+                height: _circleSize,
+                decoration: BoxDecoration(
+                  color: AppColors.blue,
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(_icons[_localIndex], size: 22, color: Colors.black),
               ),
             ),
-
-            // ✅ الدائرة الزرقاء المتحركة
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              bottom: _barHeight - _circleSize / 2,
-              left: notchCenterX - _circleSize / 2,
-              child: GestureDetector(
-                onTap: () => _onItemTapped(_localIndex),
-                child: Container(
-                  width: _circleSize,
-                  height: _circleSize,
-                  decoration: BoxDecoration(
-                    color: AppColors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _icons[_localIndex],
-                    size: 22,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -329,8 +318,10 @@ class _NotchPainter extends CustomPainter {
     final double notchLeft = notchCenterX - circleRadius - notchMargin;
     final double notchRight = notchCenterX + circleRadius + notchMargin;
     const double curveDepth = 12;
+    const double cornerRadius = 20;
 
-    path.moveTo(0, 0);
+    // ✅ Start from top-left corner arc
+    path.moveTo(cornerRadius, 0);
     path.lineTo(notchLeft - 20, 0);
 
     // ✅ منحنى يسار
@@ -346,21 +337,17 @@ class _NotchPainter extends CustomPainter {
     // ✅ منحنى يمين
     path.quadraticBezierTo(notchRight, 0, notchRight + 20, 0);
 
-    path.lineTo(size.width, 0);
+    path.lineTo(size.width - cornerRadius, 0);
+    // top-right corner
+    path.quadraticBezierTo(size.width, 0, size.width, cornerRadius);
     path.lineTo(size.width, barHeight);
     path.lineTo(0, barHeight);
+    // bottom-left back to top-left corner
+    path.lineTo(0, cornerRadius);
+    path.quadraticBezierTo(0, 0, cornerRadius, 0);
     path.close();
 
-    // ✅ تقويس الزوايا
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, barHeight),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-
-    // ✅ رسم الـ Notch
+    // ✅ رسم الـ Notch مع زوايا مدورة (بدون RRect فوقه)
     canvas.drawPath(path, paint);
   }
 

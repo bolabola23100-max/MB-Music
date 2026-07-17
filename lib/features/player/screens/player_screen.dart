@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:music/features/player/widgets/thembut.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/core/constants/app_colors.dart';
@@ -111,7 +112,7 @@ class PlayerView extends StatelessWidget {
 
                   // 🌫️ البلر
                   BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX:80, sigmaY: 80),
+                    filter: ui.ImageFilter.blur(sigmaX: 80, sigmaY: 80),
                     child: Container(color: Colors.black.withOpacity(0.3)),
                   ),
 
@@ -174,6 +175,7 @@ class PlayerView extends StatelessWidget {
           color: AppColors.white,
         ),
       ),
+      // leading: thembut(currentIndex: state.currentIndex, songs: state.songs),
       actions: [
         IconButton(
           icon: const Icon(Icons.more_vert, color: AppColors.white, size: 26),

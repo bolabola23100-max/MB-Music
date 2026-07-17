@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:music/core/services/song_edit/song_edit_service.dart';
 import 'package:music/core/widgets/app_artwork.dart';
 import 'package:music/core/widgets/app_seek_bar.dart';
 import 'package:music/core/widgets/play_pause_button.dart';
+import 'package:music/core/widgets/player_builder.dart';
 import 'package:music/core/widgets/vinyl_widget.dart';
 import 'package:music/features/home/cubit/home_cubit.dart';
 import 'package:music/features/player/screens/player_screen.dart';
@@ -99,7 +101,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
               onTap: () {
                 final index =
                     widget.audioService.currentIndexNotifier.value ?? 0;
-                final currentQueue = widget.audioService.currentQueue;
+                // final currentQueue = widget.audioService.currentQueue;
 
                 Future<void> Function(List<SongModel>)? onDelete;
                 try {
@@ -109,112 +111,133 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                 AppNavigator.push(
                   context,
                   PlayerScreen(
-                    songs: currentQueue.isNotEmpty
-                        ? currentQueue
-                        : widget.songs,
+                    songs: widget.songs,
                     index: index,
                     onDeleteSongs: onDelete,
                   ),
+                  // resolvePlayerScreen(
+                  //   songs: currentQueue.isNotEmpty
+                  //       ? currentQueue
+                  //       : widget.songs,
+                  //   index: index,
+                  //   onDeleteSongs: onDelete,
+                  // ),
                 );
               },
-              child: Container(
-                height: 90,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: AppColors.gray.withValues(alpha: 0.16),
-                ),
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 8),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 5,
-                                  bottom: 3,
-                                ),
-                                child: VinylWidget(
-                                  audioService: widget.audioService,
-                                  size: 45,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 9,
-                                  left: 15,
-                                ),
-                                child: AppArtwork(
-                                  id: currentSongId,
-                                  size: 25,
-                                  borderRadius: 50,
-                                  customArtPath: _customArtPath,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ValueListenableBuilder<String?>(
-                                  valueListenable:
-                                      widget.audioService.currentTitleNotifier,
-                                  builder: (context, title, _) => Text(
-                                    _customTitle ?? title ?? 'Unknown',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: AppColors.white,
-                                    ),
-                                  ),
-                                ),
-                                ValueListenableBuilder<String?>(
-                                  valueListenable:
-                                      widget.audioService.currentArtistNotifier,
-                                  builder: (context, artist, _) => Text(
-                                    _customArtist ?? artist ?? 'Unknown',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.white.withValues(
-                                        alpha: 0.7,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              PlayPauseButton(
-                                audioService: widget.audioService,
-                                size: 25,
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.double_arrow_rounded,
-                                  color: AppColors.white,
-                                ),
-                                onPressed: () => widget.audioService.playNext(),
-                              ),
-                            ],
-                          ),
-                        ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    height: 90,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      color: AppColors.gray,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        width: 1,
                       ),
                     ),
-                    AppSeekBar(audioService: widget.audioService, maxWidth: 20),
-                    const SizedBox(height: 8),
-                  ],
+                    padding: const EdgeInsets.only(left: 10, right: 10, top: 8),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Stack(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 5,
+                                      bottom: 3,
+                                    ),
+                                    child: VinylWidget(
+                                      audioService: widget.audioService,
+                                      size: 45,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 9,
+                                      left: 15,
+                                    ),
+                                    child: AppArtwork(
+                                      id: currentSongId,
+                                      size: 25,
+                                      borderRadius: 50,
+                                      customArtPath: _customArtPath,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ValueListenableBuilder<String?>(
+                                      valueListenable: widget
+                                          .audioService
+                                          .currentTitleNotifier,
+                                      builder: (context, title, _) => Text(
+                                        _customTitle ?? title ?? 'Unknown',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: AppColors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    ValueListenableBuilder<String?>(
+                                      valueListenable: widget
+                                          .audioService
+                                          .currentArtistNotifier,
+                                      builder: (context, artist, _) => Text(
+                                        _customArtist ?? artist ?? 'Unknown',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  PlayPauseButton(
+                                    audioService: widget.audioService,
+                                    size: 25,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.double_arrow_rounded,
+                                      color: AppColors.white,
+                                    ),
+                                    onPressed: () =>
+                                        widget.audioService.playNext(),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        AppSeekBar(
+                          audioService: widget.audioService,
+                          maxWidth: 20,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
