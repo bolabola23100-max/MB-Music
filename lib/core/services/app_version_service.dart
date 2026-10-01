@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:music/core/services/cache_helper.dart';
 
@@ -19,7 +21,7 @@ class AppVersionService {
 
       return currentVersion != savedVersion;
     } catch (e) {
-      print('⚠️ AppVersionService Error: $e');
+      developer.log('AppVersionService Error: $e', name: 'AppVersionService');
       return false;
     }
   }
@@ -33,7 +35,7 @@ class AppVersionService {
 
       CacheHelper.appVersion = currentVersion;
     } catch (e) {
-      print('⚠️ saveCurrentVersion Error: $e');
+      developer.log('saveCurrentVersion Error: $e', name: 'AppVersionService');
     }
   }
 }
