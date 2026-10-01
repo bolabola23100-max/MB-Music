@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/core/widgets/player_builder.dart';
 import 'package:music/core/widgets/song_select_screen.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
 
@@ -115,10 +114,10 @@ class SongListWidget extends StatelessWidget {
                         AppNavigator.push(
                           context,
                           PlayerScreen(
-                            songs:songs,
+                            songs: songs,
                             index: index,
                             onDeleteSongs: onDeleteSongs,
-                          )
+                          ),
                           // resolvePlayerScreen(
                           //   songs: queue,
                           //   index: index,
@@ -163,7 +162,7 @@ class SongListWidget extends StatelessWidget {
 
         if (showMiniPlayer)
           Positioned(
-            bottom: 0,
+            bottom: 60,
             left: 0,
             right: 0,
             child: MiniPlayerWidget(songs: songs, audioService: audioService),

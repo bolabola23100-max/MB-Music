@@ -21,4 +21,6 @@ class AppIcons {
   static const ss = 'assets/svg/ss.svg';
   static const cc = 'assets/svg/cc.svg';
   static const stop = 'assets/svg/stop.svg';
+  static const after = 'assets/img/after.png';
+  static const before = 'assets/img/before.png';
 }

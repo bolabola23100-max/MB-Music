@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/app/error_app.dart';
 import 'package:music/app/main_app.dart';
+import 'package:music/core/services/app_version_service.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/audio/permission_service.dart';
 import 'package:music/core/services/cache_helper.dart';
@@ -13,8 +14,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await CacheHelper.init();
-
   try {
+    final isNewVersion = await AppVersionService().isNewVersion();
+    print('🔥 Is New Version: $isNewVersion');
+
     await PermissionService.requestAudioPermissions();
     await PermissionService.requestNotificationPermission();
     await FavoritesService().loadFavorites();
@@ -29,7 +32,7 @@ Future<void> main() async {
         child: Builder(
           builder: (context) => Directionality(
             textDirection: ui.TextDirection.ltr,
-            child: const MainApp(),
+            child: MainApp(isNewVersion: isNewVersion),
           ),
         ),
       ),

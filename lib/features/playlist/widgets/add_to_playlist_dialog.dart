@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:music/core/models/playlist_model.dart';
+import 'package:music/core/services/review_service.dart';
 import 'package:on_audio_query/on_audio_query.dart' hide PlaylistModel;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:music/core/widgets/dialog/my_snack_bar.dart';
@@ -78,7 +79,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () async {
+            onPressed: () async { await ReviewService().registerPositiveAction();
               if (controller.text.trim().isNotEmpty) {
                 final playlistId = await _service.createPlaylist(
                   controller.text.trim(),

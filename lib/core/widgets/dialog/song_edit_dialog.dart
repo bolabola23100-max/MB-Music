@@ -1,11 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class SongEditDialog extends StatefulWidget {
   final SongModel song;
@@ -32,6 +31,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
 
   Future<void> _loadExistingEdit() async {
     final edit = await SongEditService().getEdit(widget.song.id);
+
     if (edit != null && mounted) {
       setState(() {
         _titleController.text = edit['title'] ?? widget.song.title;
@@ -42,36 +42,37 @@ class _SongEditDialogState extends State<SongEditDialog> {
   }
 
   Future<void> _pickImage() async {
-    // طلب الـ permission أول
-    final status = await Permission.photos.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
-      if (mounted) {
-        MySnackBar(
-          context: context,
-        ).showSnackBar('يجب السماح بالوصول للصور', Colors.red);
-      }
-      return;
-    }
-
     final picked = await ImagePicker().pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
     );
+
     if (picked != null && mounted) {
-      setState(() => _artPath = picked.path);
+      setState(() {
+        _artPath = picked.path;
+      });
     }
   }
 
   Future<void> _save() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+    });
+
     await SongEditService().saveEdit(
       songId: widget.song.id,
       title: _titleController.text.trim(),
       artist: _artistController.text.trim(),
       artPath: _artPath,
     );
-    setState(() => _loading = false);
-    if (mounted) Navigator.pop(context, true);
+
+    setState(() {
+      _loading = false;
+    });
+
+    if (mounted) {
+      Navigator.pop(context, true);
+    }
   }
 
   @override
@@ -103,6 +104,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 20),
 
               GestureDetector(
@@ -129,7 +131,9 @@ class _SongEditDialogState extends State<SongEditDialog> {
                       : null,
                 ),
               ),
+
               const SizedBox(height: 8),
+
               Text(
                 'اضغط لتغيير الصورة',
                 style: TextStyle(
@@ -137,6 +141,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                   fontSize: 12,
                 ),
               ),
+
               const SizedBox(height: 20),
 
               TextField(
@@ -157,6 +162,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
 
               TextField(
@@ -177,6 +183,7 @@ class _SongEditDialogState extends State<SongEditDialog> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               SizedBox(
