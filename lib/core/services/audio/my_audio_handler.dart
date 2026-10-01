@@ -16,12 +16,8 @@ import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler
     with SeekHandler {
-  final AndroidEqualizer _equalizer = AndroidEqualizer();
-  final AudioPlayer _player = AudioPlayer(
-    audioPipeline: AudioPipeline(
-      androidAudioEffects: [_equalizer],
-    ),
-  );
+  late final AndroidEqualizer _equalizer;
+  late final AudioPlayer _player;
 
   final AudioPlayer _preloadPlayer =
       AudioPlayer();
@@ -37,6 +33,13 @@ class MyAudioHandler extends BaseAudioHandler
   Duration? _lastSavedPosition;
 
   MyAudioHandler() {
+    _equalizer = AndroidEqualizer();
+    _player = AudioPlayer(
+      audioPipeline: AudioPipeline(
+        androidAudioEffects: [_equalizer],
+      ),
+    );
+
     _sleepHandler =
         SleepTimerHandler(
       onTimerElapsed: () => stop(),
