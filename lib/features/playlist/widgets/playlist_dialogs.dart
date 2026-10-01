@@ -232,10 +232,12 @@ class _AddSongsViewState extends State<_AddSongsView> {
                       await _service.addSongToPlaylist(widget.playlistId, song);
                     }
                     if (mounted) {
+                      final selectedCount = _selectedIds.length;
                       Navigator.pop(context);
                       widget.onDone();
-                      MySnackBar(context: context).showSnackBar(
-                        "${_selectedIds.length} songs added to playlist!",
+                      if (!mounted) return;
+                      MySnackBar(context: this.context).showSnackBar(
+                        "$selectedCount songs added to playlist!",
                         AppColors.blue,
                       );
                     }
