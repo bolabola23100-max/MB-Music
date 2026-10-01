@@ -143,11 +143,11 @@ class PlaylistDialogs {
               if (!context.mounted) return;
               Navigator.pop(context);
               onDeleted();
-                MySnackBar(context: context).showSnackBar(
-                  "Playlist '${playlist.name}' deleted",
-                  AppColors.red,
-                );
-              }
+              if (!context.mounted) return;
+              MySnackBar(context: context).showSnackBar(
+                "Playlist '${playlist.name}' deleted",
+                AppColors.red,
+              );
             },
             child: Text(
               "options.delete".tr(),
@@ -233,16 +233,15 @@ class _AddSongsViewState extends State<_AddSongsView> {
                       );
                       await _service.addSongToPlaylist(widget.playlistId, song);
                     }
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     final selectedCount = _selectedIds.length;
                     Navigator.pop(context);
                     widget.onDone();
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     MySnackBar(context: context).showSnackBar(
-                        "$selectedCount songs added to playlist!",
-                        AppColors.blue,
-                      );
-                    }
+                      "$selectedCount songs added to playlist!",
+                      AppColors.blue,
+                    );
                   },
                   child: Text(
                     "common.save".tr(),
