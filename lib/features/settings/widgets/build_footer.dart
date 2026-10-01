@@ -14,7 +14,7 @@ Widget buildFooter() {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.blue.withOpacity(0.1),
+                color: AppColors.blue.withValues(alpha: 0.1),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
