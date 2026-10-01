@@ -93,7 +93,7 @@ class _SearchBodyState extends State<SearchBody> {
                   decoration: InputDecoration(
                     hintText: "search_hint".tr(),
                     hintStyle: TextStyle(
-                      color: AppColors.white.withOpacity(0.5),
+                      color: AppColors.white.withValues(alpha: 0.5),
                     ),
                     prefixIcon: const Icon(
                       Icons.search,
