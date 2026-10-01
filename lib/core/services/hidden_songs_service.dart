@@ -11,7 +11,10 @@ class HiddenSongsService {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_key) ?? [];
-    _hiddenIds = list.map(int.parse).toSet();
+    _hiddenIds = list
+        .map(int.tryParse)
+        .whereType<int>()
+        .toSet();
   }
 
   Future<void> hideSong(int songId) async {
