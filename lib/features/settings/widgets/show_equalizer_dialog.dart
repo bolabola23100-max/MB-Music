@@ -11,8 +11,6 @@ Future<void> showEqualizerDialog(
     final parameters = await audioService.equalizer.parameters;
     if (!context.mounted) return;
 
-    await audioService.equalizer.setEnabled(true);
-    CacheHelper.equalizerEnabled = true;
 
     await showModalBottomSheet(
       context: context,
