@@ -15,6 +15,7 @@ Widget languageOption(
     child: InkWell(
       onTap: () async {
         await context.setLocale(Locale(languageCode));
+        if (!context.mounted) return;
         cubit.updateLanguage(languageCode);
         Navigator.pop(context);
       },
