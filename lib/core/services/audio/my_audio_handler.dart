@@ -11,7 +11,6 @@ import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart'
 import 'package:music/core/services/audio/audio_service.dart'
     as app_service;
 import 'package:music/core/services/favorites/favorites_service.dart';
-import 'package:music/core/services/listening_stats_service.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler
@@ -531,16 +530,6 @@ class MyAudioHandler extends BaseAudioHandler
       await _player.play();
 
       _preloadNext(index);
-
-      if (songId != null) {
-        await ListeningStatsService()
-            .recordPlay(
-          songId: songId,
-          title: finalTitle,
-          artist:
-              finalArtist ?? 'Unknown',
-        );
-      }
     } catch (e) {
       log(
         '❌ Error playing song: $e',
