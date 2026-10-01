@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -9,12 +18,16 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("../../my-release-key.jks")
-            storePassword = "m_01229306370_b_01019204419_mb_music"
-            keyAlias = "my-key-alias"
-            keyPassword ="m_01229306370_b_01019204419_mb_music"
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs {
+            create("release") {
+                storeFile = rootProject.file(
+                    keystoreProperties["storeFile"] as String
+                )
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
         }
     }
 
@@ -40,8 +53,14 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("release")
+
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
+
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
         }

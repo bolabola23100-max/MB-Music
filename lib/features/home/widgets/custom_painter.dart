@@ -44,7 +44,7 @@ class PremiumWavePainter extends CustomPainter {
 
       /// inactive
       final inactivePaint = Paint()
-        ..color = Colors.white.withOpacity(0.08)
+        ..color = Colors.white.withValues(alpha: 0.08)
         ..strokeWidth = barWidth * 0.45
         ..strokeCap = StrokeCap.round;
 

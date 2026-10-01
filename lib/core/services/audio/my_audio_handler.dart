@@ -22,6 +22,7 @@ class MyAudioHandler extends BaseAudioHandler
       AudioPlayer();
 
   late final SleepTimerHandler _sleepHandler;
+  late final Future<void> _initFuture;
 
   List<SongModel> _queue = [];
 
@@ -37,8 +38,10 @@ class MyAudioHandler extends BaseAudioHandler
     );
 
     _initInitialState();
-    _init();
+    _initFuture = _init();
   }
+
+  Future<void> get ready => _initFuture;
 
   AudioPlayer get rawPlayer => _player;
 
@@ -119,7 +122,7 @@ class MyAudioHandler extends BaseAudioHandler
       (_) => pause(),
     );
 
-    _sleepHandler
+    await _sleepHandler
         .loadPersistentSleepTimer();
 
     await _restorePlaybackState();
@@ -645,6 +648,8 @@ class MyAudioHandler extends BaseAudioHandler
               ? MediaControl.pause
               : MediaControl.play,
           MediaControl.skipToNext,
+          getModeControl(),
+          favoriteControl,
         ],
         androidCompactActionIndices:
             const [0, 1, 2],
@@ -755,7 +760,7 @@ class MyAudioHandler extends BaseAudioHandler
       _toggleMode();
     } else if (name ==
         _kActionFavorite) {
-      _toggleFavorite();
+      await _toggleFavorite();
     }
 
     return super.customAction(
@@ -791,15 +796,15 @@ class MyAudioHandler extends BaseAudioHandler
     );
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
     final songId =
         mediaItem.value
                 ?.extras?['songId']
             as int?;
 
     if (songId != null) {
-      FavoritesService()
-          .toggleFavorite(songId);
+      await FavoritesService().toggleFavorite(songId);
+      _broadcastState(_player.playing);
     }
   }
 
@@ -871,11 +876,17 @@ class MyAudioHandler extends BaseAudioHandler
       return;
     }
 
-    final path =
-        state['path'] as String;
+    final path = state['path'] as String?;
+    if (path == null || path.isEmpty) {
+      return;
+    }
 
-    final songId =
-        state['songId'] as int?;
+    final songId = state['songId'] as int?;
+    final title = state['title'] as String? ?? 'Unknown';
+    final artist = state['artist'] as String? ?? 'Unknown';
+    final index = state['index'] as int?;
+    final position = state['position'] as Duration?;
+    final duration = state['duration'] as Duration?;
 
     final savedQueueRaw =
         await AudioPersistenceHelper
@@ -905,44 +916,32 @@ class MyAudioHandler extends BaseAudioHandler
       );
     }
 
-    mediaItem.add(
-      MediaItem(
-        id: path,
-        title:
-            state['title']
-                as String,
-        artist:
-            state['artist']
-                as String,
-        duration:
-            state['duration']
-                as Duration?,
-        artUri: songId != null
-            ? Uri.parse(
-                'content://media/external/audio/media/$songId/albumart',
-              )
-            : null,
-        extras: {
-          'index':
-              state['index'],
-          'songId':
-              songId,
-        },
-      ),
-    );
-
     try {
       await _player.setFilePath(
         path,
       );
 
-      if (state['position'] !=
-          null) {
-        await _player.seek(
-          state['position']
-              as Duration,
-        );
+      if (position != null) {
+        await _player.seek(position);
       }
+
+      mediaItem.add(
+        MediaItem(
+          id: path,
+          title: title,
+          artist: artist,
+          duration: duration,
+          artUri: songId != null
+              ? Uri.parse(
+                  'content://media/external/audio/media/$songId/albumart',
+                )
+              : null,
+          extras: {
+            'index': index,
+            'songId': songId,
+          },
+        ),
+      );
     } catch (e) {
       log(
         'Error restoring playback: $e',
@@ -961,12 +960,9 @@ class MyAudioHandler extends BaseAudioHandler
       return;
     }
 
-    final nextIndex =
-        (currentIndex + 1) %
-            _queue.length;
+    final nextIndex = currentIndex + 1;
 
-    if (nextIndex ==
-        currentIndex) {
+    if (nextIndex >= _queue.length) {
       return;
     }
 
@@ -978,12 +974,7 @@ class MyAudioHandler extends BaseAudioHandler
     );
 
     _preloadPlayer
-        .setFilePath(
-          nextSong.data,
-        )
-        .then(
-          (_) => _preloadPlayer.load(),
-        )
+        .setFilePath(nextSong.data)
         .catchError(
           (e) {
             log(

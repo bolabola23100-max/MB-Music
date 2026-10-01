@@ -112,7 +112,7 @@ class PlayerView extends StatelessWidget {
                   // 🌫️ البلر
                   BackdropFilter(
                     filter: ui.ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                    child: Container(color: Colors.black.withOpacity(0.3)),
+                    child: Container(color: Colors.black.withValues(alpha: 0.3)),
                   ),
 
                   // 🌑 تدرج اسود في الاسفل عشان الازرار واضحة
@@ -123,7 +123,7 @@ class PlayerView extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.45),
+                          Colors.black.withValues(alpha: 0.45),
                         ],
                         stops: const [0.55, 1.0],
                       ),
