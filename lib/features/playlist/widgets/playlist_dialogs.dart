@@ -32,9 +32,9 @@ class PlaylistDialogs {
           style: const TextStyle(color: AppColors.white),
           decoration: InputDecoration(
             hintText: "playlist_dialogs.enter_name".tr(),
-            hintStyle: TextStyle(color: AppColors.white.withOpacity(0.5)),
+            hintStyle: TextStyle(color: AppColors.white.withValues(alpha: 0.5)),
             filled: true,
-            fillColor: Colors.black.withOpacity(0.2),
+            fillColor: Colors.black.withValues(alpha: 0.2),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide: BorderSide.none,
@@ -281,7 +281,7 @@ class _AddSongsViewState extends State<_AddSongsView> {
                   ),
                   subtitle: Text(
                     song.artist ?? "Unknown",
-                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                   ),
                   activeColor: AppColors.blue,
                   checkColor: Colors.black,
