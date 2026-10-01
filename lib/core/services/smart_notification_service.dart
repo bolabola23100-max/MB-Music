@@ -60,7 +60,7 @@ class SmartNotificationService with WidgetsBindingObserver {
         tz.setLocalLocation(tz.getLocation('Africa/Cairo'));
       }
 
-      const androidSettings = AndroidInitializationSettings('ic_launcher');
+      const androidSettings = AndroidInitializationSettings('ic_notification');
       const settings = InitializationSettings(android: androidSettings);
       await _notifications.initialize(settings);
 
@@ -126,7 +126,7 @@ class SmartNotificationService with WidgetsBindingObserver {
       channelDescription: 'Daily MB-Music morning reminders',
       importance: Importance.high,
       priority: Priority.high,
-      icon: 'ic_launcher',
+      icon: 'ic_notification',
       playSound: true,
       enableVibration: true,
     );
@@ -164,7 +164,7 @@ class SmartNotificationService with WidgetsBindingObserver {
         channelDescription: 'MB-Music return reminders',
         importance: Importance.high,
         priority: Priority.high,
-        icon: 'ic_launcher',
+        icon: 'ic_notification',
         playSound: true,
         enableVibration: true,
       );
@@ -245,7 +245,7 @@ class SmartNotificationService with WidgetsBindingObserver {
       channelDescription: 'MB-Music return reminders',
       importance: Importance.high,
       priority: Priority.high,
-      icon: 'ic_launcher',
+      icon: 'ic_notification',
       playSound: true,
       enableVibration: true,
     );
