@@ -17,9 +17,7 @@ class SmartNotificationService with WidgetsBindingObserver {
   static const int _morningHour = 10;
   static const int _morningMinute = 0;
 
-  // Temporary Debug Mode:
-  // Debug builds use minutes so all notification scenarios can be tested quickly.
-  // Release builds keep the real 10:00 AM / every-3-days behavior.
+  // Temporary debug timing. Release builds use the real schedule.
   static const bool _debugMode = kDebugMode;
   static const int _debugDailyDelayMinutes = 1;
   static const int _debugInactivityStartMinutes = 2;
@@ -36,12 +34,6 @@ class SmartNotificationService with WidgetsBindingObserver {
     {'title': 'الساعة 10 يا نجم ⏰', 'body': 'ده وقت أغنية حلوة.. متخليناش نزعل منك 😂'},
   ];
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
-
-  bool _initialized = false;
-  bool _scheduling = false;
-
   static const List<Map<String, String>> _messages = [
     {'title': 'يا نجم 👀', 'body': 'بقالك 3 أيام مش نورت MB-Music.. نروقها بأغنية؟ 🎧'},
     {'title': 'فينك يا معلم 😂', 'body': 'إحنا قولنا نسيّت التطبيق ولا إيه؟ افتح كده واسمع حاجة.'},
@@ -55,35 +47,48 @@ class SmartNotificationService with WidgetsBindingObserver {
     {'title': 'عامل إيه يا صاحبي؟ 🎶', 'body': 'بقالك كام يوم سايب المزيكا.. نرجعها ولا إيه؟'},
   ];
 
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
+
+  bool _initialized = false;
+  bool _scheduling = false;
+
   Future<void> initialize() async {
     if (_initialized) return;
 
-    WidgetsBinding.instance.addObserver(this);
-
-    tz.initializeTimeZones();
     try {
-      final timezone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timezone.identifier));
-    } catch (_) {
-      tz.setLocalLocation(tz.getLocation('Africa/Cairo'));
+      WidgetsBinding.instance.addObserver(this);
+
+      tz.initializeTimeZones();
+      try {
+        final timezone = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(timezone.identifier));
+      } catch (_) {
+        tz.setLocalLocation(tz.getLocation('Africa/Cairo'));
+      }
+
+      const androidSettings = AndroidInitializationSettings('ic_launcher');
+      const settings = InitializationSettings(android: androidSettings);
+      await _notifications.initialize(settings);
+
+      _initialized = true;
+      await onAppOpened();
+    } catch (error, stackTrace) {
+      // Notifications are optional. Never prevent MB-Music from starting.
+      debugPrint('SmartNotificationService initialization failed: $error');
+      debugPrint('$stackTrace');
+      _initialized = false;
+      WidgetsBinding.instance.removeObserver(this);
     }
-
-    const androidSettings = AndroidInitializationSettings('ic_launcher');
-    const settings = InitializationSettings(android: androidSettings);
-    await _notifications.initialize(settings);
-
-    _initialized = true;
-    await onAppOpened();
   }
 
   Future<void> _scheduleDailyNotification() async {
     final now = tz.TZDateTime.now(tz.local);
 
     if (_debugMode) {
-      final date = now.add(
-        const Duration(minutes: _debugDailyDelayMinutes),
+      await _scheduleDailyAt(
+        now.add(const Duration(minutes: _debugDailyDelayMinutes)),
       );
-      await _scheduleDailyAt(date);
       return;
     }
 
@@ -202,8 +207,9 @@ class SmartNotificationService with WidgetsBindingObserver {
         );
         await _scheduleOne(i, date);
       }
-    } catch (_) {
-      // Notification failures must never affect the music app.
+    } catch (error, stackTrace) {
+      debugPrint('SmartNotificationService scheduling failed: $error');
+      debugPrint('$stackTrace');
     } finally {
       _scheduling = false;
     }
