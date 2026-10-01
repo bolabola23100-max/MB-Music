@@ -11,7 +11,6 @@ import 'package:music/features/settings/widgets/format_duration.dart';
 import 'package:music/features/settings/widgets/show_language_dialog.dart';
 import 'package:music/features/settings/widgets/show_equalizer_dialog.dart';
 import 'package:music/core/services/review_service.dart';
-import 'package:music/core/services/smart_notification_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:music/features/settings/widgets/show_sleep_timer_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -99,14 +98,6 @@ class SettingsView extends StatelessWidget {
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
           onTap: () => showEqualizerDialog(context, audioService),
-        ),
-        buildSettingTile(
-          icon: Icons.notifications_active_outlined,
-          title: 'اختبار الإشعارات',
-          subtitle: 'اضغط هنا للتأكد إن الإشعارات شغالة',
-          onTap: () async {
-            await SmartNotificationService.instance.sendTestNotification();
-          },
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.audio'.tr()),
