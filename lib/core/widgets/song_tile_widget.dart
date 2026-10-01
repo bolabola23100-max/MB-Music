@@ -86,7 +86,7 @@ class _SongTileWidgetState extends State<SongTileWidget> {
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   decoration: BoxDecoration(
                     color: isCurrent
-                        ? AppColors.blue.withOpacity(0.12)
+                        ? AppColors.blue.withValues(alpha: 0.12)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
@@ -129,7 +129,7 @@ class _SongTileWidgetState extends State<SongTileWidget> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isCurrent
-                                    ? AppColors.blue.withOpacity(0.8)
+                                    ? AppColors.blue.withValues(alpha: 0.8)
                                     : Colors.grey,
                               ),
                             ),
@@ -144,7 +144,7 @@ class _SongTileWidgetState extends State<SongTileWidget> {
                             isPlaying
                                 ? Icons.graphic_eq
                                 : Icons.pause_circle_outline,
-                            color: AppColors.blue.withOpacity(0.8),
+                            color: AppColors.blue.withValues(alpha: 0.8),
                           ),
                         ),
                       IconButton(
