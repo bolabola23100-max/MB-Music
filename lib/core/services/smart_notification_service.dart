@@ -188,7 +188,7 @@ class SmartNotificationService with WidgetsBindingObserver {
   Future<void> onAppOpened() async {
     if (!_initialized) return;
     await _cancelScheduledNotifications();
-    await _notifications.cancel(_dailyNotificationId);
+    await _notifications.cancel(id: _dailyNotificationId);
   }
 
   @override
@@ -210,7 +210,7 @@ class SmartNotificationService with WidgetsBindingObserver {
     try {
       debugPrint('Smart notifications: scheduling after app background');
       await _cancelScheduledNotifications();
-      await _notifications.cancel(_dailyNotificationId);
+      await _notifications.cancel(id: _dailyNotificationId);
       await _scheduleDailyNotification();
       debugPrint('Smart notifications: daily notification scheduled');
 
@@ -265,7 +265,7 @@ class SmartNotificationService with WidgetsBindingObserver {
 
   Future<void> _cancelScheduledNotifications() async {
     for (var i = 0; i < _scheduledCount; i++) {
-      await _notifications.cancel(_firstNotificationId + i);
+      await _notifications.cancel(id: _firstNotificationId + i);
     }
   }
 
