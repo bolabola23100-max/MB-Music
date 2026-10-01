@@ -3,7 +3,7 @@ String formatDuration(Duration duration) {
   String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
   String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
   if (duration.inHours > 0) {
-    return "duration.inHours:twoDigitMinutes:twoDigitSeconds";
+    return "${duration.inHours}:$twoDigitMinutes:$twoDigitSeconds";
   }
-  return "twoDigitMinutes:twoDigitSeconds";
+  return "$twoDigitMinutes:$twoDigitSeconds";
 }
