@@ -15,7 +15,7 @@ import com.ryanheise.audioservice.AudioServiceActivity
 
 class MainActivity : AudioServiceActivity() {
 
-    private val CHANNEL = "com.example.music/delete"
+    private val CHANNEL = "com.mbmusic.player/delete"
     private var pendingResult: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
