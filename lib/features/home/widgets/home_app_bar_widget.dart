@@ -4,6 +4,7 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/constants/app_icons.dart';
 import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/features/settings/screens/settings.dart';
 import 'package:music/core/widgets/sort_button.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -43,9 +44,16 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
           child: IconButton(
             icon: Icon(Icons.settings, color: AppColors.blue, size: 25),
             onPressed: () {
-              MySnackBar(
-                context: context,
-              ).showSnackBar("settings_coming_soon".tr(), AppColors.blue);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SettingsScreen(
+                    songs: widget.songs,
+                    audioService: widget.audioService,
+                    onRescan: widget.onRescan,
+                  ),
+                ),
+              );
             },
           ),
         ),
