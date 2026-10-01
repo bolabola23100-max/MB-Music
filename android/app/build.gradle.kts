@@ -46,10 +46,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    dependencies {
-        add("coreLibraryDesugaring", "com.android.tools:desugar_jdk_libs:2.1.4")
-    }
-
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -70,6 +66,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    add("coreLibraryDesugaring", "com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {
