@@ -308,7 +308,7 @@ class PlayerView extends StatelessWidget {
                   color: AppColors.white,
                   size: 28,
                 ),
-                onPressed: () {
+                onPressed: () async {
                   final safeIndex = state.currentIndex.clamp(
                     0,
                     state.songs.length - 1,
