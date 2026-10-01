@@ -14,7 +14,10 @@ class FavoritesService {
     final prefs = await SharedPreferences.getInstance();
     final ids = prefs.getStringList(_favoritesKey) ?? [];
 
-    favoriteIdsNotifier.value = ids.map(int.parse).toSet();
+    favoriteIdsNotifier.value = ids
+        .map(int.tryParse)
+        .whereType<int>()
+        .toSet();
   }
 
   Future<void> toggleFavorite(int songId) async {
