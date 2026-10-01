@@ -111,7 +111,15 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
     }
     emit(state.copyWith(songs: sortedSongs));
 
-    _audioService.currentQueue = List<SongModel>.from(sortedSongs);
+    final currentSongId = _audioService.currentSongIdNotifier.value;
+    final newIndex = currentSongId == null
+        ? 0
+        : sortedSongs.indexWhere((s) => s.id == currentSongId);
+    if (newIndex >= 0 && newIndex < sortedSongs.length) {
+      _audioService.updateQueueAndKeepPlaying(sortedSongs, newIndex);
+    } else {
+      _audioService.setQueue(sortedSongs);
+    }
     await AudioPersistenceHelper.saveQueue(sortedSongs.map((s) => {
       '_id': s.id,
       '_data': s.data,
