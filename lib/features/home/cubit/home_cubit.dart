@@ -127,10 +127,12 @@ class HomeCubit extends Cubit<HomeState> {
       );
 
       // الـ original يفضل الترتيب الأصلي
-      _audioService.originalQueue = List<SongModel>.from(filtered);
+      final playlistQueueActive = await AudioPersistenceHelper.isPlaylistQueueActive();
 
-      // currentQueue ياخد الترتيب المحفوظ
-      _audioService.currentQueue = List<SongModel>.from(restoredDisplaySongs);
+      if (!playlistQueueActive) {
+        _audioService.originalQueue = List<SongModel>.from(filtered);
+        _audioService.currentQueue = List<SongModel>.from(restoredDisplaySongs);
+      }
     } catch (e) {
       emit(state.copyWith(status: HomeStatus.failure));
     }
