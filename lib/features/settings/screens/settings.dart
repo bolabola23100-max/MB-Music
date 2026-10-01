@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/cache_helper.dart';
 import 'package:music/features/settings/widgets/build_badge.dart';
 import 'package:music/features/settings/widgets/build_footer.dart';
 import 'package:music/features/settings/widgets/build_section_header.dart';
@@ -99,6 +100,14 @@ class SettingsView extends StatelessWidget {
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
           onTap: () => showEqualizerDialog(context, audioService),
+          trailing: Icon(
+            CacheHelper.equalizerEnabled
+                ? Icons.equalizer_rounded
+                : Icons.equalizer_outlined,
+            color: CacheHelper.equalizerEnabled
+                ? AppColors.blue
+                : AppColors.white.withValues(alpha: 0.25),
+          ),
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.audio'.tr()),
@@ -178,7 +187,7 @@ class SettingsView extends StatelessWidget {
           onTap: () async {
             final reviewService = ReviewService();
             try {
-              await reviewService.openStoreListing();
+              await reviewService.openStoreReviewPage();
             } catch (_) {
               if (!context.mounted) return;
               MySnackBar(context: context).showSnackBar(
@@ -193,6 +202,7 @@ class SettingsView extends StatelessWidget {
       ],
     );
   }
+
   void _showAudioQualityInfo(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -253,5 +263,4 @@ class SettingsView extends StatelessWidget {
       },
     );
   }
-
 }
