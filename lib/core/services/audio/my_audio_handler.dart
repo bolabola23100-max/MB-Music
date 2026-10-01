@@ -22,6 +22,7 @@ class MyAudioHandler extends BaseAudioHandler
       AudioPlayer();
 
   late final SleepTimerHandler _sleepHandler;
+  late final Future<void> _initFuture;
 
   List<SongModel> _queue = [];
 
@@ -37,8 +38,10 @@ class MyAudioHandler extends BaseAudioHandler
     );
 
     _initInitialState();
-    _init();
+    _initFuture = _init();
   }
+
+  Future<void> get ready => _initFuture;
 
   AudioPlayer get rawPlayer => _player;
 
@@ -645,6 +648,8 @@ class MyAudioHandler extends BaseAudioHandler
               ? MediaControl.pause
               : MediaControl.play,
           MediaControl.skipToNext,
+          getModeControl(),
+          favoriteControl,
         ],
         androidCompactActionIndices:
             const [0, 1, 2],
@@ -755,7 +760,7 @@ class MyAudioHandler extends BaseAudioHandler
       _toggleMode();
     } else if (name ==
         _kActionFavorite) {
-      _toggleFavorite();
+      await _toggleFavorite();
     }
 
     return super.customAction(
@@ -791,15 +796,15 @@ class MyAudioHandler extends BaseAudioHandler
     );
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
     final songId =
         mediaItem.value
                 ?.extras?['songId']
             as int?;
 
     if (songId != null) {
-      FavoritesService()
-          .toggleFavorite(songId);
+      await FavoritesService().toggleFavorite(songId);
+      _broadcastState(_player.playing);
     }
   }
 
@@ -978,12 +983,7 @@ class MyAudioHandler extends BaseAudioHandler
     );
 
     _preloadPlayer
-        .setFilePath(
-          nextSong.data,
-        )
-        .then(
-          (_) => _preloadPlayer.load(),
-        )
+        .setFilePath(nextSong.data)
         .catchError(
           (e) {
             log(
