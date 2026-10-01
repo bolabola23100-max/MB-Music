@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
@@ -16,7 +17,7 @@ Future<void> main() async {
   await CacheHelper.init();
   try {
     final isNewVersion = await AppVersionService().isNewVersion();
-    print('🔥 Is New Version: $isNewVersion');
+    developer.log('Is New Version: $isNewVersion', name: 'MB-Music');
 
     await PermissionService.requestAudioPermissions();
     await PermissionService.requestNotificationPermission();
