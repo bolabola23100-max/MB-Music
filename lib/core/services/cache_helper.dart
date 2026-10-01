@@ -7,6 +7,8 @@ class CacheHelper {
   static String appVersionKey = 'app_version';
   static const String equalizerEnabledKey = 'equalizer_enabled';
   static const String equalizerGainsKey = 'equalizer_gains';
+  static const String notificationMessageIndexKey = 'notification_message_index';
+
 
   /// يجب استدعاء هذه الدالة في main قبل تشغيل التطبيق
   static Future<void> init() async {
@@ -109,6 +111,15 @@ class CacheHelper {
 
   static set equalizerGains(List<double> value) =>
       _prefs.setStringList(equalizerGainsKey, value.map((e) => e.toString()).toList());
+
+  // =========================================================
+  // NOTIFICATIONS
+
+  static int get notificationMessageIndex =>
+      _prefs.getInt(notificationMessageIndexKey) ?? 0;
+
+  static set notificationMessageIndex(int value) =>
+      _prefs.setInt(notificationMessageIndexKey, value);
 
   // =========================================================
   // CLEAR ALL
