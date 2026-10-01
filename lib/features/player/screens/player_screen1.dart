@@ -2,8 +2,6 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:music/features/player/widgets/thembut.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:music/core/constants/app_colors.dart';
@@ -380,187 +378,210 @@ class PlayerView1 extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final maxSheetWidth = screenWidth > 600 ? 550.0 : double.infinity;
+        final queueHeight = (screenHeight * 0.35).clamp(180.0, 420.0);
+
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.gray,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Text(
-                    'player.playback_mode'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  ValueListenableBuilder<PlaybackMode>(
-                    valueListenable: audioService.playbackModeNotifier,
-                    builder: (context, mode, _) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildModeButton(
-                            icon: Icons.repeat,
-                            label: 'player.sequential'.tr(),
-                            isSelected: mode == PlaybackMode.sequential,
-                            onTap: () => audioService.setPlaybackMode(
-                              PlaybackMode.sequential,
-                            ),
-                          ),
-                          _buildModeButton(
-                            icon: Icons.repeat_one,
-                            label: 'player.repeat_one'.tr(),
-                            isSelected: mode == PlaybackMode.repeatOne,
-                            onTap: () => audioService.setPlaybackMode(
-                              PlaybackMode.repeatOne,
-                            ),
-                          ),
-                          _buildModeButton(
-                            icon: Icons.shuffle,
-                            label: 'player.shuffle'.tr(),
-                            isSelected: mode == PlaybackMode.shuffle,
-                            onTap: () {
-                              audioService.setPlaybackMode(
-                                PlaybackMode.shuffle,
-                              );
-
-                              final currentQueue = List<SongModel>.from(
-                                audioService.currentQueue,
-                              );
-                              final currentId =
-                                  audioService.currentSongIdNotifier.value;
-
-                              SongModel? currentSong;
-                              if (currentId != null) {
-                                try {
-                                  currentSong = currentQueue.firstWhere(
-                                    (s) => s.id == currentId,
-                                  );
-                                } catch (_) {}
-                              }
-
-                              if (currentSong != null) {
-                                currentQueue.removeWhere(
-                                  (s) => s.id == currentId,
-                                );
-                                currentQueue.shuffle();
-                                currentQueue.insert(0, currentSong);
-
-                                audioService.shuffledQueue = currentQueue;
-                                audioService.updateQueueAndKeepPlaying(
-                                  currentQueue,
-                                  0,
-                                );
-                              } else {
-                                currentQueue.shuffle();
-                                audioService.shuffledQueue = currentQueue;
-                              }
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  if (audioService.currentQueue.isNotEmpty) ...[
-                    Divider(color: AppColors.white.withOpacity(0.1)),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'player.playing_queue'.tr(),
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 14,
-                        ),
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxSheetWidth),
+                child: SafeArea(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.gray,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 300,
-                      child: ValueListenableBuilder<List<SongModel>>(
-                        valueListenable: audioService.currentQueueNotifier,
-                        builder: (context, currentQueue, _) {
-                          return ValueListenableBuilder<List<SongModel>>(
-                            valueListenable: audioService.shuffledQueueNotifier,
-                            builder: (context, shuffledQueue, _) {
-                              return ValueListenableBuilder<PlaybackMode>(
-                                valueListenable:
-                                    audioService.playbackModeNotifier,
-                                builder: (context, mode, _) {
-                                  List<SongModel> displayQueue;
-                                  if (mode == PlaybackMode.repeatOne) {
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 16,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Text(
+                          'player.playback_mode'.tr(),
+                          style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        ValueListenableBuilder<PlaybackMode>(
+                          valueListenable: audioService.playbackModeNotifier,
+                          builder: (context, mode, _) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildModeButton(
+                                  icon: Icons.repeat,
+                                  label: 'player.sequential'.tr(),
+                                  isSelected: mode == PlaybackMode.sequential,
+                                  onTap: () => audioService.setPlaybackMode(
+                                    PlaybackMode.sequential,
+                                  ),
+                                ),
+                                _buildModeButton(
+                                  icon: Icons.repeat_one,
+                                  label: 'player.repeat_one'.tr(),
+                                  isSelected: mode == PlaybackMode.repeatOne,
+                                  onTap: () => audioService.setPlaybackMode(
+                                    PlaybackMode.repeatOne,
+                                  ),
+                                ),
+                                _buildModeButton(
+                                  icon: Icons.shuffle,
+                                  label: 'player.shuffle'.tr(),
+                                  isSelected: mode == PlaybackMode.shuffle,
+                                  onTap: () {
+                                    audioService.setPlaybackMode(
+                                      PlaybackMode.shuffle,
+                                    );
+
+                                    final currentQueue = List<SongModel>.from(
+                                      audioService.currentQueue,
+                                    );
                                     final currentId = audioService
                                         .currentSongIdNotifier
                                         .value;
-                                    displayQueue = currentQueue
-                                        .where((s) => s.id == currentId)
-                                        .toList();
-                                  } else if (mode == PlaybackMode.shuffle) {
-                                    displayQueue = shuffledQueue.isEmpty
-                                        ? currentQueue
-                                        : shuffledQueue;
-                                  } else {
-                                    displayQueue = currentQueue;
-                                  }
 
-                                  return ListView.builder(
-                                    itemCount: displayQueue.length,
-                                    itemBuilder: (context, index) {
-                                      final song = displayQueue[index];
-                                      return SongTileWidget(
-                                        song: song,
-                                        audioService: audioService,
-                                        onTap: () {
-                                          audioService.playSong(
-                                            song.data,
-                                            title: song.title,
-                                            artist: song.artist,
-                                            index: index,
-                                            songId: song.id,
-                                            queue: displayQueue,
-                                          );
-                                          Navigator.pop(context);
-                                        },
-                                        onMoreTap: () {
-                                          Navigator.pop(context);
-                                          AppNavigator.push(
-                                            context,
-                                            PlayerScreen1(
-                                              songs: displayQueue,
-                                              index: index,
-                                            ),
-                                          );
-                                        },
+                                    SongModel? currentSong;
+                                    if (currentId != null) {
+                                      try {
+                                        currentSong = currentQueue.firstWhere(
+                                          (s) => s.id == currentId,
+                                        );
+                                      } catch (_) {}
+                                    }
+
+                                    if (currentSong != null) {
+                                      currentQueue.removeWhere(
+                                        (s) => s.id == currentId,
                                       );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
-                      ),
+                                      currentQueue.shuffle();
+                                      currentQueue.insert(0, currentSong);
+
+                                      audioService.shuffledQueue = currentQueue;
+                                      audioService.updateQueueAndKeepPlaying(
+                                        currentQueue,
+                                        0,
+                                      );
+                                    } else {
+                                      currentQueue.shuffle();
+                                      audioService.shuffledQueue = currentQueue;
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        if (audioService.currentQueue.isNotEmpty) ...[
+                          Divider(
+                            color: AppColors.white.withValues(alpha: 0.1),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              'player.playing_queue'.tr(),
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: queueHeight,
+                            child: ValueListenableBuilder<List<SongModel>>(
+                              valueListenable:
+                                  audioService.currentQueueNotifier,
+                              builder: (context, currentQueue, _) {
+                                return ValueListenableBuilder<List<SongModel>>(
+                                  valueListenable:
+                                      audioService.shuffledQueueNotifier,
+                                  builder: (context, shuffledQueue, _) {
+                                    return ValueListenableBuilder<PlaybackMode>(
+                                      valueListenable:
+                                          audioService.playbackModeNotifier,
+                                      builder: (context, mode, _) {
+                                        List<SongModel> displayQueue;
+                                        if (mode == PlaybackMode.repeatOne) {
+                                          final currentId = audioService
+                                              .currentSongIdNotifier
+                                              .value;
+                                          displayQueue = currentQueue
+                                              .where((s) => s.id == currentId)
+                                              .toList();
+                                        } else if (mode ==
+                                            PlaybackMode.shuffle) {
+                                          displayQueue = shuffledQueue.isEmpty
+                                              ? currentQueue
+                                              : shuffledQueue;
+                                        } else {
+                                          displayQueue = currentQueue;
+                                        }
+
+                                        return ListView.builder(
+                                          itemCount: displayQueue.length,
+                                          itemBuilder: (context, index) {
+                                            final song = displayQueue[index];
+                                            return SongTileWidget(
+                                              song: song,
+                                              audioService: audioService,
+                                              onTap: () {
+                                                audioService.playSong(
+                                                  song.data,
+                                                  title: song.title,
+                                                  artist: song.artist,
+                                                  index: index,
+                                                  songId: song.id,
+                                                  queue: displayQueue,
+                                                );
+                                                Navigator.pop(context);
+                                              },
+                                              onMoreTap: () {
+                                                Navigator.pop(context);
+                                                AppNavigator.push(
+                                                  context,
+                                                  PlayerScreen1(
+                                                    songs: displayQueue,
+                                                    index: index,
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 16),
-                ],
+                  ),
+                ),
               ),
             );
           },

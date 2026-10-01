@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
+import 'package:music/features/home/widgets/bottom_nav_bar.dart';
 import 'package:music/features/sounds/screens/sounds_screen.dart';
 import 'package:music/features/favorite/screens/favorites_screen.dart';
 import 'package:music/features/home/widgets/home_app_bar_widget.dart';
@@ -12,6 +12,7 @@ import 'package:music/features/search/screens/search_screen.dart';
 import 'package:music/features/home/cubit/home_cubit.dart';
 import 'package:music/features/home/cubit/home_state.dart';
 
+// bottomNavigationBar
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -35,19 +36,8 @@ class _HomeViewState extends State<HomeView> {
   late PageController _pageController;
   int _localIndex = 0;
 
-  static const double _circleSize = 44; // 🔥 حجم الدائرة
-  static const double _barHeight = 55; // 🔥 ارتفاع البار
-
   static const Duration _pageAnimDuration = Duration(milliseconds: 400);
   static const Curve _pageAnimCurve = Curves.easeInOutCubic;
-
-  static const List<IconData> _icons = [
-    Icons.music_note_rounded,
-    Icons.graphic_eq_rounded,
-    Icons.favorite_rounded,
-    Icons.queue_music_rounded,
-    Icons.search_rounded,
-  ];
 
   @override
   void initState() {
@@ -109,9 +99,14 @@ class _HomeViewState extends State<HomeView> {
       ),
       child: Scaffold(
         extendBody: true,
+
         backgroundColor: Colors.transparent,
-        bottomNavigationBar: _buildBottomBar(context),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: _localIndex,
+          onTap: _onItemTapped,
+        ),
         body: SafeArea(
+          bottom: false,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
@@ -150,81 +145,6 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // ✅ Bottom Bar
-  Widget _buildBottomBar(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final itemWidth = width / _icons.length;
-    final notchCenterX = itemWidth * _localIndex + itemWidth / 2;
-    // No SafeArea — Scaffold's extendBody: true lets the bar float freely
-    return SizedBox(
-      height: _barHeight + _circleSize / 2,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          // ✅ الشكل المحفور (Notch) — fully transparent background, only path drawn
-          AnimatedBuilder(
-            animation: AlwaysStoppedAnimation(_localIndex.toDouble()),
-            builder: (context, _) => CustomPaint(
-              painter: _NotchPainter(
-                color: AppColors.gray.withValues(alpha: 0.55),
-                notchCenterX: notchCenterX,
-                circleRadius: _circleSize / 2 + 2,
-                barHeight: _barHeight,
-              ),
-              child: SizedBox(width: width, height: _barHeight),
-            ),
-          ),
-
-          // ✅ أيقونات البار
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SizedBox(
-              height: _barHeight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(_icons.length, (index) {
-                  if (index == _localIndex) {
-                    return SizedBox(width: itemWidth);
-                  }
-                  return SizedBox(
-                    width: itemWidth,
-                    child: GestureDetector(
-                      onTap: () => _onItemTapped(index),
-                      behavior: HitTestBehavior.opaque,
-                      child: Icon(_icons[index], size: 24, color: Colors.white),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ),
-
-          // ✅ الدائرة الزرقاء المتحركة
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            bottom: _barHeight - _circleSize / 2,
-            left: notchCenterX - _circleSize / 2,
-            child: GestureDetector(
-              onTap: () => _onItemTapped(_localIndex),
-              child: Container(
-                width: _circleSize,
-                height: _circleSize,
-                decoration: BoxDecoration(
-                  color: AppColors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(_icons[_localIndex], size: 22, color: Colors.black),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -290,68 +210,4 @@ class _HomeViewState extends State<HomeView> {
       ],
     );
   }
-}
-
-// ✅ CustomPainter للـ Notch المحفور
-class _NotchPainter extends CustomPainter {
-  final Color color;
-  final double notchCenterX;
-  final double circleRadius;
-  final double barHeight;
-
-  _NotchPainter({
-    required this.color,
-    required this.notchCenterX,
-    required this.circleRadius,
-    required this.barHeight,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-
-    const double notchMargin = 10;
-    final double notchLeft = notchCenterX - circleRadius - notchMargin;
-    final double notchRight = notchCenterX + circleRadius + notchMargin;
-    const double curveDepth = 12;
-    const double cornerRadius = 20;
-
-    // ✅ Start from top-left corner arc
-    path.moveTo(cornerRadius, 0);
-    path.lineTo(notchLeft - 20, 0);
-
-    // ✅ منحنى يسار
-    path.quadraticBezierTo(notchLeft, 0, notchLeft + 10, curveDepth);
-
-    // ✅ القوس المحفور
-    path.arcToPoint(
-      Offset(notchRight - 10, curveDepth),
-      radius: Radius.circular(circleRadius + notchMargin),
-      clockwise: false,
-    );
-
-    // ✅ منحنى يمين
-    path.quadraticBezierTo(notchRight, 0, notchRight + 20, 0);
-
-    path.lineTo(size.width - cornerRadius, 0);
-    // top-right corner
-    path.quadraticBezierTo(size.width, 0, size.width, cornerRadius);
-    path.lineTo(size.width, barHeight);
-    path.lineTo(0, barHeight);
-    // bottom-left back to top-left corner
-    path.lineTo(0, cornerRadius);
-    path.quadraticBezierTo(0, 0, cornerRadius, 0);
-    path.close();
-
-    // ✅ رسم الـ Notch مع زوايا مدورة (بدون RRect فوقه)
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_NotchPainter oldDelegate) =>
-      oldDelegate.notchCenterX != notchCenterX;
 }

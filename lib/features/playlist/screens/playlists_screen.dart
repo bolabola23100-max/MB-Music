@@ -74,21 +74,24 @@ class PlaylistsView extends StatelessWidget {
               ],
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => PlaylistDialogs.showCreateDialog(context, (id) {
-              final cubit = context.read<PlaylistCubit>();
-              final homeCubit = context.read<HomeCubit>();
-              cubit.loadPlaylists();
-              PlaylistDialogs.showAddSongsDialog(
-                context,
-                id,
-                homeCubit.state.songs,
-                cubit.loadPlaylists,
-              );
-            }),
-            backgroundColor: const Color(0xFF00C8FF),
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add, color: Colors.black, size: 30),
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.only(bottom: 70),
+            child: FloatingActionButton(
+              onPressed: () => PlaylistDialogs.showCreateDialog(context, (id) {
+                final cubit = context.read<PlaylistCubit>();
+                final homeCubit = context.read<HomeCubit>();
+                cubit.loadPlaylists();
+                PlaylistDialogs.showAddSongsDialog(
+                  context,
+                  id,
+                  homeCubit.state.songs,
+                  cubit.loadPlaylists,
+                );
+              }),
+              backgroundColor: const Color(0xFF00C8FF),
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add, color: Colors.black, size: 30),
+            ),
           ),
         );
       },

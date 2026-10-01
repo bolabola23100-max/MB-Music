@@ -9,7 +9,6 @@
 
     <!-- Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
     <!-- Android 12 وأقل -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"

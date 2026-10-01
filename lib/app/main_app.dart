@@ -7,7 +7,9 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/features/onboarding/screens/splash_screen.dart';
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  final bool isNewVersion;
+
+  const MainApp({super.key, required this.isNewVersion});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class MainApp extends StatelessWidget {
           ),
         ),
       ),
-      home: SplashScreen(),
+      home: SplashScreen(isNewVersion: isNewVersion),
     );
   }
 }

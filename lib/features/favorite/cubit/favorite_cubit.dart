@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
+import 'package:music/core/services/review_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'favorite_state.dart';
 
@@ -8,8 +9,8 @@ class FavoriteCubit extends Cubit<FavoriteState> {
   List<SongModel> _allSongs;
 
   FavoriteCubit({required List<SongModel> allSongs})
-      : _allSongs = allSongs,
-        super(const FavoriteState()) {
+    : _allSongs = allSongs,
+      super(const FavoriteState()) {
     _init();
   }
 
@@ -20,11 +21,12 @@ class FavoriteCubit extends Cubit<FavoriteState> {
 
   void _onFavoritesChanged() {
     final favoriteIds = _favoritesService.favoriteIdsNotifier.value;
-    final favoriteSongs = _allSongs.where((song) => favoriteIds.contains(song.id)).toList();
-    emit(state.copyWith(
-      favoriteSongs: favoriteSongs,
-      favoriteIds: favoriteIds,
-    ));
+    final favoriteSongs = _allSongs
+        .where((song) => favoriteIds.contains(song.id))
+        .toList();
+    emit(
+      state.copyWith(favoriteSongs: favoriteSongs, favoriteIds: favoriteIds),
+    );
   }
 
   void updateAllSongs(List<SongModel> allSongs) {
@@ -34,6 +36,7 @@ class FavoriteCubit extends Cubit<FavoriteState> {
 
   Future<void> toggleFavorite(int songId) async {
     await _favoritesService.toggleFavorite(songId);
+    await ReviewService().registerPositiveAction();
   }
 
   @override

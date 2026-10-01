@@ -142,7 +142,7 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
                       ),
                       child: Column(
                         children: [
-                          _buildHeader(cubit),
+                          _buildHeader(cubit, audioService),
                           Expanded(child: _buildList(state, audioService)),
                           MiniPlayerWidget(
                             songs: state.songs,
@@ -158,30 +158,35 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
     );
   }
 
-  bool isShuffle = false;
-
-  Widget _buildHeader(PlaylistDetailsCubit cubit) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16, top: 4, bottom: 4),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: _buildPlayModeButton(
-          icon: isShuffle ? Icons.shuffle_rounded : Icons.play_arrow_rounded,
-          onTap: () {
-            if (cubit.state.songs.isNotEmpty) {
-              setState(() {
-                isShuffle = !isShuffle;
-              });
-              cubit.sortSongs(
-                isShuffle
-                    ? SongSortOption.shufflePlay
-                    : SongSortOption.orderedPlay,
-              );
-              cubit.play(0);
-            }
-          },
-        ),
-      ),
+  Widget _buildHeader(PlaylistDetailsCubit cubit, AudioService audioService) {
+    return ValueListenableBuilder<PlaybackMode>(
+      valueListenable: audioService.playbackModeNotifier,
+      builder: (context, mode, _) {
+        final isShuffle = mode == PlaybackMode.shuffle;
+        return Padding(
+          padding: const EdgeInsets.only(right: 16, top: 4, bottom: 4),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: _buildPlayModeButton(
+              icon: isShuffle
+                  ? Icons.shuffle_rounded
+                  : Icons.play_arrow_rounded,
+              onTap: () {
+                if (cubit.state.songs.isNotEmpty) {
+                  if (isShuffle) {
+                    audioService.setPlaybackMode(PlaybackMode.sequential);
+                    cubit.sortSongs(SongSortOption.orderedPlay);
+                    cubit.play(0);
+                  } else {
+                    audioService.setPlaybackMode(PlaybackMode.shuffle);
+                    cubit.playRandom();
+                  }
+                }
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -191,7 +196,7 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.blue.withOpacity(0.1),
+        color: AppColors.blue.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: IconButton(
