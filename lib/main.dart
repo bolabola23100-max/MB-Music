@@ -9,6 +9,7 @@ import 'package:music/core/services/app_version_service.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/audio/permission_service.dart';
 import 'package:music/core/services/cache_helper.dart';
+import 'package:music/core/services/smart_notification_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 
 Future<void> main() async {
@@ -21,6 +22,7 @@ Future<void> main() async {
 
     await PermissionService.requestAudioPermissions();
     await PermissionService.requestNotificationPermission();
+    await SmartNotificationService.instance.initialize();
     await FavoritesService().loadFavorites();
     await AudioService().init();
 
