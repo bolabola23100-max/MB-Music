@@ -71,7 +71,29 @@ class SmartNotificationService with WidgetsBindingObserver {
       const settings = InitializationSettings(android: androidSettings);
       await _notifications.initialize(settings);
 
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'mb_music_daily',
+          'MB-Music Daily',
+          description: 'Daily MB-Music morning reminders',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'mb_music_return',
+          'MB-Music',
+          description: 'MB-Music return reminders',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin?.requestNotificationsPermission();
+
       _initialized = true;
+      debugPrint('SmartNotificationService initialized successfully');
       await onAppOpened();
     } catch (error, stackTrace) {
       // Notifications are optional. Never prevent MB-Music from starting.
@@ -165,9 +187,11 @@ class SmartNotificationService with WidgetsBindingObserver {
 
     _scheduling = true;
     try {
+      debugPrint('Smart notifications: scheduling after app background');
       await _cancelScheduledNotifications();
       await _notifications.cancel(_dailyNotificationId);
       await _scheduleDailyNotification();
+      debugPrint('Smart notifications: daily notification scheduled');
 
       final now = tz.TZDateTime.now(tz.local);
 
@@ -180,6 +204,7 @@ class SmartNotificationService with WidgetsBindingObserver {
             ),
           );
           await _scheduleOne(i, date);
+          debugPrint('Smart notifications: debug notification ${i + 1} scheduled for $date');
         }
         return;
       }
