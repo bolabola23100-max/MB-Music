@@ -183,8 +183,6 @@ class HomeCubit extends Cubit<HomeState> {
 
       final currentDisplay = state.displaySongs;
 
-      final currentDisplayIds = currentDisplay.map((s) => s.id).toSet();
-
       final filteredMap = <int, SongModel>{
         for (final song in filtered) song.id: song,
       };
