@@ -100,7 +100,7 @@ class SongListWidget extends StatelessWidget {
               child: ListView.builder(
                 padding: const EdgeInsets.only(bottom: 220),
                 itemCount: songs.length,
-                cacheExtent: 500,
+                scrollCacheExtent: 500,
                 itemBuilder: (context, index) {
                   final song = songs[index];
 
