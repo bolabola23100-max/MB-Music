@@ -22,7 +22,16 @@ Future<void> main() async {
 
     await PermissionService.requestAudioPermissions();
     await PermissionService.requestNotificationPermission();
-    await SmartNotificationService.instance.initialize();
+    try {
+      await SmartNotificationService.instance.initialize();
+    } catch (e, s) {
+      developer.log(
+        'Smart notifications failed to initialize: $e',
+        name: 'MB-Music',
+        error: e,
+        stackTrace: s,
+      );
+    }
     await FavoritesService().loadFavorites();
     await AudioService().init();
 
