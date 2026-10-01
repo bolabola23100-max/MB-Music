@@ -62,7 +62,7 @@ class SmartNotificationService with WidgetsBindingObserver {
 
       const androidSettings = AndroidInitializationSettings('ic_notification');
       const settings = InitializationSettings(android: androidSettings);
-      await _notifications.initialize(settings: settings);
+      await _notifications.initialize(settings);
 
       final androidPlugin = _notifications
           .resolvePlatformSpecificImplementation<
@@ -138,11 +138,11 @@ class SmartNotificationService with WidgetsBindingObserver {
     final message = _dailyMessages[dayIndex % _dailyMessages.length];
 
     await _notifications.zonedSchedule(
-      id: _dailyNotificationId,
-      title: message['title'],
-      body: message['body'],
-      scheduledDate: date,
-      notificationDetails: details,
+      _dailyNotificationId,
+      message['title'],
+      message['body'],
+      date,
+      details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents:
           repeating ? DateTimeComponents.time : null,
@@ -172,10 +172,10 @@ class SmartNotificationService with WidgetsBindingObserver {
       const details = NotificationDetails(android: androidDetails);
 
       await _notifications.show(
-        id: 7600,
-        title: 'تمام يا نجم 🎧',
-        body: 'الإشعارات شغالة عندك وMB-Music جاهز للمزيكا 🔥',
-        notificationDetails: details,
+        7600,
+        'تمام يا نجم 🎧',
+        'الإشعارات شغالة عندك وMB-Music جاهز للمزيكا 🔥',
+        details,
         payload: 'mb_music_test',
       );
       debugPrint('Smart notifications: test notification sent');
@@ -188,7 +188,7 @@ class SmartNotificationService with WidgetsBindingObserver {
   Future<void> onAppOpened() async {
     if (!_initialized) return;
     await _cancelScheduledNotifications();
-    await _notifications.cancel(id: _dailyNotificationId);
+    await _notifications.cancel(_dailyNotificationId);
   }
 
   @override
@@ -253,11 +253,11 @@ class SmartNotificationService with WidgetsBindingObserver {
     const details = NotificationDetails(android: androidDetails);
 
     await _notifications.zonedSchedule(
-      id: _firstNotificationId + index,
-      title: message['title'],
-      body: message['body'],
-      scheduledDate: date,
-      notificationDetails: details,
+      _firstNotificationId + index,
+      message['title'],
+      message['body'],
+      date,
+      details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'mb_music_return',
     );
@@ -265,7 +265,7 @@ class SmartNotificationService with WidgetsBindingObserver {
 
   Future<void> _cancelScheduledNotifications() async {
     for (var i = 0; i < _scheduledCount; i++) {
-      await _notifications.cancel(id: _firstNotificationId + i);
+      await _notifications.cancel(_firstNotificationId + i);
     }
   }
 
