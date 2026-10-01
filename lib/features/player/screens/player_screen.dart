@@ -71,7 +71,8 @@ class PlayerView extends StatelessWidget {
           },
           onVerticalDragEnd: (details) {
             if (!state.canDrag) return;
-            if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (state.offsetY > 200 || velocity > 1000) {
               Navigator.pop(context);
             } else {
               cubit.resetDrag();
