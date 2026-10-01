@@ -902,6 +902,9 @@ class MyAudioHandler extends BaseAudioHandler
       app_service
           .AudioService()
           .currentQueue = _queue;
+      app_service
+          .AudioService()
+          .originalQueue = List<SongModel>.from(_queue);
 
       queue.add(
         _queue
