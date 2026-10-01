@@ -1,8 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/constants/app_icons.dart';
-import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/features/settings/screens/settings.dart';
 import 'package:music/core/widgets/sort_button.dart';
