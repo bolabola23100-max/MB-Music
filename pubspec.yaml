@@ -27,6 +27,7 @@ dependencies:
   lottie: ^3.3.3
   in_app_review: ^2.0.12
   package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
   # google_mobile_ads: ^8.0.0
 
 dev_dependencies:
