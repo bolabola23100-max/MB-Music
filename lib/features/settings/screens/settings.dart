@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/core/services/cache_helper.dart';
 import 'package:music/features/settings/widgets/build_badge.dart';
 import 'package:music/features/settings/widgets/build_footer.dart';
 import 'package:music/features/settings/widgets/build_section_header.dart';
@@ -100,10 +99,6 @@ class SettingsView extends StatelessWidget {
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
           onTap: () => showEqualizerDialog(context, audioService),
-          trailing: const Icon(
-            Icons.refresh_rounded,
-            color: AppColors.blue,
-          ),
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.audio'.tr()),
