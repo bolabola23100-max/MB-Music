@@ -47,13 +47,20 @@ class AudioPersistenceHelper {
       return [];
     }
 
-    return jsonList
-        .map(
-          (j) => Map<String, dynamic>.from(
-            jsonDecode(j) as Map,
-          ),
-        )
-        .toList();
+    final result = <Map<String, dynamic>>[];
+
+    for (final json in jsonList) {
+      try {
+        final decoded = jsonDecode(json);
+        if (decoded is Map) {
+          result.add(Map<String, dynamic>.from(decoded));
+        }
+      } catch (_) {
+        // Ignore a corrupted queue entry and keep valid entries.
+      }
+    }
+
+    return result;
   }
 
   // ============================================================
@@ -130,17 +137,15 @@ class AudioPersistenceHelper {
     );
 
     if (songId != null) {
-      await prefs.setInt(
-        _lastSongIdKey,
-        songId,
-      );
+      await prefs.setInt(_lastSongIdKey, songId);
+    } else {
+      await prefs.remove(_lastSongIdKey);
     }
 
     if (index != null) {
-      await prefs.setInt(
-        _lastSongIndexKey,
-        index,
-      );
+      await prefs.setInt(_lastSongIndexKey, index);
+    } else {
+      await prefs.remove(_lastSongIndexKey);
     }
 
     if (duration != null) {
@@ -148,6 +153,8 @@ class AudioPersistenceHelper {
         _lastSongDurationKey,
         duration.inMilliseconds,
       );
+    } else {
+      await prefs.remove(_lastSongDurationKey);
     }
   }
 
@@ -252,7 +259,7 @@ class AudioPersistenceHelper {
       return null;
     }
 
-    return DateTime.parse(endTimeStr);
+    return DateTime.tryParse(endTimeStr);
   }
 
   static Future<void> clearSleepTimer() async {
