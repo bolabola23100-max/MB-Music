@@ -62,7 +62,7 @@ class SmartNotificationService with WidgetsBindingObserver {
 
       const androidSettings = AndroidInitializationSettings('ic_notification');
       const settings = InitializationSettings(android: androidSettings);
-      await _notifications.initialize(settings);
+      await _notifications.initialize(settings: settings);
 
       final androidPlugin = _notifications
           .resolvePlatformSpecificImplementation<
