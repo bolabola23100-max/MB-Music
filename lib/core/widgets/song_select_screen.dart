@@ -327,20 +327,19 @@ class _SongSelectScreenState extends State<SongSelectScreen> {
     );
   }
 
-  Future<bool> _onWillPop() async {
-    if (_isSelecting && widget.initialSelectedSongId == null) {
-      _clearSelection();
-      return false;
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     final count = _selectedIds.length;
+    final shouldInterceptBack =
+        _isSelecting && widget.initialSelectedSongId == null;
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: !shouldInterceptBack,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && shouldInterceptBack) {
+          _clearSelection();
+        }
+      },
       child: Scaffold(
         backgroundColor: AppColors.black,
         appBar: AppBar(
