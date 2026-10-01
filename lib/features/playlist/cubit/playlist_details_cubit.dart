@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart';
 import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'package:on_audio_query/on_audio_query.dart' hide PlaylistModel;
@@ -50,6 +51,8 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
       index: index,
       songId: s.id,
       queue: state.songs,
+      queueType: 'playlist',
+      playlistId: playlistId,
     );
   }
 
@@ -64,6 +67,8 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
       index: 0,
       songId: first.id,
       queue: shuffled,
+      queueType: 'playlist',
+      playlistId: playlistId,
     );
   }
 
@@ -72,7 +77,7 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
     await loadSongs();
   }
 
-  void sortSongs(SongSortOption option) {
+  Future<void> sortSongs(SongSortOption option) async {
     if (state.songs.isEmpty) return;
     List<SongModel> sortedSongs = List.from(state.songs);
 
@@ -105,5 +110,18 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
         break;
     }
     emit(state.copyWith(songs: sortedSongs));
+
+    _audioService.currentQueue = List<SongModel>.from(sortedSongs);
+    await AudioPersistenceHelper.saveQueue(sortedSongs.map((s) => {
+      '_id': s.id,
+      '_data': s.data,
+      'title': s.title,
+      'artist': s.artist,
+      'duration': s.duration,
+    }).toList());
+    await AudioPersistenceHelper.saveActiveQueueContext(
+      type: 'playlist',
+      playlistId: playlistId,
+    );
   }
 }
