@@ -5,6 +5,8 @@ class CacheHelper {
 
   static String reviewActionCountKey = 'review_action_count';
   static String appVersionKey = 'app_version';
+  static const String equalizerEnabledKey = 'equalizer_enabled';
+  static const String equalizerGainsKey = 'equalizer_gains';
 
   /// يجب استدعاء هذه الدالة في main قبل تشغيل التطبيق
   static Future<void> init() async {
@@ -97,6 +99,16 @@ class CacheHelper {
   }
 
 
+
+  static bool get equalizerEnabled => _prefs.getBool(equalizerEnabledKey) ?? true;
+
+  static set equalizerEnabled(bool value) => _prefs.setBool(equalizerEnabledKey, value);
+
+  static List<double> get equalizerGains =>
+      (_prefs.getStringList(equalizerGainsKey) ?? []).map(double.parse).toList();
+
+  static set equalizerGains(List<double> value) =>
+      _prefs.setStringList(equalizerGainsKey, value.map((e) => e.toString()).toList());
 
   // =========================================================
   // CLEAR ALL
