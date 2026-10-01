@@ -11,6 +11,9 @@ Future<void> showEqualizerDialog(
     final parameters = await audioService.equalizer.parameters;
     if (!context.mounted) return;
 
+    await audioService.equalizer.setEnabled(true);
+    CacheHelper.equalizerEnabled = true;
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.black,
@@ -26,8 +29,6 @@ Future<void> showEqualizerDialog(
                 ? savedGains[i]
                 : parameters.bands[i].gain,
         };
-        var equalizerEnabled = CacheHelper.equalizerEnabled;
-
         return StatefulBuilder(
           builder: (context, setState) {
             return Padding(
@@ -41,31 +42,32 @@ Future<void> showEqualizerDialog(
                   const SizedBox(height: 6),
                   Text('Adjust the sound bands while music is playing.', style: TextStyle(color: AppColors.white.withValues(alpha: 0.55), fontSize: 12), textAlign: TextAlign.center),
                   const SizedBox(height: 12),
-                  SwitchListTile(
+                  ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Enable Equalizer', style: TextStyle(color: AppColors.white)),
-                    value: equalizerEnabled,
-                    onChanged: (value) async {
-                      setState(() {
-                        equalizerEnabled = value;
-                      });
-                      CacheHelper.equalizerEnabled = value;
-                      if (!value) {
+                    title: const Text(
+                      'Reset Equalizer',
+                      style: TextStyle(color: AppColors.white),
+                    ),
+                    trailing: IconButton(
+                      onPressed: () async {
                         setState(() {
                           for (final band in parameters.bands) {
                             gainValues[band.index] = 0;
                           }
                         });
-                      }
-                      await audioService.equalizer.setEnabled(value);
-                      if (!value) {
+                        await audioService.equalizer.setEnabled(true);
                         await Future.wait(
                           parameters.bands.map((band) => band.setGain(0)),
                         );
+                        CacheHelper.equalizerEnabled = true;
                         CacheHelper.equalizerGains =
                             List<double>.filled(parameters.bands.length, 0.0);
-                      }
-                    },
+                      },
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        color: AppColors.blue,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
