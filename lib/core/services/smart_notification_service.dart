@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -15,6 +16,15 @@ class SmartNotificationService with WidgetsBindingObserver {
   static const int _daysBetweenNotifications = 3;
   static const int _morningHour = 10;
   static const int _morningMinute = 0;
+
+  // Temporary Debug Mode:
+  // Debug builds use minutes so all notification scenarios can be tested quickly.
+  // Release builds keep the real 10:00 AM / every-3-days behavior.
+  static const bool _debugMode = kDebugMode;
+  static const int _debugDailyDelayMinutes = 1;
+  static const int _debugInactivityStartMinutes = 2;
+  static const int _debugInactivityIntervalMinutes = 1;
+  static const int _debugScheduledCount = 4;
 
   static const List<Map<String, String>> _dailyMessages = [
     {'title': 'صباح الفل يا نجم ☀️', 'body': 'يلا بأغنية كده تظبط المود من بدري 🎧'},
@@ -68,6 +78,15 @@ class SmartNotificationService with WidgetsBindingObserver {
 
   Future<void> _scheduleDailyNotification() async {
     final now = tz.TZDateTime.now(tz.local);
+
+    if (_debugMode) {
+      final date = now.add(
+        const Duration(minutes: _debugDailyDelayMinutes),
+      );
+      await _scheduleDailyAt(date);
+      return;
+    }
+
     var date = tz.TZDateTime(
       tz.local,
       now.year,
@@ -81,6 +100,13 @@ class SmartNotificationService with WidgetsBindingObserver {
       date = date.add(const Duration(days: 1));
     }
 
+    await _scheduleDailyAt(date, repeating: true);
+  }
+
+  Future<void> _scheduleDailyAt(
+    tz.TZDateTime date, {
+    bool repeating = false,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'mb_music_daily',
       'MB-Music Daily',
@@ -93,12 +119,9 @@ class SmartNotificationService with WidgetsBindingObserver {
     );
 
     const details = NotificationDetails(android: androidDetails);
-    final dayIndex = date.difference(tz.TZDateTime(
-      tz.local,
-      2026,
-      1,
-      1,
-    )).inDays;
+    final dayIndex = date.difference(
+      tz.TZDateTime(tz.local, 2026, 1, 1),
+    ).inDays;
     final message = _dailyMessages[dayIndex % _dailyMessages.length];
 
     await _notifications.zonedSchedule(
@@ -108,7 +131,8 @@ class SmartNotificationService with WidgetsBindingObserver {
       date,
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
+      matchDateTimeComponents:
+          repeating ? DateTimeComponents.time : null,
       payload: 'mb_music_daily',
     );
   }
@@ -141,6 +165,20 @@ class SmartNotificationService with WidgetsBindingObserver {
       await _scheduleDailyNotification();
 
       final now = tz.TZDateTime.now(tz.local);
+
+      if (_debugMode) {
+        for (var i = 0; i < _debugScheduledCount; i++) {
+          final date = now.add(
+            Duration(
+              minutes: _debugInactivityStartMinutes +
+                  (_debugInactivityIntervalMinutes * i),
+            ),
+          );
+          await _scheduleOne(i, date);
+        }
+        return;
+      }
+
       final threshold = now.add(
         const Duration(days: _daysBetweenNotifications),
       );
