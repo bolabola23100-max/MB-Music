@@ -17,12 +17,6 @@ class SmartNotificationService with WidgetsBindingObserver {
   static const int _morningHour = 10;
   static const int _morningMinute = 0;
 
-  // Temporary debug timing. Release builds use the real schedule.
-  static const bool _debugMode = kDebugMode;
-  static const int _debugDailyDelayMinutes = 1;
-  static const int _debugInactivityStartMinutes = 2;
-  static const int _debugInactivityIntervalMinutes = 1;
-  static const int _debugScheduledCount = 4;
 
   static const List<Map<String, String>> _dailyMessages = [
     {'title': 'صباح الفل يا نجم ☀️', 'body': 'يلا بأغنية كده تظبط المود من بدري 🎧'},
@@ -107,13 +101,6 @@ class SmartNotificationService with WidgetsBindingObserver {
   Future<void> _scheduleDailyNotification() async {
     final now = tz.TZDateTime.now(tz.local);
 
-    if (_debugMode) {
-      await _scheduleDailyAt(
-        now.add(const Duration(minutes: _debugDailyDelayMinutes)),
-      );
-      return;
-    }
-
     var date = tz.TZDateTime(
       tz.local,
       now.year,
@@ -164,6 +151,41 @@ class SmartNotificationService with WidgetsBindingObserver {
     );
   }
 
+  Future<void> sendTestNotification() async {
+    if (!_initialized) {
+      await initialize();
+    }
+
+    if (!_initialized) return;
+
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'mb_music_return',
+        'MB-Music',
+        channelDescription: 'MB-Music return reminders',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: 'ic_launcher',
+        playSound: true,
+        enableVibration: true,
+      );
+
+      const details = NotificationDetails(android: androidDetails);
+
+      await _notifications.show(
+        7600,
+        'تمام يا نجم 🎧',
+        'الإشعارات شغالة عندك وMB-Music جاهز للمزيكا 🔥',
+        details,
+        payload: 'mb_music_test',
+      );
+      debugPrint('Smart notifications: test notification sent');
+    } catch (error, stackTrace) {
+      debugPrint('SmartNotificationService test notification failed: $error');
+      debugPrint('$stackTrace');
+    }
+  }
+
   Future<void> onAppOpened() async {
     if (!_initialized) return;
     await _cancelScheduledNotifications();
@@ -194,20 +216,6 @@ class SmartNotificationService with WidgetsBindingObserver {
       debugPrint('Smart notifications: daily notification scheduled');
 
       final now = tz.TZDateTime.now(tz.local);
-
-      if (_debugMode) {
-        for (var i = 0; i < _debugScheduledCount; i++) {
-          final date = now.add(
-            Duration(
-              minutes: _debugInactivityStartMinutes +
-                  (_debugInactivityIntervalMinutes * i),
-            ),
-          );
-          await _scheduleOne(i, date);
-          debugPrint('Smart notifications: debug notification ${i + 1} scheduled for $date');
-        }
-        return;
-      }
 
       final threshold = now.add(
         const Duration(days: _daysBetweenNotifications),
