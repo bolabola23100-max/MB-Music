@@ -941,7 +941,7 @@ class MyAudioHandler extends BaseAudioHandler
             'songId': songId,
           },
         ),
-      )
+      );
     } catch (e) {
       log(
         'Error restoring playback: $e',
