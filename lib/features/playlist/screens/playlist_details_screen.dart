@@ -78,7 +78,11 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
         playlistId: playlistId,
         onPlay: () {
           Navigator.pop(context);
-          cubit.play(cubit.state.playlistSongs.indexOf(song));
+          final songIndex =
+              cubit.state.songs.indexWhere((s) => s.id == song.songId);
+          if (songIndex != -1) {
+            cubit.play(songIndex);
+          }
         },
         onDelete: () {
           Navigator.pop(context);
