@@ -178,17 +178,13 @@ class SettingsView extends StatelessWidget {
           onTap: () async {
             final reviewService = ReviewService();
             try {
-              await reviewService.requestReview();
+              await reviewService.openStoreListing();
             } catch (_) {
-              try {
-                await reviewService.openStoreListing();
-              } catch (_) {
-                if (!context.mounted) return;
-                MySnackBar(context: context).showSnackBar(
-                  'settings.rate_app_unavailable'.tr(),
-                  AppColors.blue,
-                );
-              }
+              if (!context.mounted) return;
+              MySnackBar(context: context).showSnackBar(
+                'settings.rate_app_unavailable'.tr(),
+                AppColors.blue,
+              );
             }
           },
         ),
