@@ -21,6 +21,10 @@ Future<void> showEqualizerDialog(
         final gainValues = <int, double>{
           for (final band in parameters.bands) band.index: band.gain,
         };
+        var equalizerEnabled = true;
+
+        // Keep the equalizer enabled by default.
+        audioService.equalizer.setEnabled(true);
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -38,13 +42,16 @@ Future<void> showEqualizerDialog(
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Enable Equalizer', style: TextStyle(color: AppColors.white)),
-                    value: audioService.equalizer.enabled,
+                    value: equalizerEnabled,
                     onChanged: (value) async {
+                      setState(() {
+                        equalizerEnabled = value;
+                      });
                       if (!value) {
                         setState(() {
                           for (final band in parameters.bands) { gainValues[band.index] = 0; }
                         });
-                      } else { setState(() {}); }
+                      }
                       await audioService.equalizer.setEnabled(value);
                       if (!value) { await Future.wait(parameters.bands.map((band) => band.setGain(0))); }
                     },
