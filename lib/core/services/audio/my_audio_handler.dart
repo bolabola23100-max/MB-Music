@@ -876,11 +876,17 @@ class MyAudioHandler extends BaseAudioHandler
       return;
     }
 
-    final path =
-        state['path'] as String;
+    final path = state['path'] as String?;
+    if (path == null || path.isEmpty) {
+      return;
+    }
 
-    final songId =
-        state['songId'] as int?;
+    final songId = state['songId'] as int?;
+    final title = state['title'] as String? ?? 'Unknown';
+    final artist = state['artist'] as String? ?? 'Unknown';
+    final index = state['index'] as int?;
+    final position = state['position'] as Duration?;
+    final duration = state['duration'] as Duration?;
 
     final savedQueueRaw =
         await AudioPersistenceHelper
@@ -910,44 +916,32 @@ class MyAudioHandler extends BaseAudioHandler
       );
     }
 
-    mediaItem.add(
-      MediaItem(
-        id: path,
-        title:
-            state['title']
-                as String,
-        artist:
-            state['artist']
-                as String,
-        duration:
-            state['duration']
-                as Duration?,
-        artUri: songId != null
-            ? Uri.parse(
-                'content://media/external/audio/media/$songId/albumart',
-              )
-            : null,
-        extras: {
-          'index':
-              state['index'],
-          'songId':
-              songId,
-        },
-      ),
-    );
-
     try {
       await _player.setFilePath(
         path,
       );
 
-      if (state['position'] !=
-          null) {
-        await _player.seek(
-          state['position']
-              as Duration,
-        );
+      if (position != null) {
+        await _player.seek(position);
       }
+
+      mediaItem.add(
+        MediaItem(
+          id: path,
+          title: title,
+          artist: artist,
+          duration: duration,
+          artUri: songId != null
+              ? Uri.parse(
+                  'content://media/external/audio/media/$songId/albumart',
+                )
+              : null,
+          extras: {
+            'index': index,
+            'songId': songId,
+          },
+        ),
+      )
     } catch (e) {
       log(
         'Error restoring playback: $e',
@@ -966,12 +960,9 @@ class MyAudioHandler extends BaseAudioHandler
       return;
     }
 
-    final nextIndex =
-        (currentIndex + 1) %
-            _queue.length;
+    final nextIndex = currentIndex + 1;
 
-    if (nextIndex ==
-        currentIndex) {
+    if (nextIndex >= _queue.length) {
       return;
     }
 
