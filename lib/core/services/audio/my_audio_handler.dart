@@ -16,7 +16,12 @@ import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler
     with SeekHandler {
-  final AudioPlayer _player = AudioPlayer();
+  final AndroidEqualizer _equalizer = AndroidEqualizer();
+  final AudioPlayer _player = AudioPlayer(
+    audioPipeline: AudioPipeline(
+      androidAudioEffects: [_equalizer],
+    ),
+  );
 
   final AudioPlayer _preloadPlayer =
       AudioPlayer();
@@ -44,6 +49,8 @@ class MyAudioHandler extends BaseAudioHandler
   Future<void> get ready => _initFuture;
 
   AudioPlayer get rawPlayer => _player;
+
+  AndroidEqualizer get equalizer => _equalizer;
 
   // ============================================================
   // INITIAL STATE
