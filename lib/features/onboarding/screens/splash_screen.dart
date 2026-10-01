@@ -89,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => screen,
+        pageBuilder: (_, _, _) => screen,
         transitionDuration: const Duration(milliseconds: 800),
         transitionsBuilder: (_, anim, __, child) {
           return FadeTransition(opacity: anim, child: child);
@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
             // Glow خلفي
             AnimatedBuilder(
               animation: _waveController,
-              builder: (_, __) {
+              builder: (_, _) {
                 return Container(
                   width: 300,
                   height: 300,
@@ -150,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                     AnimatedBuilder(
                       animation: _waveController,
-                      builder: (_, __) {
+                      builder: (_, _) {
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: List.generate(9, (i) => _buildWaveBar(i)),
