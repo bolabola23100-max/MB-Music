@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/audio/audio_service.dart';
