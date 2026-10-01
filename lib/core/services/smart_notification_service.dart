@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -217,22 +216,11 @@ class SmartNotificationService with WidgetsBindingObserver {
 
       final now = tz.TZDateTime.now(tz.local);
 
-      final threshold = now.add(
+      // First return reminder is sent only after 3 full days,
+      // then repeated every 3 days until the user opens the app.
+      final firstDate = now.add(
         const Duration(days: _daysBetweenNotifications),
       );
-
-      var firstDate = tz.TZDateTime(
-        tz.local,
-        threshold.year,
-        threshold.month,
-        threshold.day,
-        _morningHour,
-        _morningMinute,
-      );
-
-      if (!firstDate.isAfter(threshold)) {
-        firstDate = firstDate.add(const Duration(days: 1));
-      }
 
       for (var i = 0; i < _scheduledCount; i++) {
         final date = firstDate.add(
