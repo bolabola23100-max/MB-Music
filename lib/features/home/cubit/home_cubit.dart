@@ -217,7 +217,10 @@ class HomeCubit extends Cubit<HomeState> {
       // نحفظ الترتيب الجديد
       await AudioPersistenceHelper.saveDisplayOrder(newDisplay);
 
-      _audioService.originalQueue = List<SongModel>.from(filtered);
+      final playlistQueueActive = await AudioPersistenceHelper.isPlaylistQueueActive();
+      if (!playlistQueueActive) {
+        _audioService.originalQueue = List<SongModel>.from(filtered);
+      }
 
       // Sync current queue
       final existingIds = newIds;
