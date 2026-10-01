@@ -84,6 +84,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                 final playlistId = await _service.createPlaylist(
                   controller.text.trim(),
                 );
+                if (!context.mounted) return;
                 Navigator.pop(context);
 
                 if (playlistId > 0) {
@@ -91,6 +92,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                     playlistId,
                     widget.songs,
                   );
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                   MySnackBar(context: context).showSnackBar(
                     "playlist_dialogs.create_and_add_success".tr(
@@ -222,6 +224,7 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                                       playlist.id!,
                                       widget.songs,
                                     );
+                                if (!context.mounted) return;
                                 Navigator.pop(context);
                                 MySnackBar(context: context).showSnackBar(
                                   addedCount > 0
