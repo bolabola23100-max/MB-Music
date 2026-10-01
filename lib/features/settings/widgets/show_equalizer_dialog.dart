@@ -66,6 +66,13 @@ Future<void> showEqualizerDialog(
                     value: audioService.equalizer.enabled,
                     onChanged: (value) async {
                       await audioService.equalizer.setEnabled(value);
+
+                      if (!value) {
+                        for (final band in parameters.bands) {
+                          await band.setGain(0);
+                        }
+                      }
+
                       setState(() {});
                     },
                   ),
