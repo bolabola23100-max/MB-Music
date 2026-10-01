@@ -19,16 +19,14 @@ Future<void> showEqualizerDialog(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       builder: (sheetContext) {
+        final savedGains = CacheHelper.equalizerGains;
         final gainValues = <int, double>{
-          for (final band in parameters.bands) band.index: band.gain,
+          for (var i = 0; i < parameters.bands.length; i++)
+            parameters.bands[i].index: i < savedGains.length
+                ? savedGains[i]
+                : parameters.bands[i].gain,
         };
-        var equalizerEnabled = true;
-
-        // Keep the equalizer enabled by default.
-        audioService.equalizer.setEnabled(true);
-        // Default is ON and stays ON unless the user explicitly disables it.
-        // Persist the user's choice and slider values.
-        CacheHelper.equalizerEnabled = true;
+        var equalizerEnabled = CacheHelper.equalizerEnabled;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -54,11 +52,19 @@ Future<void> showEqualizerDialog(
                       CacheHelper.equalizerEnabled = value;
                       if (!value) {
                         setState(() {
-                          for (final band in parameters.bands) { gainValues[band.index] = 0; }
+                          for (final band in parameters.bands) {
+                            gainValues[band.index] = 0;
+                          }
                         });
                       }
                       await audioService.equalizer.setEnabled(value);
-                      if (!value) { await Future.wait(parameters.bands.map((band) => band.setGain(0))); }
+                      if (!value) {
+                        await Future.wait(
+                          parameters.bands.map((band) => band.setGain(0)),
+                        );
+                        CacheHelper.equalizerGains =
+                            List<double>.filled(parameters.bands.length, 0.0);
+                      }
                     },
                   ),
                   const SizedBox(height: 8),
