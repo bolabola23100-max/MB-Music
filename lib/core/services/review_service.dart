@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:in_app_review/in_app_review.dart';
 import 'package:music/core/services/cache_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReviewService {
   final inAppReview = InAppReview.instance;
@@ -18,11 +19,16 @@ class ReviewService {
       return;
     }
 
-    developer.log(
-      '⚠️ InAppReview is not available. Opening the Google Play listing instead.',
-      name: 'ReviewService',
+    await openStoreReviewPage();
+  }
+
+  Future<void> openStoreReviewPage() async {
+    final uri = Uri.parse(
+      'https://play.google.com/store/apps/details?id=com.mbmusic.player&reviewId=0',
     );
-    await openStoreListing();
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not open Google Play review page');
+    }
   }
 
   Future<void> openStoreListing() async {
