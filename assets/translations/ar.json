@@ -34,7 +34,10 @@
     "arabic": "العربية",
     "share_app": "مشاركة التطبيق",
     "rate_app": "تقييم التطبيق",
-    "automatically_stop_playback_after": "سيتم إيقاف التشغيل تلقائياً بعد..."
+    "automatically_stop_playback_after": "سيتم إيقاف التشغيل تلقائياً بعد...",
+    "rate_app_unavailable": "صفحة تقييم التطبيق غير متاحة حالياً.",
+    "audio_quality_original": "الجودة الأصلية — يتم تشغيل الملفات بالجودة المحفوظة بها.",
+    "audio_quality_local_info": "MBMusic يشغّل ملفات الموسيقى الموجودة على الجهاز مباشرة، لذلك لا توجد جودة بث لتقليلها أو رفعها."
   },
   "songs": "الأغاني",
   "sounds": "الأصوات",
@@ -145,5 +148,4 @@
     "newest_first": "الأحدث"
   },
   "settings_coming_soon": "الإعدادات قريباً!"
-
 }
