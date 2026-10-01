@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/cache_helper.dart';
 
 Future<void> showEqualizerDialog(
   BuildContext context,
@@ -25,6 +26,9 @@ Future<void> showEqualizerDialog(
 
         // Keep the equalizer enabled by default.
         audioService.equalizer.setEnabled(true);
+        // Default is ON and stays ON unless the user explicitly disables it.
+        // Persist the user's choice and slider values.
+        CacheHelper.equalizerEnabled = true;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -47,6 +51,7 @@ Future<void> showEqualizerDialog(
                       setState(() {
                         equalizerEnabled = value;
                       });
+                      CacheHelper.equalizerEnabled = value;
                       if (!value) {
                         setState(() {
                           for (final band in parameters.bands) { gainValues[band.index] = 0; }
@@ -79,6 +84,7 @@ Future<void> showEqualizerDialog(
                                     onChanged: (value) {
                                       setState(() { gainValues[band.index] = value; });
                                       band.setGain(value);
+                                      CacheHelper.equalizerGains = parameters.bands.map((b) => gainValues[b.index] ?? b.gain).toList();
                                     },
                                   ),
                                 ),
