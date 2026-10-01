@@ -97,6 +97,8 @@ class AudioService {
       ),
     );
 
+    await _handler.ready;
+
     _initialized = true;
 
     _handler.rawPlayer.playingStream.listen((playing) {
