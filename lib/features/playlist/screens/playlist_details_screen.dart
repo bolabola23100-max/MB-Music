@@ -231,13 +231,6 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
               song: s,
               audioService: audioService,
               onTap: () => cubit.play(index),
-              onMoreTap: () {
-                final ps = state.playlistSongs.firstWhere(
-                  (ps) => ps.songId == s.id,
-                  orElse: () => state.playlistSongs[index],
-                );
-                _showOptions(context, ps, widget.playlist.id!);
-              },
               onLongPress: () {
                 final ps = state.playlistSongs.firstWhere(
                   (ps) => ps.songId == s.id,
