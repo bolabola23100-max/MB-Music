@@ -56,6 +56,9 @@ Future<void> showEqualizerDialog(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: parameters.bands.map((band) {
                         final gain = gainValues[band.index] ?? band.gain;
+                        final frequencyLabel = band.centerFrequency >= 1000
+                            ? '${(band.centerFrequency / 1000).toStringAsFixed(1)}k'
+                            : band.centerFrequency.round().toString();
                         return Expanded(
                           child: Column(
                             children: [
@@ -75,7 +78,7 @@ Future<void> showEqualizerDialog(
                               ),
                               Text('${gain >= 0 ? '+' : ''}${gain.toStringAsFixed(1)} dB', style: TextStyle(color: AppColors.white.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 3),
-                              Text('${band.centerFrequency >= 1000 ? (band.centerFrequency / 1000).toStringAsFixed(1) + 'k' : band.centerFrequency.round().toString()}', style: TextStyle(color: AppColors.white.withValues(alpha: 0.65), fontSize: 10)),
+                              Text(frequencyLabel, style: TextStyle(color: AppColors.white.withValues(alpha: 0.65), fontSize: 10)),
                             ],
                           ),
                         );
