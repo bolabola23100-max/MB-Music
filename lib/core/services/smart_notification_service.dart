@@ -10,10 +10,21 @@ class SmartNotificationService with WidgetsBindingObserver {
   static final SmartNotificationService instance = SmartNotificationService._();
 
   static const int _firstNotificationId = 7300;
+  static const int _dailyNotificationId = 7500;
   static const int _scheduledCount = 120;
   static const int _daysBetweenNotifications = 3;
   static const int _morningHour = 10;
   static const int _morningMinute = 0;
+
+  static const List<Map<String, String>> _dailyMessages = [
+    {'title': 'صباح الفل يا نجم ☀️', 'body': 'يلا بأغنية كده تظبط المود من بدري 🎧'},
+    {'title': 'صباحك مزيكا 🎵', 'body': 'قبل ما اليوم يزنقك.. خدلك أغنية حلوة 😂'},
+    {'title': 'صحيت ولا لسه؟ 😂', 'body': 'MB-Music بيقولك صباح الخير يا معلم ☀️'},
+    {'title': 'يلا نبدأ اليوم 🎧', 'body': 'أغنية واحدة بس.. وبعدها نشوف اليوم هيودينا فين.'},
+    {'title': 'صباح الروقان ☕', 'body': 'القهوة ناقصها أغنية حلوة كده ولا إيه؟'},
+    {'title': 'صباح الخير يا صاحبي 👋', 'body': 'شغّل حاجة بتحبها وخلي اليوم يبدأ صح.'},
+    {'title': 'الساعة 10 يا نجم ⏰', 'body': 'ده وقت أغنية حلوة.. متخليناش نزعل منك 😂'},
+  ];
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
@@ -55,9 +66,57 @@ class SmartNotificationService with WidgetsBindingObserver {
     await onAppOpened();
   }
 
+  Future<void> _scheduleDailyNotification() async {
+    final now = tz.TZDateTime.now(tz.local);
+    var date = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      _morningHour,
+      _morningMinute,
+    );
+
+    if (!date.isAfter(now)) {
+      date = date.add(const Duration(days: 1));
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'mb_music_daily',
+      'MB-Music Daily',
+      channelDescription: 'Daily MB-Music morning reminders',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: 'ic_launcher',
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const details = NotificationDetails(android: androidDetails);
+    final dayIndex = date.difference(tz.TZDateTime(
+      tz.local,
+      2026,
+      1,
+      1,
+    )).inDays;
+    final message = _dailyMessages[dayIndex % _dailyMessages.length];
+
+    await _notifications.zonedSchedule(
+      _dailyNotificationId,
+      message['title'],
+      message['body'],
+      date,
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'mb_music_daily',
+    );
+  }
+
   Future<void> onAppOpened() async {
     if (!_initialized) return;
     await _cancelScheduledNotifications();
+    await _notifications.cancel(_dailyNotificationId);
   }
 
   @override
@@ -78,6 +137,8 @@ class SmartNotificationService with WidgetsBindingObserver {
     _scheduling = true;
     try {
       await _cancelScheduledNotifications();
+      await _notifications.cancel(_dailyNotificationId);
+      await _scheduleDailyNotification();
 
       final now = tz.TZDateTime.now(tz.local);
       final threshold = now.add(
