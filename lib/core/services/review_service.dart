@@ -15,12 +15,14 @@ class ReviewService {
 
     if (isAvailable) {
       await inAppReview.requestReview();
-    } else {
-      developer.log(
-        '⚠️ InAppReview is NOT available (Normal on Emulator / Debug Mode / App not downloaded from Google Play Store).',
-        name: 'ReviewService',
-      );
+      return;
     }
+
+    developer.log(
+      '⚠️ InAppReview is not available. Opening the Google Play listing instead.',
+      name: 'ReviewService',
+    );
+    await openStoreListing();
   }
 
   Future<void> openStoreListing() async {
