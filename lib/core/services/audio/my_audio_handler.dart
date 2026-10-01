@@ -11,6 +11,7 @@ import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart'
 import 'package:music/core/services/audio/audio_service.dart'
     as app_service;
 import 'package:music/core/services/favorites/favorites_service.dart';
+import 'package:music/core/services/cache_helper.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler
@@ -186,7 +187,19 @@ class MyAudioHandler extends BaseAudioHandler
           _onSongEdited,
         );
 
+    await _restoreEqualizer();
     _broadcastState(false);
+  }
+
+  Future<void> _restoreEqualizer() async {
+    final enabled = CacheHelper.equalizerEnabled;
+    await _equalizer.setEnabled(enabled);
+    final saved = CacheHelper.equalizerGains;
+    final parameters = await _equalizer.parameters;
+    for (var i = 0; i < parameters.bands.length; i++) {
+      final gain = i < saved.length ? saved[i] : 0.0;
+      await parameters.bands[i].setGain(gain);
+    }
   }
 
   // ============================================================
