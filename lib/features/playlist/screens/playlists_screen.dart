@@ -114,7 +114,10 @@ class PlaylistsView extends StatelessWidget {
       onTap: (p) => Navigator.push(
         context,
         MaterialPageRoute(builder: (c) => PlaylistDetailsScreen(playlist: p)),
-      ).then((_) => context.read<PlaylistCubit>().loadPlaylists()),
+      ).then((_) {
+        if (!context.mounted) return;
+        context.read<PlaylistCubit>().loadPlaylists();
+      }),
       onLongPress: (p) {
         _showPlaylistMenu(context, p);
       },
