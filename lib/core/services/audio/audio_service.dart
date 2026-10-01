@@ -180,4 +180,5 @@ class AudioService {
   Stream<Duration> get positionStream => _handler.rawPlayer.positionStream;
   Stream<PlayerState> get playerStateStream => _handler.rawPlayer.playerStateStream;
   AudioPlayer get player => _handler.rawPlayer;
+  AndroidEqualizer get equalizer => _handler.equalizer;
 }
