@@ -122,7 +122,7 @@ class MyAudioHandler extends BaseAudioHandler
       (_) => pause(),
     );
 
-    _sleepHandler
+    await _sleepHandler
         .loadPersistentSleepTimer();
 
     await _restorePlaybackState();
