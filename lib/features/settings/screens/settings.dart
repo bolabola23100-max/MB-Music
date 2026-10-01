@@ -10,7 +10,6 @@ import 'package:music/features/settings/widgets/build_setting_tile.dart';
 import 'package:music/features/settings/widgets/format_duration.dart';
 import 'package:music/features/settings/widgets/show_language_dialog.dart';
 import 'package:music/features/settings/widgets/show_equalizer_dialog.dart';
-import 'package:music/features/settings/widgets/show_hidden_songs_dialog.dart';
 import 'package:music/core/services/review_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:music/features/settings/widgets/show_sleep_timer_dialog.dart';
@@ -118,12 +117,6 @@ class SettingsView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.library'.tr()),
-        buildSettingTile(
-          icon: Icons.visibility_off_outlined,
-          title: 'settings.hidden_songs'.tr(),
-          subtitle: 'settings.hidden_songs_desc'.tr(),
-          onTap: () => showHiddenSongsDialog(context, songs),
-        ),
         buildSettingTile(
           icon: Icons.refresh_rounded,
           title: 'settings.re_scan_library'.tr(),
