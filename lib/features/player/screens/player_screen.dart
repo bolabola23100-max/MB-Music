@@ -313,16 +313,16 @@ class PlayerView extends StatelessWidget {
                     0,
                     state.songs.length - 1,
                   );
-                  showDialog(
+                  await showDialog(
                     context: context,
                     builder: (_) =>
                         AddToPlaylistDialog(songs: [state.songs[safeIndex]]),
-                  ).then((_) {
-                    MySnackBar(context: context).showSnackBar(
-                      "playlist_dialogs.add_to_playlist".tr(),
-                      AppColors.blue,
-                    );
-                  });
+                  );
+                  if (!context.mounted) return;
+                  MySnackBar(context: context).showSnackBar(
+                    "playlist_dialogs.add_to_playlist".tr(),
+                    AppColors.blue,
+                  );
                 },
               ),
 
