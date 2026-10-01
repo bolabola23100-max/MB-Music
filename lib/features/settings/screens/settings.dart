@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/features/listening_stats_screen/screens/listening_stats_screen.dart';
 import 'package:music/features/settings/widgets/build_badge.dart';
 import 'package:music/features/settings/widgets/build_footer.dart';
 import 'package:music/features/settings/widgets/build_section_header.dart';
@@ -97,17 +96,6 @@ class SettingsView extends StatelessWidget {
         const SizedBox(height: 10),
         buildSectionHeader('settings.general'.tr()),
         buildSettingTile(
-          icon: Icons.bar_chart_rounded,
-          title: 'settings.listening_stats'.tr(),
-          subtitle: 'settings.listening_stats_desc'.tr(),
-          onTap: () {
-            AppNavigator.push(
-              context,
-              ListeningStatsScreen(allSongs: songs, audioService: audioService),
-            );
-          },
-        ),
-        buildSettingTile(
           icon: Icons.equalizer_rounded,
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
@@ -180,7 +168,7 @@ class SettingsView extends StatelessWidget {
           title: 'settings.share_app'.tr(),
           onTap: () => SharePlus.instance.share(
             ShareParams(
-              text: 'MBMusic - a simple music player for Android.',
+              text: 'MBMusic - a simple music player for Android.\nhttps://play.google.com/store/apps/details?id=com.mbmusic.player',
               title: 'MBMusic',
             ),
           ),
