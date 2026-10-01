@@ -100,13 +100,9 @@ class SettingsView extends StatelessWidget {
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
           onTap: () => showEqualizerDialog(context, audioService),
-          trailing: Icon(
-            CacheHelper.equalizerEnabled
-                ? Icons.equalizer_rounded
-                : Icons.equalizer_outlined,
-            color: CacheHelper.equalizerEnabled
-                ? AppColors.blue
-                : AppColors.white.withValues(alpha: 0.25),
+          trailing: const Icon(
+            Icons.refresh_rounded,
+            color: AppColors.blue,
           ),
         ),
         const SizedBox(height: 20),
