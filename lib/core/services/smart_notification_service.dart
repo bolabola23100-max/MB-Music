@@ -138,11 +138,11 @@ class SmartNotificationService with WidgetsBindingObserver {
     final message = _dailyMessages[dayIndex % _dailyMessages.length];
 
     await _notifications.zonedSchedule(
-      _dailyNotificationId,
-      message['title'],
-      message['body'],
-      date,
-      details,
+      id: _dailyNotificationId,
+      title: message['title'],
+      body: message['body'],
+      scheduledDate: date,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents:
           repeating ? DateTimeComponents.time : null,
@@ -172,10 +172,10 @@ class SmartNotificationService with WidgetsBindingObserver {
       const details = NotificationDetails(android: androidDetails);
 
       await _notifications.show(
-        7600,
-        'تمام يا نجم 🎧',
-        'الإشعارات شغالة عندك وMB-Music جاهز للمزيكا 🔥',
-        details,
+        id: 7600,
+        title: 'تمام يا نجم 🎧',
+        body: 'الإشعارات شغالة عندك وMB-Music جاهز للمزيكا 🔥',
+        notificationDetails: details,
         payload: 'mb_music_test',
       );
       debugPrint('Smart notifications: test notification sent');
@@ -253,11 +253,11 @@ class SmartNotificationService with WidgetsBindingObserver {
     const details = NotificationDetails(android: androidDetails);
 
     await _notifications.zonedSchedule(
-      _firstNotificationId + index,
-      message['title'],
-      message['body'],
-      date,
-      details,
+      id: _firstNotificationId + index,
+      title: message['title'],
+      body: message['body'],
+      scheduledDate: date,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'mb_music_return',
     );
