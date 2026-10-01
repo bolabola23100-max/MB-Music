@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 /// - Android 10 and below: Uses ContentResolver.delete()
 /// - Android 11+: Uses MediaStore.createDeleteRequest() (system dialog)
 class SongDeleteService {
-  static const _channel = MethodChannel('com.example.music/delete');
+  static const _channel = MethodChannel('com.mbmusic.player/delete');
 
   /// Deletes songs by their MediaStore IDs.
   /// Returns a [SongDeleteResult] indicating success/failure.
