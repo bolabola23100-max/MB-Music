@@ -150,5 +150,24 @@
     "oldest_first": "الأقدم",
     "newest_first": "الأحدث"
   },
-  "settings_coming_soon": "الإعدادات قريباً!"
+  "settings_coming_soon": "الإعدادات قريباً!",
+  "backup_restore": {
+    "title": "النسخ الاحتياطي والاستعادة",
+    "connected": "Google Drive متصل",
+    "connect": "توصيل Google Drive",
+    "connect_desc": "اختر حساب Google لاستخدام النسخ الاحتياطي",
+    "backup": "نسخ احتياطي إلى Google Drive",
+    "backup_desc": "حفظ قوائم التشغيل والمفضلة وإعدادات التطبيق",
+    "restore": "استعادة من Google Drive",
+    "restore_desc": "استعادة بيانات MB Music المحفوظة",
+    "disconnect": "فصل Google Drive",
+    "disconnect_desc": "إزالة وصول MB Music إلى Google Drive",
+    "cloud_ready": "Google Drive جاهز",
+    "cloud_not_connected": "وصّل Google Drive لحماية بياناتك",
+    "backup_success": "تم إنشاء النسخة الاحتياطية بنجاح.",
+    "restore_success": "تمت الاستعادة بنجاح.",
+    "no_backup": "لم يتم العثور على نسخة MB Music على Google Drive.",
+    "disconnected": "تم فصل Google Drive.",
+    "operation_failed": "تعذر إكمال العملية."
+  }
 }
