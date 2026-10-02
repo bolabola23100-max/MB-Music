@@ -38,19 +38,46 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(start: 16, top: 10),
-          child: IconButton(
-            icon: Icon(
-              widget.isVideoMode
-                  ? Icons.music_note_rounded
-                  : Icons.video_library_rounded,
-              color: AppColors.blue,
-              size: 25,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8, top: 10),
+              child: IconButton(
+                icon: Icon(
+                  Icons.settings,
+                  color: AppColors.blue,
+                  size: 25,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SettingsScreen(
+                        songs: widget.songs,
+                        audioService: widget.audioService,
+                        onRescan: widget.onRescan,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            tooltip: widget.isVideoMode ? 'Music' : 'Videos',
-            onPressed: widget.onToggleMediaMode,
-          ),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 10),
+              child: IconButton(
+                icon: Icon(
+                  widget.isVideoMode
+                      ? Icons.music_note_rounded
+                      : Icons.video_library_rounded,
+                  color: AppColors.blue,
+                  size: 25,
+                ),
+                tooltip: widget.isVideoMode ? 'Music' : 'Videos',
+                onPressed: widget.onToggleMediaMode,
+              ),
+            ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.only(top: 4),
