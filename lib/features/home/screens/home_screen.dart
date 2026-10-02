@@ -11,8 +11,9 @@ import 'package:music/features/playlist/screens/playlists_screen.dart';
 import 'package:music/features/search/screens/search_screen.dart';
 import 'package:music/features/home/cubit/home_cubit.dart';
 import 'package:music/features/home/cubit/home_state.dart';
+import 'package:music/features/video/screens/video_albums_screen.dart';
+import 'package:music/features/video/services/video_library_service.dart';
 
-// bottomNavigationBar
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -35,6 +36,8 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   late PageController _pageController;
   int _localIndex = 0;
+  bool _isVideoMode = false;
+  final VideoLibraryService _videoService = const VideoLibraryService();
 
   static const Duration _pageAnimDuration = Duration(milliseconds: 400);
   static const Curve _pageAnimCurve = Curves.easeInOutCubic;
@@ -73,7 +76,30 @@ class _HomeViewState extends State<HomeView> {
     if (index == _localIndex) return;
     setState(() => _localIndex = index);
     _animateToPage(index);
-    context.read<HomeCubit>().updateCurrentIndex(index);
+    if (!_isVideoMode) {
+      context.read<HomeCubit>().updateCurrentIndex(index);
+    }
+  }
+
+  Future<void> _toggleMediaMode() async {
+    if (!_isVideoMode) {
+      final hasAccess = await _videoService.requestAccess();
+      if (!mounted) return;
+      if (!hasAccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video access permission is required.')),
+        );
+        return;
+      }
+    }
+
+    setState(() {
+      _isVideoMode = !_isVideoMode;
+      _localIndex = 0;
+    });
+
+    _pageController.dispose();
+    _pageController = PageController(initialPage: 0);
   }
 
   @override
@@ -90,7 +116,7 @@ class _HomeViewState extends State<HomeView> {
         : 0.0;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -99,10 +125,10 @@ class _HomeViewState extends State<HomeView> {
       ),
       child: Scaffold(
         extendBody: true,
-
         backgroundColor: Colors.transparent,
         bottomNavigationBar: BottomNavBar(
           currentIndex: _localIndex,
+          isVideoMode: _isVideoMode,
           onTap: _onItemTapped,
         ),
         body: SafeArea(
@@ -111,7 +137,6 @@ class _HomeViewState extends State<HomeView> {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
-                // ✅ AppBar
                 BlocBuilder<HomeCubit, HomeState>(
                   buildWhen: (p, c) =>
                       p.songs != c.songs || p.displaySongs != c.displaySongs,
@@ -121,24 +146,26 @@ class _HomeViewState extends State<HomeView> {
                     displaySongs: state.displaySongs,
                     onDisplaySongsChanged: cubit.updateDisplaySongs,
                     onRescan: cubit.initData,
+                    isVideoMode: _isVideoMode,
+                    onToggleMediaMode: _toggleMediaMode,
                   ),
                 ),
-
-                // ✅ PageView
                 Expanded(
                   child: RepaintBoundary(
-                    child: BlocListener<HomeCubit, HomeState>(
-                      listenWhen: (p, c) => p.currentIndex != c.currentIndex,
-                      listener: (context, state) {
-                        _animateToPage(state.currentIndex);
-                      },
-                      child: _buildPageView(
-                        context,
-                        audioService,
-                        favoritesService,
-                        cubit,
-                      ),
-                    ),
+                    child: _isVideoMode
+                        ? _buildVideoPageView()
+                        : BlocListener<HomeCubit, HomeState>(
+                            listenWhen: (p, c) =>
+                                p.currentIndex != c.currentIndex,
+                            listener: (context, state) {
+                              _animateToPage(state.currentIndex);
+                            },
+                            child: _buildMusicPageView(
+                              audioService,
+                              favoritesService,
+                              cubit,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -149,9 +176,26 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // ✅ PageView
-  Widget _buildPageView(
-    BuildContext context,
+  Widget _buildVideoPageView() {
+    return PageView(
+      controller: _pageController,
+      physics: const BouncingScrollPhysics(),
+      onPageChanged: (index) => setState(() => _localIndex = index),
+      children: [
+        VideoAlbumsScreen(
+          key: const PageStorageKey('all_videos'),
+          service: _videoService,
+          showAllVideos: true,
+        ),
+        VideoAlbumsScreen(
+          key: const PageStorageKey('video_albums'),
+          service: _videoService,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMusicPageView(
     AudioService audioService,
     FavoritesService favoritesService,
     HomeCubit cubit,
