@@ -37,7 +37,10 @@
     "automatically_stop_playback_after": "Automatically stop playback after...",
     "rate_app_unavailable": "The app store rating page is not available right now.",
     "audio_quality_original": "Original quality — files are played at the quality they were stored with.",
-    "audio_quality_local_info": "MBMusic plays local music files directly, so there is no streaming quality to downgrade or upgrade."
+    "audio_quality_local_info": "MBMusic plays local music files directly, so there is no streaming quality to downgrade or upgrade.",
+    "backup": "Backup",
+    "backup_restore": "Backup & Restore",
+    "backup_restore_desc": "Save your app data safely to Google Drive"
   },
   "songs": "Songs",
   "sounds": "Sounds",
