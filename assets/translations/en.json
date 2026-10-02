@@ -150,5 +150,24 @@
     "oldest_first": "Oldest",
     "newest_first": "Newest"
   },
-  "settings_coming_soon": "Settings Coming Soon"
+  "settings_coming_soon": "Settings Coming Soon",
+  "backup_restore": {
+    "title": "Backup & Restore",
+    "connected": "Google Drive connected",
+    "connect": "Connect Google Drive",
+    "connect_desc": "Choose your Google account to use Drive backup",
+    "backup": "Backup to Google Drive",
+    "backup_desc": "Save your playlists, favorites and app settings",
+    "restore": "Restore from Google Drive",
+    "restore_desc": "Restore your saved MB Music data",
+    "disconnect": "Disconnect Google Drive",
+    "disconnect_desc": "Remove Google Drive access from MB Music",
+    "cloud_ready": "Your Google Drive is ready",
+    "cloud_not_connected": "Connect Google Drive to protect your data",
+    "backup_success": "Backup completed successfully.",
+    "restore_success": "Restore completed successfully.",
+    "no_backup": "No MB Music backup was found on Google Drive.",
+    "disconnected": "Google Drive disconnected.",
+    "operation_failed": "The operation could not be completed."
+  }
 }
