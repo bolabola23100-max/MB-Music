@@ -17,6 +17,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/features/settings/cubit/settings_cubit.dart';
 import 'package:music/features/settings/cubit/settings_state.dart';
 import 'package:music/core/widgets/dialog/my_snack_bar.dart';
+import 'package:music/features/settings/screens/backup_restore_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -114,6 +115,19 @@ class SettingsView extends StatelessWidget {
           title: 'settings.audio_quality'.tr(),
           subtitle: 'settings.audio_quality_desc'.tr(),
           onTap: () => _showAudioQualityInfo(context),
+        ),
+        const SizedBox(height: 20),
+        buildSectionHeader('settings.backup'.tr()),
+        buildSettingTile(
+          icon: Icons.cloud_sync_rounded,
+          title: 'settings.backup_restore'.tr(),
+          subtitle: 'settings.backup_restore_desc'.tr(),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const BackupRestoreScreen(),
+            ),
+          ),
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.library'.tr()),
