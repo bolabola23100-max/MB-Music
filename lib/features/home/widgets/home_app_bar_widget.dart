@@ -9,12 +9,11 @@ import 'package:on_audio_query/on_audio_query.dart';
 class HomeAppBarWidget extends StatefulWidget {
   final List<SongModel> songs;
   final AudioService audioService;
-
   final List<SongModel> displaySongs;
-
   final ValueChanged<List<SongModel>> onDisplaySongsChanged;
-
   final VoidCallback onRescan;
+  final bool isVideoMode;
+  final VoidCallback onToggleMediaMode;
 
   const HomeAppBarWidget({
     super.key,
@@ -23,6 +22,8 @@ class HomeAppBarWidget extends StatefulWidget {
     required this.displaySongs,
     required this.onDisplaySongsChanged,
     required this.onRescan,
+    required this.isVideoMode,
+    required this.onToggleMediaMode,
   });
 
   @override
@@ -40,38 +41,34 @@ class _HomeAppBarWidgetState extends State<HomeAppBarWidget> {
         Padding(
           padding: const EdgeInsetsDirectional.only(start: 16, top: 10),
           child: IconButton(
-            icon: Icon(Icons.settings, color: AppColors.blue, size: 25),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SettingsScreen(
-                    songs: widget.songs,
-                    audioService: widget.audioService,
-                    onRescan: widget.onRescan,
-                  ),
-                ),
-              );
-            },
+            icon: Icon(
+              widget.isVideoMode
+                  ? Icons.music_note_rounded
+                  : Icons.video_library_rounded,
+              color: AppColors.blue,
+              size: 25,
+            ),
+            tooltip: widget.isVideoMode ? 'Music' : 'Videos',
+            onPressed: widget.onToggleMediaMode,
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Center(child: Image.asset(AppIcons.logo, width: 70)),
         ),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(end: 12, top: 10),
-          child: SortButton(
-            isAscending: isAscending,
-            onPressed: () {
-              setState(() {
-                isAscending = !isAscending;
-              });
-
-              widget.onDisplaySongsChanged(sortSongs());
-            },
-          ),
-        ),
+        if (!widget.isVideoMode)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 12, top: 10),
+            child: SortButton(
+              isAscending: isAscending,
+              onPressed: () {
+                setState(() => isAscending = !isAscending);
+                widget.onDisplaySongsChanged(sortSongs());
+              },
+            ),
+          )
+        else
+          const SizedBox(width: 48),
       ],
     );
   }
