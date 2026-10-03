@@ -280,6 +280,7 @@ class _HomeViewState extends State<HomeView> {
             key: const PageStorageKey("search_screen"),
             allSongs: state.songs,
             onDeleteSongs: cubit.onDeleteSongs,
+            ),
           ),
         ),
       ],
