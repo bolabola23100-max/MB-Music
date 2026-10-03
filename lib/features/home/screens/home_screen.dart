@@ -185,23 +185,33 @@ class _HomeViewState extends State<HomeView> {
       physics: const BouncingScrollPhysics(),
       onPageChanged: (index) => setState(() => _localIndex = index),
       children: [
-        VideoAlbumsScreen(
-          key: const PageStorageKey('all_videos'),
-          service: _videoService,
-          showAllVideos: true,
+        _KeepAlivePage(
+          child: VideoAlbumsScreen(
+            key: const PageStorageKey('all_videos'),
+            service: _videoService,
+            showAllVideos: true,
+          ),
         ),
-        VideoAlbumsScreen(
-          key: const PageStorageKey('video_albums'),
-          service: _videoService,
+        _KeepAlivePage(
+          child: VideoAlbumsScreen(
+            key: const PageStorageKey('video_albums'),
+            service: _videoService,
+          ),
         ),
-        const VideoFavoritesScreen(
-          key: PageStorageKey('video_favorites'),
+        _KeepAlivePage(
+          child: const VideoFavoritesScreen(
+            key: PageStorageKey('video_favorites'),
+          ),
         ),
-        const VideoPlaylistsScreen(
-          key: PageStorageKey('video_playlists'),
+        _KeepAlivePage(
+          child: const VideoPlaylistsScreen(
+            key: PageStorageKey('video_playlists'),
+          ),
         ),
-        const VideoSearchScreen(
-          key: PageStorageKey('video_search'),
+        _KeepAlivePage(
+          child: const VideoSearchScreen(
+            key: PageStorageKey('video_search'),
+          ),
         ),
       ],
     );
@@ -265,5 +275,26 @@ class _HomeViewState extends State<HomeView> {
         ),
       ],
     );
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  final Widget child;
+
+  const _KeepAlivePage({required this.child});
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin<_KeepAlivePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
