@@ -4,6 +4,7 @@ import 'package:photo_manager/photo_manager.dart';
 import '../services/video_library_service.dart';
 import '../widgets/video_thumbnail.dart';
 import 'video_player_screen.dart';
+import '../widgets/video_options_bottom_sheet.dart';
 
 class VideoAlbumsScreen extends StatefulWidget {
   final VideoLibraryService service;
@@ -214,6 +215,20 @@ class _VideoCard extends StatelessWidget {
                     Icons.play_circle_fill_rounded,
                     color: Colors.white,
                     size: 30,
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: IconButton(
+                    onPressed: () => VideoOptionsBottomSheet.show(
+                      context,
+                      asset: asset,
+                    ),
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
