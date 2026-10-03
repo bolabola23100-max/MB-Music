@@ -132,10 +132,19 @@ class MyAudioHandler extends BaseAudioHandler
       (_) => pause(),
     );
 
-    await _sleepHandler
-        .loadPersistentSleepTimer();
+    try {
+      await _sleepHandler.loadPersistentSleepTimer();
+    } catch (e, s) {
+      log('Sleep timer restore failed: $e', stackTrace: s);
+    }
 
-    await _restorePlaybackState();
+    // Restoring the last song is optional. A stale/deleted file must never
+    // prevent the audio service from becoming ready.
+    try {
+      await _restorePlaybackState();
+    } catch (e, s) {
+      log('Playback state restore failed: $e', stackTrace: s);
+    }
 
     _player.playingStream.listen(
       _broadcastState,
@@ -187,18 +196,36 @@ class MyAudioHandler extends BaseAudioHandler
           _onSongEdited,
         );
 
-    await _restoreEqualizer();
+    // Equalizer is optional and can fail on devices with limited audio-effect
+    // support. Never let it block the audio service.
+    try {
+      await _restoreEqualizer();
+    } catch (e, s) {
+      log('Equalizer restore failed: $e', stackTrace: s);
+    }
+
     _broadcastState(false);
   }
 
   Future<void> _restoreEqualizer() async {
-    final enabled = CacheHelper.equalizerEnabled;
-    await _equalizer.setEnabled(enabled);
-    final saved = CacheHelper.equalizerGains;
-    final parameters = await _equalizer.parameters;
-    for (var i = 0; i < parameters.bands.length; i++) {
-      final gain = i < saved.length ? saved[i] : 0.0;
-      await parameters.bands[i].setGain(gain);
+    try {
+      final enabled = CacheHelper.equalizerEnabled;
+      await _equalizer.setEnabled(enabled);
+
+      final saved = CacheHelper.equalizerGains;
+      final parameters = await _equalizer.parameters;
+
+      for (var i = 0; i < parameters.bands.length; i++) {
+        final gain = i < saved.length ? saved[i] : 0.0;
+        try {
+          await parameters.bands[i].setGain(gain);
+        } catch (e, s) {
+          log('Equalizer band $i restore failed: $e', stackTrace: s);
+        }
+      }
+    } catch (e, s) {
+      // Equalizer support varies by Android device.
+      log('Equalizer initialization unavailable: $e', stackTrace: s);
     }
   }
 
