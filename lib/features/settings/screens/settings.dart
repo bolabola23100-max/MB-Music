@@ -122,10 +122,9 @@ class SettingsView extends StatelessWidget {
           title: 'settings.re_scan_library'.tr(),
           subtitle: 'settings.re_scan_library_desc'.tr(),
           onTap: () {
-            MySnackBar(context: context).showSnackBar(
-              'settings.refreshing_library'.tr(),
-              AppColors.blue,
-            );
+            MySnackBar(
+              context: context,
+            ).showSnackBar('settings.refreshing_library'.tr(), AppColors.blue);
             onRescan();
           },
         ),
@@ -153,14 +152,15 @@ class SettingsView extends StatelessWidget {
         buildSettingTile(
           icon: Icons.info_outline_rounded,
           title: 'settings.version'.tr(),
-          subtitle: '1.0.0 (V24.04)',
+          subtitle: '1.0.0+11 (v11)',
         ),
         buildSettingTile(
           icon: Icons.share_rounded,
           title: 'settings.share_app'.tr(),
           onTap: () => SharePlus.instance.share(
             ShareParams(
-              text: 'MBMusic - a simple music player for Android.\nhttps://play.google.com/store/apps/details?id=com.mbmusic.player',
+              text:
+                  'MBMusic - a simple music player for Android.\nhttps://play.google.com/store/apps/details?id=com.mbmusic.player',
               title: 'MBMusic',
             ),
           ),
