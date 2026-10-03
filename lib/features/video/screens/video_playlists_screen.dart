@@ -84,7 +84,7 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     _reload();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Playlist "\${playlist.name}" deleted')),
+        SnackBar(content: Text('Playlist "${playlist.name}" deleted')),
       );
     }
   }
@@ -121,7 +121,7 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.playlist_play_rounded, color: AppColors.blue, size: 34),
                   title: Text(playlist.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                  subtitle: Text('\${playlist.videoIds.length} videos',
+                  subtitle: Text('${playlist.videoIds.length} videos',
                       style: const TextStyle(color: Colors.white54)),
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
