@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:music/app/error_app.dart';
 import 'package:music/app/main_app.dart';
 import 'package:music/core/services/app_version_service.dart';
 import 'package:music/core/services/audio/audio_service.dart';
