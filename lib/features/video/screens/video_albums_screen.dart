@@ -239,8 +239,8 @@ class _VideoCard extends StatelessWidget {
     final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
     return hours > 0
-        ? hours.toString() + ':' + minutes + ':' + seconds
-        : minutes + ':' + seconds;
+        ? '$hours:$minutes:$seconds'
+        : '$minutes:$seconds';
   }
 }
 
@@ -285,7 +285,7 @@ class _AlbumTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            subtitle: Text((snapshot.data ?? 0).toString() + ' videos'),
+            subtitle: Text('${snapshot.data ?? 0} videos'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () {
               Navigator.of(context).push(
