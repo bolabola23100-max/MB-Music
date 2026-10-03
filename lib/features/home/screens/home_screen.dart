@@ -198,34 +198,28 @@ class _HomeViewState extends State<HomeView> {
 
   List<Widget> _buildVideoPages() {
     return [
-      _KeepAlivePage(
-        child: VideoAlbumsScreen(
+      VideoAlbumsScreen(
           key: const PageStorageKey('all_videos'),
           service: _videoService,
           showAllVideos: true,
         ),
       ),
-      _KeepAlivePage(
-        child: VideoAlbumsScreen(
+      VideoAlbumsScreen(
           key: const PageStorageKey('video_albums'),
           service: _videoService,
         ),
       ),
-      _KeepAlivePage(
-        child: const VideoFavoritesScreen(
+      const VideoFavoritesScreen(
           key: PageStorageKey('video_favorites'),
         ),
       ),
-      _KeepAlivePage(
-        child: const VideoPlaylistsScreen(
+      const VideoPlaylistsScreen(
           key: PageStorageKey('video_playlists'),
         ),
       ),
-      _KeepAlivePage(
-        child: const VideoSearchScreen(
+      const VideoSearchScreen(
           key: PageStorageKey('video_search'),
         ),
-      ),
     ];
   }
 
@@ -251,8 +245,7 @@ class _HomeViewState extends State<HomeView> {
     HomeCubit cubit,
   ) {
     return [
-      _KeepAlivePage(
-        child: BlocBuilder<HomeCubit, HomeState>(
+      BlocBuilder<HomeCubit, HomeState>(
           buildWhen: (p, c) => p.displaySongs != c.displaySongs,
           builder: (context, state) => SongListWidget(
             key: const PageStorageKey("songs_list"),
@@ -269,8 +262,7 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       ),
-      _KeepAlivePage(
-        child: BlocBuilder<HomeCubit, HomeState>(
+      BlocBuilder<HomeCubit, HomeState>(
           buildWhen: (p, c) => p.sounds != c.sounds,
           builder: (context, state) => SoundsScreen(
             key: const PageStorageKey("sounds_screen"),
@@ -280,8 +272,7 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       ),
-      _KeepAlivePage(
-        child: BlocBuilder<HomeCubit, HomeState>(
+      BlocBuilder<HomeCubit, HomeState>(
           buildWhen: (p, c) => p.songs != c.songs,
           builder: (context, state) => FavoritesScreen(
             key: const PageStorageKey("favs_screen"),
@@ -291,11 +282,9 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       ),
-      _KeepAlivePage(
-        child: const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
+      const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
       ),
-      _KeepAlivePage(
-        child: BlocBuilder<HomeCubit, HomeState>(
+      BlocBuilder<HomeCubit, HomeState>(
           buildWhen: (p, c) => p.songs != c.songs,
           builder: (context, state) => SearchScreen(
             key: const PageStorageKey("search_screen"),
@@ -303,7 +292,6 @@ class _HomeViewState extends State<HomeView> {
             onDeleteSongs: cubit.onDeleteSongs,
           ),
         ),
-      ),
     ];
   }
 }
