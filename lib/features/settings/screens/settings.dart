@@ -167,7 +167,7 @@ class SettingsView extends StatelessWidget {
         buildSettingTile(
           icon: Icons.info_outline_rounded,
           title: 'settings.version'.tr(),
-          subtitle: '1.0.0 (V24.04)',
+          subtitle: '1.0.0+11 (v11)',
         ),
         buildSettingTile(
           icon: Icons.share_rounded,
