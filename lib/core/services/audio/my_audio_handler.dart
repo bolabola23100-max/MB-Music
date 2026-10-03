@@ -132,10 +132,17 @@ class MyAudioHandler extends BaseAudioHandler
       (_) => pause(),
     );
 
-    await _sleepHandler
-        .loadPersistentSleepTimer();
+    try {
+      await _sleepHandler.loadPersistentSleepTimer();
+    } catch (e, s) {
+      log('Sleep timer restore failed: $e', stackTrace: s);
+    }
 
-    await _restorePlaybackState();
+    try {
+      await _restorePlaybackState();
+    } catch (e, s) {
+      log('Playback state restore failed: $e', stackTrace: s);
+    }
 
     _player.playingStream.listen(
       _broadcastState,
@@ -187,18 +194,33 @@ class MyAudioHandler extends BaseAudioHandler
           _onSongEdited,
         );
 
-    await _restoreEqualizer();
+    try {
+      await _restoreEqualizer();
+    } catch (e, s) {
+      log('Equalizer restore failed: $e', stackTrace: s);
+    }
+
     _broadcastState(false);
   }
 
   Future<void> _restoreEqualizer() async {
-    final enabled = CacheHelper.equalizerEnabled;
-    await _equalizer.setEnabled(enabled);
-    final saved = CacheHelper.equalizerGains;
-    final parameters = await _equalizer.parameters;
-    for (var i = 0; i < parameters.bands.length; i++) {
-      final gain = i < saved.length ? saved[i] : 0.0;
-      await parameters.bands[i].setGain(gain);
+    try {
+      final enabled = CacheHelper.equalizerEnabled;
+      await _equalizer.setEnabled(enabled);
+
+      final saved = CacheHelper.equalizerGains;
+      final parameters = await _equalizer.parameters;
+
+      for (var i = 0; i < parameters.bands.length; i++) {
+        final gain = i < saved.length ? saved[i] : 0.0;
+        try {
+          await parameters.bands[i].setGain(gain);
+        } catch (e, s) {
+          log('Equalizer band $i restore failed: $e', stackTrace: s);
+        }
+      }
+    } catch (e, s) {
+      log('Equalizer initialization unavailable: $e', stackTrace: s);
     }
   }
 
