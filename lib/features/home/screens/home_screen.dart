@@ -13,6 +13,8 @@ import 'package:music/features/home/cubit/home_cubit.dart';
 import 'package:music/features/home/cubit/home_state.dart';
 import 'package:music/features/video/screens/video_albums_screen.dart';
 import 'package:music/features/video/services/video_library_service.dart';
+import 'package:music/features/video/screens/video_favorites_screen.dart';
+import 'package:music/features/video/screens/video_playlists_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -190,6 +192,12 @@ class _HomeViewState extends State<HomeView> {
         VideoAlbumsScreen(
           key: const PageStorageKey('video_albums'),
           service: _videoService,
+        ),
+        const VideoFavoritesScreen(
+          key: PageStorageKey('video_favorites'),
+        ),
+        const VideoPlaylistsScreen(
+          key: PageStorageKey('video_playlists'),
         ),
       ],
     );
