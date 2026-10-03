@@ -306,7 +306,6 @@ class _HomeViewState extends State<HomeView> {
       ),
     ];
   }
-  }
 }
 
 class _KeepAlivePage extends StatefulWidget {
