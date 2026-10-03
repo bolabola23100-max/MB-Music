@@ -71,6 +71,7 @@ class VideoOptionsBottomSheet {
                 title: const Text('Add to playlist', style: TextStyle(color: Colors.white)),
                 onTap: () async {
                   Navigator.pop(sheetContext);
+                  if (!context.mounted) return;
                   await _showPlaylistPicker(context, asset, playlists);
                 },
               ),
@@ -312,7 +313,7 @@ class VideoOptionsBottomSheet {
   ) async {
     final file = await asset.file;
     final size = file?.lengthSync() ?? 0;
-    final path = await asset.relativePath;
+    final path = asset.relativePath;
     final mime = await asset.mimeTypeAsync;
     if (!context.mounted) return;
 
