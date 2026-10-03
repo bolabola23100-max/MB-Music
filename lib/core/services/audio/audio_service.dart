@@ -15,6 +15,7 @@ class AudioService {
 
   late MyAudioHandler _handler;
   bool _initialized = false;
+  Future<void>? _initializationFuture;
 
   AudioService._internal();
 
@@ -53,6 +54,25 @@ class AudioService {
   Future<void> init() async {
     if (_initialized) return;
 
+    final existingInitialization = _initializationFuture;
+    if (existingInitialization != null) {
+      await existingInitialization;
+      return;
+    }
+
+    final future = _initialize();
+    _initializationFuture = future;
+
+    try {
+      await future;
+    } finally {
+      if (identical(_initializationFuture, future)) {
+        _initializationFuture = null;
+      }
+    }
+  }
+
+  Future<void> _initialize() async {
     _handler = await as_pkg.AudioService.init(
       builder: () => MyAudioHandler(),
       config: const as_pkg.AudioServiceConfig(
