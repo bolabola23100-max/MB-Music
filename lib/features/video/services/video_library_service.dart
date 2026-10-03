@@ -6,7 +6,7 @@ class VideoLibraryService {
   Future<bool> requestAccess() async {
     final state = await PhotoManager.requestPermissionExtend(
       requestOption: const PermissionRequestOption(
-        android: AndroidPermission(
+        androidPermission: AndroidPermission(
           type: RequestType.video,
           mediaLocation: false,
         ),
