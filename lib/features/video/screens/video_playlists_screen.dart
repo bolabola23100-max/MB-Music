@@ -47,6 +47,11 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     if (!mounted || name == null || name.isEmpty) return;
     await _service.createPlaylist(name);
     _reload();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Playlist "$name" created')),
+      );
+    }
   }
 
   Future<void> _rename(VideoPlaylist playlist) async {
@@ -67,11 +72,21 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     if (!mounted || name == null || name.isEmpty) return;
     await _service.renamePlaylist(playlist.id, name);
     _reload();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Playlist renamed to "$name"')),
+      );
+    }
   }
 
   Future<void> _delete(VideoPlaylist playlist) async {
     await _service.deletePlaylist(playlist.id);
     _reload();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Playlist "\${playlist.name}" deleted')),
+      );
+    }
   }
 
   @override
@@ -106,7 +121,7 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.playlist_play_rounded, color: AppColors.blue, size: 34),
                   title: Text(playlist.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                  subtitle: Text(playlist.videoIds.length.toString() + ' videos',
+                  subtitle: Text('\${playlist.videoIds.length} videos',
                       style: const TextStyle(color: Colors.white54)),
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
