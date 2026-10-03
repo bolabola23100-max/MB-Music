@@ -117,18 +117,33 @@ class VideoOptionsBottomSheet {
         );
         break;
       case 'playlist':
+        await _waitForSheetToClose();
+        if (!context.mounted) return;
         await _showPlaylistPicker(context, asset, playlists);
         break;
       case 'rename':
+        await _waitForSheetToClose();
+        if (!context.mounted) return;
         await _renameVideo(context, asset, title);
         break;
       case 'info':
+        await _waitForSheetToClose();
+        if (!context.mounted) return;
         await _showInfo(context, asset, title);
         break;
       case 'delete':
+        await _waitForSheetToClose();
+        if (!context.mounted) return;
         await _deleteVideo(context, asset);
         break;
     }
+  }
+
+  // showModalBottomSheet completes when the route starts popping, while its
+  // closing animation is still running. Wait for that animation before
+  // presenting another route to avoid Flutter's _dependents assertion.
+  static Future<void> _waitForSheetToClose() async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
   }
 
   static Future<void> _showPlaylistPicker(
