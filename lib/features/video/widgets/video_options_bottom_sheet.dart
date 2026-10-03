@@ -19,7 +19,7 @@ class VideoOptionsBottomSheet {
     final title = await asset.titleAsync;
     if (!context.mounted) return;
 
-    await showModalBottomSheet(
+    final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.gray,
       shape: const RoundedRectangleBorder(
@@ -54,56 +54,81 @@ class VideoOptionsBottomSheet {
                       : 'Add to favorites',
                   style: const TextStyle(color: Colors.white),
                 ),
-                onTap: () async {
-                  await favorites.toggleFavorite(asset.id);
-                  if (!sheetContext.mounted || !context.mounted) return;
-                  Navigator.pop(sheetContext);
-                  _message(
-                    context,
-                    isFavorite
-                        ? 'Video removed from favorites'
-                        : 'Video added to favorites',
-                  );
-                },
+                onTap: () => Navigator.pop(sheetContext, 'favorite'),
               ),
               ListTile(
-                leading: const Icon(Icons.playlist_add_rounded, color: Colors.white),
-                title: const Text('Add to playlist', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  if (!context.mounted) return;
-                  await _showPlaylistPicker(context, asset, playlists);
-                },
+                leading: const Icon(
+                  Icons.playlist_add_rounded,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Add to playlist',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'playlist'),
               ),
               ListTile(
                 leading: const Icon(Icons.edit_rounded, color: Colors.white),
-                title: const Text('Rename video', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await _renameVideo(context, asset, title);
-                },
+                title: const Text(
+                  'Rename video',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'rename'),
               ),
               ListTile(
-                leading: const Icon(Icons.info_outline_rounded, color: Colors.white),
-                title: const Text('Video information', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await _showInfo(context, asset, title);
-                },
+                leading: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Video information',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'info'),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                title: const Text('Delete video from device', style: TextStyle(color: Colors.redAccent)),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await _deleteVideo(context, asset);
-                },
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  'Delete video from device',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+                onTap: () => Navigator.pop(sheetContext, 'delete'),
               ),
             ],
           ),
         ),
       ),
     );
+
+    if (!context.mounted || action == null) return;
+
+    switch (action) {
+      case 'favorite':
+        await favorites.toggleFavorite(asset.id);
+        if (!context.mounted) return;
+        _message(
+          context,
+          isFavorite
+              ? 'Video removed from favorites'
+              : 'Video added to favorites',
+        );
+        break;
+      case 'playlist':
+        await _showPlaylistPicker(context, asset, playlists);
+        break;
+      case 'rename':
+        await _renameVideo(context, asset, title);
+        break;
+      case 'info':
+        await _showInfo(context, asset, title);
+        break;
+      case 'delete':
+        await _deleteVideo(context, asset);
+        break;
+    }
   }
 
   static Future<void> _showPlaylistPicker(
