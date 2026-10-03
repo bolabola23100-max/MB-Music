@@ -283,7 +283,6 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
-      ),
       BlocBuilder<HomeCubit, HomeState>(
           buildWhen: (p, c) => p.songs != c.songs,
           builder: (context, state) => SearchScreen(
