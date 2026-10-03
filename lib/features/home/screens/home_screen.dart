@@ -41,6 +41,8 @@ class _HomeViewState extends State<HomeView> {
   int _localIndex = 0;
   bool _isVideoMode = false;
   final VideoLibraryService _videoService = const VideoLibraryService();
+  late final List<Widget> _musicPages;
+  late final List<Widget> _videoPages;
 
   static const Duration _pageAnimDuration = Duration(milliseconds: 400);
   static const Curve _pageAnimCurve = Curves.easeInOutCubic;
@@ -50,6 +52,12 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _localIndex = context.read<HomeCubit>().state.currentIndex;
     _pageController = PageController(initialPage: _localIndex);
+
+    final audioService = AudioService();
+    final favoritesService = FavoritesService();
+    final cubit = context.read<HomeCubit>();
+    _musicPages = _buildMusicPages(audioService, favoritesService, cubit);
+    _videoPages = _buildVideoPages();
   }
 
   @override
@@ -184,37 +192,41 @@ class _HomeViewState extends State<HomeView> {
       controller: _pageController,
       physics: const BouncingScrollPhysics(),
       onPageChanged: (index) => setState(() => _localIndex = index),
-      children: [
-        _KeepAlivePage(
-          child: VideoAlbumsScreen(
-            key: const PageStorageKey('all_videos'),
-            service: _videoService,
-            showAllVideos: true,
-          ),
-        ),
-        _KeepAlivePage(
-          child: VideoAlbumsScreen(
-            key: const PageStorageKey('video_albums'),
-            service: _videoService,
-          ),
-        ),
-        _KeepAlivePage(
-          child: const VideoFavoritesScreen(
-            key: PageStorageKey('video_favorites'),
-          ),
-        ),
-        _KeepAlivePage(
-          child: const VideoPlaylistsScreen(
-            key: PageStorageKey('video_playlists'),
-          ),
-        ),
-        _KeepAlivePage(
-          child: const VideoSearchScreen(
-            key: PageStorageKey('video_search'),
-          ),
-        ),
-      ],
+      children: _videoPages,
     );
+  }
+
+  List<Widget> _buildVideoPages() {
+    return [
+      _KeepAlivePage(
+        child: VideoAlbumsScreen(
+          key: const PageStorageKey('all_videos'),
+          service: _videoService,
+          showAllVideos: true,
+        ),
+      ),
+      _KeepAlivePage(
+        child: VideoAlbumsScreen(
+          key: const PageStorageKey('video_albums'),
+          service: _videoService,
+        ),
+      ),
+      _KeepAlivePage(
+        child: const VideoFavoritesScreen(
+          key: PageStorageKey('video_favorites'),
+        ),
+      ),
+      _KeepAlivePage(
+        child: const VideoPlaylistsScreen(
+          key: PageStorageKey('video_playlists'),
+        ),
+      ),
+      _KeepAlivePage(
+        child: const VideoSearchScreen(
+          key: PageStorageKey('video_search'),
+        ),
+      ),
+    ];
   }
 
   Widget _buildMusicPageView(
@@ -229,11 +241,20 @@ class _HomeViewState extends State<HomeView> {
         setState(() => _localIndex = index);
         cubit.updateCurrentIndex(index);
       },
-      children: [
-        _KeepAlivePage(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            buildWhen: (p, c) => p.displaySongs != c.displaySongs,
-            builder: (context, state) => SongListWidget(
+      children: _musicPages,
+    );
+  }
+
+  List<Widget> _buildMusicPages(
+    AudioService audioService,
+    FavoritesService favoritesService,
+    HomeCubit cubit,
+  ) {
+    return [
+      _KeepAlivePage(
+        child: BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.displaySongs != c.displaySongs,
+          builder: (context, state) => SongListWidget(
             key: const PageStorageKey("songs_list"),
             songs: state.displaySongs,
             audioService: audioService,
@@ -245,46 +266,46 @@ class _HomeViewState extends State<HomeView> {
             openPlayerOnSongTap: true,
             onDeleteSongs: cubit.onDeleteSongs,
             isf: false,
-            ),
           ),
         ),
-        _KeepAlivePage(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            buildWhen: (p, c) => p.sounds != c.sounds,
-            builder: (context, state) => SoundsScreen(
+      ),
+      _KeepAlivePage(
+        child: BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.sounds != c.sounds,
+          builder: (context, state) => SoundsScreen(
             key: const PageStorageKey("sounds_screen"),
             songs: state.sounds,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
-            ),
           ),
         ),
-        _KeepAlivePage(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            buildWhen: (p, c) => p.songs != c.songs,
-            builder: (context, state) => FavoritesScreen(
+      ),
+      _KeepAlivePage(
+        child: BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.songs != c.songs,
+          builder: (context, state) => FavoritesScreen(
             key: const PageStorageKey("favs_screen"),
             allSongs: state.songs,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
-            ),
           ),
         ),
-        _KeepAlivePage(
-          child: const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
-        ),
-        _KeepAlivePage(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            buildWhen: (p, c) => p.songs != c.songs,
-            builder: (context, state) => SearchScreen(
+      ),
+      _KeepAlivePage(
+        child: const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
+      ),
+      _KeepAlivePage(
+        child: BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (p, c) => p.songs != c.songs,
+          builder: (context, state) => SearchScreen(
             key: const PageStorageKey("search_screen"),
             allSongs: state.songs,
             onDeleteSongs: cubit.onDeleteSongs,
-            ),
           ),
         ),
-      ],
-    );
+      ),
+    ];
+  }
   }
 }
 
