@@ -196,6 +196,22 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  Widget _buildMusicPageView(
+    AudioService audioService,
+    FavoritesService favoritesService,
+    HomeCubit cubit,
+  ) {
+    return PageView(
+      controller: _pageController,
+      physics: const BouncingScrollPhysics(),
+      onPageChanged: (index) {
+        setState(() => _localIndex = index);
+        cubit.updateCurrentIndex(index);
+      },
+      children: _musicPages,
+    );
+  }
+
   List<Widget> _buildVideoPages() {
     return [
       VideoAlbumsScreen(
