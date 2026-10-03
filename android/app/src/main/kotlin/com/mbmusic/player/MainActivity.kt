@@ -16,6 +16,7 @@ import com.ryanheise.audioservice.AudioServiceActivity
 class MainActivity : AudioServiceActivity() {
 
     private val CHANNEL = "com.mbmusic.player/delete"
+    private val VIDEO_CHANNEL = "com.mbmusic.player/video"
     private var pendingResult: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +56,45 @@ class MainActivity : AudioServiceActivity() {
                     else -> result.notImplemented()
                 }
             }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VIDEO_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "renameVideo" -> {
+                        val videoId = call.argument<String>("videoId")
+                        val newName = call.argument<String>("newName")?.trim()
+                        if (videoId.isNullOrBlank() || newName.isNullOrBlank()) {
+                            result.error("INVALID_ARGS", "videoId and newName are required", null)
+                            return@setMethodCallHandler
+                        }
+                        renameVideo(videoId, newName, result)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    private fun renameVideo(videoId: String, newName: String, result: MethodChannel.Result) {
+        try {
+            val id = videoId.toLong()
+            val uri = ContentUris.withAppendedId(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                id
+            )
+
+            val values = android.content.ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, newName)
+            }
+
+            val updated = contentResolver.update(uri, values, null, null)
+            if (updated > 0) {
+                result.success(true)
+            } else {
+                result.error("RENAME_FAILED", "Video could not be renamed", null)
+            }
+        } catch (e: Exception) {
+            result.error("RENAME_ERROR", e.message, null)
+        }
     }
 
     private fun deleteSongs(songIds: List<Int>, result: MethodChannel.Result) {
