@@ -199,44 +199,24 @@ class _HomeViewState extends State<HomeView> {
   List<Widget> _buildVideoPages() {
     return [
       VideoAlbumsScreen(
-          key: const PageStorageKey('all_videos'),
-          service: _videoService,
-          showAllVideos: true,
-        ),
+        key: const PageStorageKey('all_videos'),
+        service: _videoService,
+        showAllVideos: true,
       ),
       VideoAlbumsScreen(
-          key: const PageStorageKey('video_albums'),
-          service: _videoService,
-        ),
+        key: const PageStorageKey('video_albums'),
+        service: _videoService,
       ),
       const VideoFavoritesScreen(
-          key: PageStorageKey('video_favorites'),
-        ),
+        key: PageStorageKey('video_favorites'),
       ),
       const VideoPlaylistsScreen(
-          key: PageStorageKey('video_playlists'),
-        ),
+        key: PageStorageKey('video_playlists'),
       ),
       const VideoSearchScreen(
-          key: PageStorageKey('video_search'),
-        ),
+        key: PageStorageKey('video_search'),
+      ),
     ];
-  }
-
-  Widget _buildMusicPageView(
-    AudioService audioService,
-    FavoritesService favoritesService,
-    HomeCubit cubit,
-  ) {
-    return PageView(
-      controller: _pageController,
-      physics: const BouncingScrollPhysics(),
-      onPageChanged: (index) {
-        setState(() => _localIndex = index);
-        cubit.updateCurrentIndex(index);
-      },
-      children: _musicPages,
-    );
   }
 
   List<Widget> _buildMusicPages(
@@ -246,51 +226,50 @@ class _HomeViewState extends State<HomeView> {
   ) {
     return [
       BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.displaySongs != c.displaySongs,
-          builder: (context, state) => SongListWidget(
-            key: const PageStorageKey("songs_list"),
-            songs: state.displaySongs,
-            audioService: audioService,
-            isFavoriteChecker: (s) =>
-                favoritesService.favoriteIdsNotifier.value.contains(s.id),
-            onToggleFavorite: (s) => favoritesService.toggleFavorite(s.id),
-            onOptionSelected: cubit.handleSort,
-            isTitle: false,
-            openPlayerOnSongTap: true,
-            onDeleteSongs: cubit.onDeleteSongs,
-            isf: false,
-          ),
+        buildWhen: (p, c) => p.displaySongs != c.displaySongs,
+        builder: (context, state) => SongListWidget(
+          key: const PageStorageKey("songs_list"),
+          songs: state.displaySongs,
+          audioService: audioService,
+          isFavoriteChecker: (s) =>
+              favoritesService.favoriteIdsNotifier.value.contains(s.id),
+          onToggleFavorite: (s) => favoritesService.toggleFavorite(s.id),
+          onOptionSelected: cubit.handleSort,
+          isTitle: false,
+          openPlayerOnSongTap: true,
+          onDeleteSongs: cubit.onDeleteSongs,
+          isf: false,
         ),
       ),
       BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.sounds != c.sounds,
-          builder: (context, state) => SoundsScreen(
-            key: const PageStorageKey("sounds_screen"),
-            songs: state.sounds,
-            audioService: audioService,
-            onDeleteSongs: cubit.onDeleteSongs,
-          ),
+        buildWhen: (p, c) => p.sounds != c.sounds,
+        builder: (context, state) => SoundsScreen(
+          key: const PageStorageKey("sounds_screen"),
+          songs: state.sounds,
+          audioService: audioService,
+          onDeleteSongs: cubit.onDeleteSongs,
         ),
       ),
       BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.songs != c.songs,
-          builder: (context, state) => FavoritesScreen(
-            key: const PageStorageKey("favs_screen"),
-            allSongs: state.songs,
-            audioService: audioService,
-            onDeleteSongs: cubit.onDeleteSongs,
-          ),
+        buildWhen: (p, c) => p.songs != c.songs,
+        builder: (context, state) => FavoritesScreen(
+          key: const PageStorageKey("favs_screen"),
+          allSongs: state.songs,
+          audioService: audioService,
+          onDeleteSongs: cubit.onDeleteSongs,
         ),
       ),
-      const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
+      const PlaylistsScreen(
+        key: PageStorageKey("playlists_screen"),
+      ),
       BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.songs != c.songs,
-          builder: (context, state) => SearchScreen(
-            key: const PageStorageKey("search_screen"),
-            allSongs: state.songs,
-            onDeleteSongs: cubit.onDeleteSongs,
-          ),
+        buildWhen: (p, c) => p.songs != c.songs,
+        builder: (context, state) => SearchScreen(
+          key: const PageStorageKey("search_screen"),
+          allSongs: state.songs,
+          onDeleteSongs: cubit.onDeleteSongs,
         ),
+      ),
     ];
   }
 }
