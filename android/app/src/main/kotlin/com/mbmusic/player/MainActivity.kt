@@ -24,7 +24,7 @@ class MainActivity : AudioServiceActivity() {
         // ✅ إنشاء Notification Channel للأندرويد 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "com.music.app.channel.audio",
+                "com.example.music.audio",
                 "Music Playback",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
