@@ -23,6 +23,7 @@ class BottomNavBar extends StatelessWidget {
             _buildMaterialNavItem(Icons.video_collection_rounded, 'Albums', 1),
             _buildMaterialNavItem(Icons.favorite_rounded, 'Favorite Videos', 2),
             _buildMaterialNavItem(Icons.playlist_play_rounded, 'Video Playlists', 3),
+            _buildMaterialNavItem(Icons.search_rounded, 'Video Search', 4),
           ]
         : <BottomNavigationBarItem>[
             _buildNavItem(AppIcons.song, 'Home', 0),
