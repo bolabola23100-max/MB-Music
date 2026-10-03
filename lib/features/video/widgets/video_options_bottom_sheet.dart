@@ -170,6 +170,8 @@ class VideoOptionsBottomSheet {
     if (!context.mounted) return;
 
     final updatedPlaylists = await service.getPlaylists();
+    if (!context.mounted) return;
+
     final matching = updatedPlaylists.where((p) => p.id == result);
     final playlistName = matching.isEmpty ? 'playlist' : matching.first.name;
 
