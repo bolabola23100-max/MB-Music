@@ -71,7 +71,8 @@ class PlayerView extends StatelessWidget {
           },
           onVerticalDragEnd: (details) {
             if (!state.canDrag) return;
-            if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (state.offsetY > 200 || velocity > 1000) {
               Navigator.pop(context);
             } else {
               cubit.resetDrag();
@@ -308,21 +309,21 @@ class PlayerView extends StatelessWidget {
                   color: AppColors.white,
                   size: 28,
                 ),
-                onPressed: () {
+                onPressed: () async {
                   final safeIndex = state.currentIndex.clamp(
                     0,
                     state.songs.length - 1,
                   );
-                  showDialog(
+                  await showDialog(
                     context: context,
                     builder: (_) =>
                         AddToPlaylistDialog(songs: [state.songs[safeIndex]]),
-                  ).then((_) {
-                    MySnackBar(context: context).showSnackBar(
-                      "playlist_dialogs.add_to_playlist".tr(),
-                      AppColors.blue,
-                    );
-                  });
+                  );
+                  if (!context.mounted) return;
+                  MySnackBar(context: context).showSnackBar(
+                    "playlist_dialogs.add_to_playlist".tr(),
+                    AppColors.blue,
+                  );
                 },
               ),
 

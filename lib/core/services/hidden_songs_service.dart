@@ -11,7 +11,10 @@ class HiddenSongsService {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_key) ?? [];
-    _hiddenIds = list.map(int.parse).toSet();
+    _hiddenIds = list
+        .map(int.tryParse)
+        .whereType<int>()
+        .toSet();
   }
 
   Future<void> hideSong(int songId) async {
@@ -34,6 +37,23 @@ class HiddenSongsService {
 
   bool isHidden(int songId) {
     return _hiddenIds.contains(songId);
+  }
+
+  Set<int> get hiddenIds => Set<int>.from(_hiddenIds);
+
+  Future<void> unhideSong(int songId) async {
+    _hiddenIds.remove(songId);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _key,
+      _hiddenIds.map((e) => e.toString()).toList(),
+    );
+  }
+
+  Future<void> clearAll() async {
+    _hiddenIds.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
   }
 
   List<T> filterHidden<T>(List<T> songs, int Function(T) idGetter) {

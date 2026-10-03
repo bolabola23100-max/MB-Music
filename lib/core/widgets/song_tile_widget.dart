@@ -13,7 +13,7 @@ class SongTileWidget extends StatefulWidget {
   final SongModel song;
   final AudioService audioService;
   final VoidCallback onTap;
-  final VoidCallback onMoreTap;
+  final VoidCallback? onMoreTap;
   final VoidCallback? onLongPress;
 
   const SongTileWidget({
@@ -21,7 +21,7 @@ class SongTileWidget extends StatefulWidget {
     required this.song,
     required this.audioService,
     required this.onTap,
-    required this.onMoreTap,
+    this.onMoreTap,
     this.onLongPress,
   });
 
@@ -147,11 +147,11 @@ class _SongTileWidgetState extends State<SongTileWidget> {
                             color: AppColors.blue.withValues(alpha: 0.8),
                           ),
                         ),
-                      IconButton(
-                        icon:
-                            Icon(Icons.more_vert, color: AppColors.white),
-                        onPressed: widget.onMoreTap,
-                      ),
+                      if (widget.onMoreTap != null)
+                        IconButton(
+                          icon: const Icon(Icons.more_vert, color: AppColors.white),
+                          onPressed: widget.onMoreTap,
+                        ),
                     ],
                   ),
                 ),

@@ -78,6 +78,7 @@ class PlayerCubit extends Cubit<PlayerState> {
     final safeIndex = state.currentIndex.clamp(0, state.songs.length - 1);
     final songId = state.songs[safeIndex].id;
     final edit = await SongEditService().getEdit(songId);
+    if (isClosed) return;
     emit(state.copyWith(
       customTitle: () => edit?['title'],
       customArtist: () => edit?['artist'],

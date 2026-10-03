@@ -28,9 +28,14 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
   }
 
   Future<void> _loadPlaylists() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    _playlists = await _service.getPlaylists();
-    setState(() => _isLoading = false);
+    final playlists = await _service.getPlaylists();
+    if (!mounted) return;
+    setState(() {
+      _playlists = playlists;
+      _isLoading = false;
+    });
   }
 
   void _showCreatePlaylistDialog() {

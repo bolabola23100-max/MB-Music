@@ -70,7 +70,8 @@ class PlayerView1 extends StatelessWidget {
           },
           onVerticalDragEnd: (details) {
             if (!state.canDrag) return;
-            if (state.offsetY > 200 || details.primaryVelocity! > 1000) {
+            final velocity = details.primaryVelocity ?? 0;
+      if (state.offsetY > 200 || velocity > 1000) {
               Navigator.pop(context);
             } else {
               cubit.resetDrag();
@@ -109,7 +110,7 @@ class PlayerView1 extends StatelessWidget {
                   // 🌫️ البلر القوي
                   BackdropFilter(
                     filter: ui.ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                    child: Container(color: Colors.black.withOpacity(0.55)),
+                    child: Container(color: Colors.black.withValues(alpha: 0.55)),
                   ),
 
                   // المحتوى الرئيسي
@@ -212,7 +213,7 @@ class PlayerView1 extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                   ),
@@ -267,9 +268,9 @@ class PlayerView1 extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: AppSeekBar(audioService: audioService, isT: true),
       ),
@@ -287,9 +288,9 @@ class PlayerView1 extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
+          color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
@@ -323,22 +324,22 @@ class PlayerView1 extends StatelessWidget {
 
                   _circleIconButton(
                     icon: Icons.playlist_add,
-                    onTap: () {
+                    onTap: () async {
                       final safeIndex = state.currentIndex.clamp(
                         0,
                         state.songs.length - 1,
                       );
-                      showDialog(
+                      await showDialog(
                         context: context,
                         builder: (_) => AddToPlaylistDialog(
                           songs: [state.songs[safeIndex]],
                         ),
-                      ).then((_) {
-                        MySnackBar(context: context).showSnackBar(
-                          "playlist_dialogs.add_to_playlist".tr(),
-                          AppColors.blue,
-                        );
-                      });
+                      );
+                      if (!context.mounted) return;
+                      MySnackBar(context: context).showSnackBar(
+                        "playlist_dialogs.add_to_playlist".tr(),
+                        AppColors.blue,
+                      );
                     },
                   ),
 
@@ -359,7 +360,7 @@ class PlayerView1 extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
       ),
       child: IconButton(
         icon: Icon(icon, color: AppColors.white, size: 24),
@@ -603,8 +604,8 @@ class PlayerView1 extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.blue.withOpacity(0.15)
-              : AppColors.white.withOpacity(0.05),
+              ? AppColors.blue.withValues(alpha: 0.15)
+              : AppColors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? AppColors.blue : Colors.transparent,
@@ -617,7 +618,7 @@ class PlayerView1 extends StatelessWidget {
               icon,
               color: isSelected
                   ? AppColors.blue
-                  : AppColors.white.withOpacity(0.4),
+                  : AppColors.white.withValues(alpha: 0.4),
               size: 26,
             ),
             const SizedBox(height: 6),
@@ -626,7 +627,7 @@ class PlayerView1 extends StatelessWidget {
               style: TextStyle(
                 color: isSelected
                     ? AppColors.blue
-                    : AppColors.white.withOpacity(0.4),
+                    : AppColors.white.withValues(alpha: 0.4),
                 fontSize: 11,
               ),
             ),

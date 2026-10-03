@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/widgets/player_builder.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
 import 'package:music/core/widgets/sort_button.dart';
 import 'package:music/features/home/widgets/mini_player_widget.dart';
@@ -66,6 +68,26 @@ class PlaylistDetailsView extends StatefulWidget {
 class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
   bool isAscending = true;
 
+  void _playAndOpenPlayer(
+    BuildContext context,
+    PlaylistDetailsCubit cubit,
+    List<SongModel> songs,
+    int index,
+  ) {
+    if (index < 0 || index >= songs.length) return;
+
+    cubit.play(index);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => resolvePlayerScreen(
+          songs: songs,
+          index: index,
+        ),
+      ),
+    );
+  }
+
   void _showOptions(BuildContext context, PlaylistSong song, int playlistId) {
     final cubit = context.read<PlaylistDetailsCubit>();
     showModalBottomSheet(
@@ -78,7 +100,16 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
         playlistId: playlistId,
         onPlay: () {
           Navigator.pop(context);
-          cubit.play(cubit.state.playlistSongs.indexOf(song));
+          final songIndex =
+              cubit.state.songs.indexWhere((s) => s.id == song.songId);
+          if (songIndex != -1) {
+            _playAndOpenPlayer(
+              this.context,
+              cubit,
+              cubit.state.songs,
+              songIndex,
+            );
+          }
         },
         onDelete: () {
           Navigator.pop(context);
@@ -226,14 +257,12 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
             return SongTileWidget(
               song: s,
               audioService: audioService,
-              onTap: () => cubit.play(index),
-              onMoreTap: () {
-                final ps = state.playlistSongs.firstWhere(
-                  (ps) => ps.songId == s.id,
-                  orElse: () => state.playlistSongs[index],
-                );
-                _showOptions(context, ps, widget.playlist.id!);
-              },
+              onTap: () => _playAndOpenPlayer(
+                context,
+                cubit,
+                state.songs,
+                index,
+              ),
               onLongPress: () {
                 final ps = state.playlistSongs.firstWhere(
                   (ps) => ps.songId == s.id,

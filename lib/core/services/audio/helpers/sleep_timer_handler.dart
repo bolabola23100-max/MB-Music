@@ -56,5 +56,6 @@ class SleepTimerHandler {
 
   void cancel() {
     _sleepTimer?.cancel();
+    _sleepTimer = null;
   }
 }

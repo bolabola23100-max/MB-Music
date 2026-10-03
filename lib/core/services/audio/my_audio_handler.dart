@@ -11,12 +11,13 @@ import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart'
 import 'package:music/core/services/audio/audio_service.dart'
     as app_service;
 import 'package:music/core/services/favorites/favorites_service.dart';
-import 'package:music/core/services/listening_stats_service.dart';
+import 'package:music/core/services/cache_helper.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 
 class MyAudioHandler extends BaseAudioHandler
     with SeekHandler {
-  final AudioPlayer _player = AudioPlayer();
+  late final AndroidEqualizer _equalizer;
+  late final AudioPlayer _player;
 
   final AudioPlayer _preloadPlayer =
       AudioPlayer();
@@ -32,6 +33,13 @@ class MyAudioHandler extends BaseAudioHandler
   Duration? _lastSavedPosition;
 
   MyAudioHandler() {
+    _equalizer = AndroidEqualizer();
+    _player = AudioPlayer(
+      audioPipeline: AudioPipeline(
+        androidAudioEffects: [_equalizer],
+      ),
+    );
+
     _sleepHandler =
         SleepTimerHandler(
       onTimerElapsed: () => stop(),
@@ -44,6 +52,8 @@ class MyAudioHandler extends BaseAudioHandler
   Future<void> get ready => _initFuture;
 
   AudioPlayer get rawPlayer => _player;
+
+  AndroidEqualizer get equalizer => _equalizer;
 
   // ============================================================
   // INITIAL STATE
@@ -122,10 +132,19 @@ class MyAudioHandler extends BaseAudioHandler
       (_) => pause(),
     );
 
-    await _sleepHandler
-        .loadPersistentSleepTimer();
+    try {
+      await _sleepHandler.loadPersistentSleepTimer();
+    } catch (e, s) {
+      log('Sleep timer restore failed: $e', stackTrace: s);
+    }
 
-    await _restorePlaybackState();
+    // Restoring the last song is optional. A stale/deleted file must never
+    // prevent the audio service from becoming ready.
+    try {
+      await _restorePlaybackState();
+    } catch (e, s) {
+      log('Playback state restore failed: $e', stackTrace: s);
+    }
 
     _player.playingStream.listen(
       _broadcastState,
@@ -177,7 +196,37 @@ class MyAudioHandler extends BaseAudioHandler
           _onSongEdited,
         );
 
+    // Equalizer is optional and can fail on devices with limited audio-effect
+    // support. Never let it block the audio service.
+    try {
+      await _restoreEqualizer();
+    } catch (e, s) {
+      log('Equalizer restore failed: $e', stackTrace: s);
+    }
+
     _broadcastState(false);
+  }
+
+  Future<void> _restoreEqualizer() async {
+    try {
+      final enabled = CacheHelper.equalizerEnabled;
+      await _equalizer.setEnabled(enabled);
+
+      final saved = CacheHelper.equalizerGains;
+      final parameters = await _equalizer.parameters;
+
+      for (var i = 0; i < parameters.bands.length; i++) {
+        final gain = i < saved.length ? saved[i] : 0.0;
+        try {
+          await parameters.bands[i].setGain(gain);
+        } catch (e, s) {
+          log('Equalizer band $i restore failed: $e', stackTrace: s);
+        }
+      }
+    } catch (e, s) {
+      // Equalizer support varies by Android device.
+      log('Equalizer initialization unavailable: $e', stackTrace: s);
+    }
   }
 
   // ============================================================
@@ -521,16 +570,6 @@ class MyAudioHandler extends BaseAudioHandler
       await _player.play();
 
       _preloadNext(index);
-
-      if (songId != null) {
-        await ListeningStatsService()
-            .recordPlay(
-          songId: songId,
-          title: finalTitle,
-          artist:
-              finalArtist ?? 'Unknown',
-        );
-      }
     } catch (e) {
       log(
         '❌ Error playing song: $e',
@@ -902,6 +941,9 @@ class MyAudioHandler extends BaseAudioHandler
       app_service
           .AudioService()
           .currentQueue = _queue;
+      app_service
+          .AudioService()
+          .originalQueue = List<SongModel>.from(_queue);
 
       queue.add(
         _queue

@@ -34,7 +34,10 @@
     "arabic": "Arabic",
     "share_app": "Share App",
     "rate_app": "Rate App",
-    "automatically_stop_playback_after": "Automatically stop playback after..."
+    "automatically_stop_playback_after": "Automatically stop playback after...",
+    "rate_app_unavailable": "The app store rating page is not available right now.",
+    "audio_quality_original": "Original quality — files are played at the quality they were stored with.",
+    "audio_quality_local_info": "MBMusic plays local music files directly, so there is no streaming quality to downgrade or upgrade."
   },
   "songs": "Songs",
   "sounds": "Sounds",

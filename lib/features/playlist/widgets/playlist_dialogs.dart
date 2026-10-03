@@ -62,6 +62,7 @@ class PlaylistDialogs {
                 final id = await _playlistService.createPlaylist(
                   controller.text.trim(),
                 );
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 onCreated(id);
               }
@@ -107,6 +108,7 @@ class PlaylistDialogs {
                 playlist.id!,
                 controller.text.trim(),
               );
+              if (!context.mounted) return;
               Navigator.pop(context);
               onRenamed();
             },
@@ -138,14 +140,14 @@ class PlaylistDialogs {
           TextButton(
             onPressed: () async {
               await _playlistService.deletePlaylist(playlist.id!);
+              if (!context.mounted) return;
               Navigator.pop(context);
               onDeleted();
-              if (context.mounted) {
-                MySnackBar(context: context).showSnackBar(
-                  "Playlist '${playlist.name}' deleted",
-                  AppColors.red,
-                );
-              }
+              if (!context.mounted) return;
+              MySnackBar(context: context).showSnackBar(
+                "Playlist '${playlist.name}' deleted",
+                AppColors.red,
+              );
             },
             child: Text(
               "options.delete".tr(),
@@ -231,16 +233,15 @@ class _AddSongsViewState extends State<_AddSongsView> {
                       );
                       await _service.addSongToPlaylist(widget.playlistId, song);
                     }
-                    if (mounted) {
-                      final selectedCount = _selectedIds.length;
-                      Navigator.pop(context);
-                      widget.onDone();
-                      if (!mounted) return;
-                      MySnackBar(context: this.context).showSnackBar(
-                        "$selectedCount songs added to playlist!",
-                        AppColors.blue,
-                      );
-                    }
+                    if (!context.mounted) return;
+                    final selectedCount = _selectedIds.length;
+                    Navigator.pop(context);
+                    widget.onDone();
+                    if (!context.mounted) return;
+                    MySnackBar(context: context).showSnackBar(
+                      "$selectedCount songs added to playlist!",
+                      AppColors.blue,
+                    );
                   },
                   child: Text(
                     "common.save".tr(),

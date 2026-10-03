@@ -2,15 +2,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/constants/app_colors.dart';
-import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/features/listening_stats_screen/screens/listening_stats_screen.dart';
 import 'package:music/features/settings/widgets/build_badge.dart';
 import 'package:music/features/settings/widgets/build_footer.dart';
 import 'package:music/features/settings/widgets/build_section_header.dart';
 import 'package:music/features/settings/widgets/build_setting_tile.dart';
 import 'package:music/features/settings/widgets/format_duration.dart';
 import 'package:music/features/settings/widgets/show_language_dialog.dart';
+import 'package:music/features/settings/widgets/show_equalizer_dialog.dart';
+import 'package:music/core/services/review_service.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:music/features/settings/widgets/show_sleep_timer_dialog.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/features/settings/cubit/settings_cubit.dart';
@@ -93,26 +94,10 @@ class SettingsView extends StatelessWidget {
         const SizedBox(height: 10),
         buildSectionHeader('settings.general'.tr()),
         buildSettingTile(
-          icon: Icons.bar_chart_rounded,
-          title: 'settings.listening_stats'.tr(),
-          subtitle: 'settings.listening_stats_desc'.tr(),
-          onTap: () {
-            AppNavigator.push(
-              context,
-              ListeningStatsScreen(allSongs: songs, audioService: audioService),
-            );
-          },
-        ),
-        buildSettingTile(
           icon: Icons.equalizer_rounded,
           title: 'settings.equalizer'.tr(),
           subtitle: 'settings.equalizer_desc'.tr(),
-          onTap: () {
-            MySnackBar(context: context).showSnackBar(
-              'settings.equalizer_feature_coming_soon'.tr(),
-              AppColors.blue,
-            );
-          },
+          onTap: () => showEqualizerDialog(context, audioService),
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.audio'.tr()),
@@ -128,30 +113,18 @@ class SettingsView extends StatelessWidget {
           icon: Icons.high_quality_rounded,
           title: 'settings.audio_quality'.tr(),
           subtitle: 'settings.audio_quality_desc'.tr(),
-          onTap: () {},
+          onTap: () => _showAudioQualityInfo(context),
         ),
         const SizedBox(height: 20),
         buildSectionHeader('settings.library'.tr()),
-        buildSettingTile(
-          icon: Icons.visibility_off_outlined,
-          title: 'settings.hidden_songs'.tr(),
-          subtitle: 'settings.hidden_songs_desc'.tr(),
-          onTap: () {
-            MySnackBar(context: context).showSnackBar(
-              'settings.hidden_songs_management_coming_soon'.tr(),
-              AppColors.blue,
-            );
-          },
-        ),
         buildSettingTile(
           icon: Icons.refresh_rounded,
           title: 'settings.re_scan_library'.tr(),
           subtitle: 'settings.re_scan_library_desc'.tr(),
           onTap: () {
-            MySnackBar(context: context).showSnackBar(
-              'settings.refreshing_library'.tr(),
-              AppColors.blue,
-            );
+            MySnackBar(
+              context: context,
+            ).showSnackBar('settings.refreshing_library'.tr(), AppColors.blue);
             onRescan();
           },
         ),
@@ -179,21 +152,99 @@ class SettingsView extends StatelessWidget {
         buildSettingTile(
           icon: Icons.info_outline_rounded,
           title: 'settings.version'.tr(),
-          subtitle: '1.0.0 (V24.04)',
+          subtitle: '1.0.0+11 (v11)',
         ),
         buildSettingTile(
           icon: Icons.share_rounded,
           title: 'settings.share_app'.tr(),
-          onTap: () {},
+          onTap: () => SharePlus.instance.share(
+            ShareParams(
+              text:
+                  'MBMusic - a simple music player for Android.\nhttps://play.google.com/store/apps/details?id=com.mbmusic.player',
+              title: 'MBMusic',
+            ),
+          ),
         ),
         buildSettingTile(
           icon: Icons.star_outline_rounded,
           title: 'settings.rate_app'.tr(),
-          onTap: () {},
+          onTap: () async {
+            final reviewService = ReviewService();
+            try {
+              await reviewService.openStoreReviewPage();
+            } catch (_) {
+              if (!context.mounted) return;
+              MySnackBar(context: context).showSnackBar(
+                'settings.rate_app_unavailable'.tr(),
+                AppColors.blue,
+              );
+            }
+          },
         ),
         const SizedBox(height: 40),
         buildFooter(),
       ],
+    );
+  }
+
+  void _showAudioQualityInfo(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.black,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(
+                Icons.high_quality_rounded,
+                color: AppColors.blue,
+                size: 36,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'settings.audio_quality'.tr(),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'settings.audio_quality_original'.tr(),
+                style: TextStyle(
+                  color: AppColors.white.withValues(alpha: 0.65),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'settings.audio_quality_local_info'.tr(),
+                style: TextStyle(
+                  color: AppColors.white.withValues(alpha: 0.45),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
