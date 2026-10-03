@@ -15,6 +15,7 @@ import 'package:music/features/video/screens/video_albums_screen.dart';
 import 'package:music/features/video/services/video_library_service.dart';
 import 'package:music/features/video/screens/video_favorites_screen.dart';
 import 'package:music/features/video/screens/video_playlists_screen.dart';
+import 'package:music/features/video/screens/video_search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -198,6 +199,9 @@ class _HomeViewState extends State<HomeView> {
         ),
         const VideoPlaylistsScreen(
           key: PageStorageKey('video_playlists'),
+        ),
+        const VideoSearchScreen(
+          key: PageStorageKey('video_search'),
         ),
       ],
     );
