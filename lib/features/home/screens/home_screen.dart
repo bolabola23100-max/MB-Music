@@ -230,9 +230,10 @@ class _HomeViewState extends State<HomeView> {
         cubit.updateCurrentIndex(index);
       },
       children: [
-        BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.displaySongs != c.displaySongs,
-          builder: (context, state) => SongListWidget(
+        _KeepAlivePage(
+          child: BlocBuilder<HomeCubit, HomeState>(
+            buildWhen: (p, c) => p.displaySongs != c.displaySongs,
+            builder: (context, state) => SongListWidget(
             key: const PageStorageKey("songs_list"),
             songs: state.displaySongs,
             audioService: audioService,
@@ -244,30 +245,38 @@ class _HomeViewState extends State<HomeView> {
             openPlayerOnSongTap: true,
             onDeleteSongs: cubit.onDeleteSongs,
             isf: false,
+            ),
           ),
         ),
-        BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.sounds != c.sounds,
-          builder: (context, state) => SoundsScreen(
+        _KeepAlivePage(
+          child: BlocBuilder<HomeCubit, HomeState>(
+            buildWhen: (p, c) => p.sounds != c.sounds,
+            builder: (context, state) => SoundsScreen(
             key: const PageStorageKey("sounds_screen"),
             songs: state.sounds,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
+            ),
           ),
         ),
-        BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.songs != c.songs,
-          builder: (context, state) => FavoritesScreen(
+        _KeepAlivePage(
+          child: BlocBuilder<HomeCubit, HomeState>(
+            buildWhen: (p, c) => p.songs != c.songs,
+            builder: (context, state) => FavoritesScreen(
             key: const PageStorageKey("favs_screen"),
             allSongs: state.songs,
             audioService: audioService,
             onDeleteSongs: cubit.onDeleteSongs,
+            ),
           ),
         ),
-        const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
-        BlocBuilder<HomeCubit, HomeState>(
-          buildWhen: (p, c) => p.songs != c.songs,
-          builder: (context, state) => SearchScreen(
+        _KeepAlivePage(
+          child: const PlaylistsScreen(key: PageStorageKey("playlists_screen")),
+        ),
+        _KeepAlivePage(
+          child: BlocBuilder<HomeCubit, HomeState>(
+            buildWhen: (p, c) => p.songs != c.songs,
+            builder: (context, state) => SearchScreen(
             key: const PageStorageKey("search_screen"),
             allSongs: state.songs,
             onDeleteSongs: cubit.onDeleteSongs,
