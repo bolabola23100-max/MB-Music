@@ -56,7 +56,7 @@ class VideoOptionsBottomSheet {
                 ),
                 onTap: () async {
                   await favorites.toggleFavorite(asset.id);
-                  if (!sheetContext.mounted) return;
+                  if (!sheetContext.mounted || !context.mounted) return;
                   Navigator.pop(sheetContext);
                   _message(
                     context,
@@ -134,7 +134,7 @@ class VideoOptionsBottomSheet {
                   leading: const Icon(Icons.playlist_play_rounded, color: AppColors.blue),
                   title: Text(playlist.name, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
-                    '\${playlist.videoIds.length} videos',
+                    '${playlist.videoIds.length} videos',
                     style: const TextStyle(color: Colors.white54),
                   ),
                   onTap: () => Navigator.pop(sheetContext, playlist.id),
@@ -312,7 +312,7 @@ class VideoOptionsBottomSheet {
   ) async {
     final file = await asset.file;
     final size = file?.lengthSync() ?? 0;
-    final path = await asset.relativePathAsync;
+    final path = await asset.relativePath;
     final mime = await asset.mimeTypeAsync;
     if (!context.mounted) return;
 
@@ -327,7 +327,7 @@ class VideoOptionsBottomSheet {
             children: [
               _infoRow('Name', title),
               _infoRow('Duration', _formatDuration(asset.duration)),
-              _infoRow('Resolution', '\${asset.width} × \${asset.height}'),
+              _infoRow('Resolution', '${asset.width} × ${asset.height}'),
               _infoRow('Format', mime ?? 'Unknown'),
               _infoRow('Size', _formatSize(size)),
               _infoRow('Created', _formatDate(asset.createDateTime)),
@@ -363,18 +363,18 @@ class VideoOptionsBottomSheet {
 
   static String _formatSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '\${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {
-      return '\${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
-    return '\${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 
   static String _formatDate(DateTime date) {
-    return '\${date.day.toString().padLeft(2, '0')}/'
-        '\${date.month.toString().padLeft(2, '0')}/'
-        '\${date.year} \${date.hour.toString().padLeft(2, '0')}:'
-        '\${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year} ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 
   static void _message(BuildContext context, String message) {
