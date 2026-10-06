@@ -178,9 +178,9 @@ class PlaybackModeSheet extends StatelessWidget {
                     height: height,
                     child: ValueListenableBuilder<List<SongModel>>(
                       valueListenable: audioService.currentQueueNotifier,
-                      builder: (context, _, __) => ValueListenableBuilder<List<SongModel>>(
+                      builder: (context, _, _) => ValueListenableBuilder<List<SongModel>>(
                         valueListenable: audioService.shuffledQueueNotifier,
-                        builder: (context, _, __) => ValueListenableBuilder<PlaybackMode>(
+                        builder: (context, _, _) => ValueListenableBuilder<PlaybackMode>(
                           valueListenable: audioService.playbackModeNotifier,
                           builder: (context, mode, _) {
                             final queue = _displayQueue(mode);
