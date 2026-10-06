@@ -82,8 +82,30 @@ class MainActivity : AudioServiceActivity() {
                 id
             )
 
+            // Keep the original extension. Flutter sends only the filename
+            // (for example "b"), so "b.mp4" stays an MP4 file.
+            val currentName = contentResolver.query(
+                uri,
+                arrayOf(MediaStore.Video.Media.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+
+            val extension = currentName
+                ?.substringAfterLast('.', "")
+                ?.takeIf { it.isNotEmpty() }
+
+            val finalName = if (extension != null && !newName.contains('.')) {
+                "$newName.$extension"
+            } else {
+                newName
+            }
+
             val values = android.content.ContentValues().apply {
-                put(MediaStore.Video.Media.DISPLAY_NAME, newName)
+                put(MediaStore.Video.Media.DISPLAY_NAME, finalName)
             }
 
             val updated = contentResolver.update(uri, values, null, null)
