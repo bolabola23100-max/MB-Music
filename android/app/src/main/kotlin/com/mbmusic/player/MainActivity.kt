@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +20,9 @@ class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.mbmusic.player/delete"
     private val VIDEO_CHANNEL = "com.mbmusic.player/video"
     private var pendingResult: MethodChannel.Result? = null
+    private var pendingRenameResult: MethodChannel.Result? = null
+    private var pendingRenameUri: Uri? = null
+    private var pendingRenameName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,10 +109,79 @@ class MainActivity : AudioServiceActivity() {
                 newName
             }
 
-            val values = android.content.ContentValues().apply {
+            val values = ContentValues().apply {
                 put(MediaStore.Video.Media.DISPLAY_NAME, finalName)
             }
 
+            try {
+                val updated = contentResolver.update(uri, values, null, null)
+                if (updated > 0) {
+                    result.success(true)
+                } else {
+                    result.error("RENAME_FAILED", "Video could not be renamed", null)
+                }
+            } catch (securityException: SecurityException) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    requestRenamePermission(uri, finalName, result)
+                } else {
+                    result.error("RENAME_PERMISSION", "Permission denied while renaming video", null)
+                }
+            }
+        } catch (e: Exception) {
+            result.error("RENAME_ERROR", e.message, null)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun requestRenamePermission(
+        uri: Uri,
+        finalName: String,
+        result: MethodChannel.Result,
+    ) {
+        try {
+            pendingRenameResult = result
+            pendingRenameUri = uri
+            pendingRenameName = finalName
+
+            val pendingIntent = MediaStore.createWriteRequest(
+                contentResolver,
+                listOf(uri)
+            )
+
+            startIntentSenderForResult(
+                pendingIntent.intentSender,
+                RENAME_REQUEST_CODE,
+                null,
+                0,
+                0,
+                0
+            )
+        } catch (e: Exception) {
+            pendingRenameResult = null
+            pendingRenameUri = null
+            pendingRenameName = null
+            result.error("RENAME_REQUEST_ERROR", e.message, null)
+        }
+    }
+
+    private fun performPendingRename() {
+        val result = pendingRenameResult ?: return
+        val uri = pendingRenameUri
+        val name = pendingRenameName
+
+        pendingRenameResult = null
+        pendingRenameUri = null
+        pendingRenameName = null
+
+        if (uri == null || name.isNullOrBlank()) {
+            result.error("RENAME_ERROR", "Missing rename information", null)
+            return
+        }
+
+        try {
+            val values = ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, name)
+            }
             val updated = contentResolver.update(uri, values, null, null)
             if (updated > 0) {
                 result.success(true)
@@ -194,19 +268,35 @@ class MainActivity : AudioServiceActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == DELETE_REQUEST_CODE) {
-            val result = pendingResult
-            pendingResult = null
+        when (requestCode) {
+            DELETE_REQUEST_CODE -> {
+                val result = pendingResult
+                pendingResult = null
 
-            if (result != null) {
-                if (resultCode == Activity.RESULT_OK) {
-                    result.success(mapOf("deleted" to true, "count" to -1))
-                } else {
-                    // User canceled the delete request
-                    result.success(mapOf("deleted" to false, "count" to 0))
+                if (result != null) {
+                    if (resultCode == Activity.RESULT_OK) {
+                        result.success(mapOf("deleted" to true, "count" to -1))
+                    } else {
+                        // User canceled the delete request
+                        result.success(mapOf("deleted" to false, "count" to 0))
+                    }
+                }
+            }
+
+            RENAME_REQUEST_CODE -> {
+                val result = pendingRenameResult
+                if (result != null) {
+                    if (resultCode == Activity.RESULT_OK) {
+                        performPendingRename()
+                    } else {
+                        pendingRenameResult = null
+                        pendingRenameUri = null
+                        pendingRenameName = null
+                        result.success(false)
+                    }
                 }
             }
         }
@@ -214,5 +304,6 @@ class MainActivity : AudioServiceActivity() {
 
     companion object {
         private const val DELETE_REQUEST_CODE = 1001
+        private const val RENAME_REQUEST_CODE = 1002
     }
 }
