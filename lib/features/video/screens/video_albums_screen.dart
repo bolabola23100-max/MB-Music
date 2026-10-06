@@ -89,7 +89,7 @@ class _VideoCard extends StatelessWidget {
     final duration = Duration(seconds: asset.duration);
     return ValueListenableBuilder<int>(
       valueListenable: VideoOptionsBottomSheet.renameChanges,
-      builder: (context, _, __) => InkWell(
+      builder: (context, _, _) => InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset))),
         onLongPress: onLongPress,
