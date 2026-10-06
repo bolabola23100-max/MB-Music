@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:music/app/main_app.dart';
 import 'package:music/core/services/app_version_service.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -13,6 +14,7 @@ import 'package:music/core/services/favorites/favorites_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
   // CacheHelper is the only startup dependency because SplashScreen reads it.
