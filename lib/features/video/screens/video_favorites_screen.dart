@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:music/features/video/screens/video_player_screen.dart';
+import 'package:music/features/video/screens/video_multi_select_screen.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
 import 'package:music/features/video/widgets/video_thumbnail.dart';
 import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
@@ -19,7 +20,19 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
   @override
   void initState() {
     super.initState();
+    _favorites.favoriteIdsNotifier.addListener(_onFavoritesChanged);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _favorites.favoriteIdsNotifier.removeListener(_onFavoritesChanged);
+    super.dispose();
+  }
+
+  void _onFavoritesChanged() {
+    if (!mounted) return;
+    setState(_load);
   }
 
   void _load() {
@@ -43,6 +56,14 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
   Future<void> _refresh() async {
     setState(_load);
     await _videosFuture;
+  }
+
+  Future<void> _openMultiSelect(List<AssetEntity> videos) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)),
+    );
+    if (mounted) setState(_load);
   }
 
   @override
@@ -88,8 +109,10 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset)),
-                ).then((_) => setState(_load)),
-                onLongPress: () => VideoOptionsBottomSheet.show(context, asset: asset),
+                ).then((_) {
+                  if (mounted) setState(_load);
+                }),
+                onLongPress: () => _openMultiSelect(videos),
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -108,7 +131,8 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
                       right: 2,
                       top: 2,
                       child: IconButton(
-                        onPressed: () => VideoOptionsBottomSheet.show(context, asset: asset),
+                        onPressed: () =>
+                            VideoOptionsBottomSheet.show(context, asset: asset),
                         icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                       ),
                     ),
