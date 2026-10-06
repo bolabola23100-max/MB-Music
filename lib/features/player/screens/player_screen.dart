@@ -156,8 +156,8 @@ class PlayerView extends StatelessWidget {
               song: state.songs[index],
               index: index,
               audioService: audioService,
-              isFavoriteChecker: favorites.isFavorite,
-              onToggleFavorite: favorites.toggleFavorite,
+              isFavoriteChecker: (song) => favorites.isFavorite(song.id),
+              onToggleFavorite: (song) => favorites.toggleFavorite(song.id),
               playlist: false,
               onDeleteSongs: onDeleteSongs,
             );
