@@ -261,7 +261,11 @@ class VideoOptionsBottomSheet {
     AssetEntity asset,
     String currentTitle,
   ) async {
-    final controller = TextEditingController(text: currentTitle);
+    // Show only the filename, not its extension. The native side keeps the
+    // original extension (for example .mp4) when it performs the rename.
+    final controller = TextEditingController(
+      text: _withoutVideoExtension(currentTitle),
+    );
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -279,7 +283,10 @@ class VideoOptionsBottomSheet {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              _withoutVideoExtension(controller.text.trim()),
+            ),
             child: const Text('Save'),
           ),
         ],
@@ -291,13 +298,10 @@ class VideoOptionsBottomSheet {
     });
     if (!context.mounted || name == null || name.isEmpty) return;
 
-    var finalName = name;
-    if (!finalName.contains('.')) finalName = '$finalName.mp4';
-
     try {
       final success = await _videoChannel.invokeMethod<bool>(
         'renameVideo',
-        {'videoId': asset.id, 'newName': finalName},
+        {'videoId': asset.id, 'newName': name},
       );
       if (!context.mounted) return;
       _message(
@@ -308,6 +312,16 @@ class VideoOptionsBottomSheet {
       if (!context.mounted) return;
       _message(context, e.message ?? 'Could not rename video');
     }
+  }
+
+  static String _withoutVideoExtension(String value) {
+    final trimmed = value.trim();
+    final match = RegExp(
+      r'\.(mp4|mkv|mov|avi|webm|3gp|m4v)$',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
+    if (match == null) return trimmed;
+    return trimmed.substring(0, match.start);
   }
 
   static Future<void> _deleteVideo(
