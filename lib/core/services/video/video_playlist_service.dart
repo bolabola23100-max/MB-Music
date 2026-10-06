@@ -34,6 +34,10 @@ class VideoPlaylistService {
 
   static const String _key = 'video_playlists';
 
+  // Notifies every screen that uses video playlists, including screens that
+  // stay mounted while another screen creates/renames/deletes a playlist.
+  final ValueNotifier<int> changes = ValueNotifier<int>(0);
+
   Future<List<VideoPlaylist>> getPlaylists() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
@@ -50,6 +54,7 @@ class VideoPlaylistService {
   Future<void> _save(List<VideoPlaylist> playlists) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode(playlists.map((p) => p.toMap()).toList()));
+    changes.value++;
   }
 
   Future<String> createPlaylist(String name) async {
