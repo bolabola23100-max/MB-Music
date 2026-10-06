@@ -248,7 +248,10 @@ class VideoOptionsBottomSheet {
         ],
       ),
     );
-    controller.dispose();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (name == null || name.trim().isEmpty) return null;
     return name.trim();
   }
@@ -283,7 +286,9 @@ class VideoOptionsBottomSheet {
       ),
     );
 
-    controller.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (!context.mounted || name == null || name.isEmpty) return;
 
     var finalName = name;
