@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:music/core/services/cache_helper.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/features/player/screens/player_screen.dart';
-import 'package:music/features/player/screens/player_screen1.dart';
 
 typedef PlayerBuilder =
     Widget Function({
@@ -15,8 +14,6 @@ typedef PlayerBuilder =
 final Map<int, PlayerBuilder> playerThemes = {
   1: ({required songs, required index, onDeleteSongs}) =>
       PlayerScreen(songs: songs, index: index, onDeleteSongs: onDeleteSongs),
-  2: ({required songs, required index, onDeleteSongs}) =>
-      PlayerScreen1(songs: songs, index: index, onDeleteSongs: onDeleteSongs),
 };
 
 Widget resolvePlayerScreen({
