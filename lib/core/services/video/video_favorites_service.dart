@@ -23,4 +23,18 @@ class VideoFavoritesService {
     favoriteIdsNotifier.value = ids;
     await prefs.setStringList(_key, ids.toList());
   }
+
+  Future<void> addFavorites(Iterable<String> videoIds) async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = Set<String>.from(favoriteIdsNotifier.value)..addAll(videoIds);
+    favoriteIdsNotifier.value = ids;
+    await prefs.setStringList(_key, ids.toList());
+  }
+
+  Future<void> removeFavorites(Iterable<String> videoIds) async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = Set<String>.from(favoriteIdsNotifier.value)..removeAll(videoIds);
+    favoriteIdsNotifier.value = ids;
+    await prefs.setStringList(_key, ids.toList());
+  }
 }
