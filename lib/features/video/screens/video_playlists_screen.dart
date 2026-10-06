@@ -43,7 +43,10 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
         ],
       ),
     );
-    controller.dispose();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (!mounted || name == null || name.isEmpty) return;
     await _service.createPlaylist(name);
     _reload();
@@ -68,7 +71,10 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
         ],
       ),
     );
-    controller.dispose();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (!mounted || name == null || name.isEmpty) return;
     await _service.renamePlaylist(playlist.id, name);
     _reload();
