@@ -12,8 +12,8 @@ class PlaybackModeSheet extends StatelessWidget {
 
   final AudioService audioService;
 
-  static Future<void> show(BuildContext context, AudioService audioService) {
-    return showModalBottomSheet(
+  static void show(BuildContext context, AudioService audioService) {
+    showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
