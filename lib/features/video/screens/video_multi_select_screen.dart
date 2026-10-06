@@ -19,7 +19,8 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
   final _favorites = VideoFavoritesService();
   final _playlists = VideoPlaylistService();
 
-  List<AssetEntity> get _selectedVideos => widget.videos.where((v) => _selected.contains(v.id)).toList();
+  List<AssetEntity> get _selectedVideos =>
+      widget.videos.where((v) => _selected.contains(v.id)).toList();
 
   void _toggle(AssetEntity video) {
     setState(() {
@@ -61,44 +62,167 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
     );
     if (!mounted || result == null) return;
 
-    String playlistId = result;
-    String playlistName = 'playlist';
     if (result == '__create__') {
-      final controller = TextEditingController();
-      final name = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          backgroundColor: AppColors.gray,
-          title: const Text('New video playlist', style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(hintText: 'Playlist name'),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-            ElevatedButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('Create')),
-          ],
-        ),
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
-      if (!mounted || name == null || name.isEmpty) return;
-      playlistId = await _playlists.createPlaylist(name);
-      playlistName = name;
-    } else {
-      playlistName = playlists.firstWhere((p) => p.id == result).name;
+      await _createPlaylistFlow();
+      return;
     }
 
+    final playlist = playlists.firstWhere((p) => p.id == result);
     var added = 0;
     for (final video in _selectedVideos) {
-      if (await _playlists.addVideo(playlistId, video.id)) added++;
+      if (await _playlists.addVideo(playlist.id, video.id)) added++;
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$added video${added == 1 ? '' : 's'} added to $playlistName')),
+      SnackBar(content: Text('$added video${added == 1 ? '' : 's'} added to ${playlist.name}')),
     );
     Navigator.pop(context);
+  }
+
+  Future<void> _createPlaylistFlow() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.gray,
+        title: const Text('New video playlist', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(hintText: 'Playlist name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Next'),
+          ),
+        ],
+      ),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
+    if (!mounted || name == null || name.isEmpty) return;
+
+    // A new playlist is not created yet. The user must choose at least one
+    // video first. This sheet cannot be dismissed by tapping outside.
+    final chosenIds = await _showRequiredVideoPicker();
+    if (!mounted || chosenIds == null || chosenIds.isEmpty) return;
+
+    final playlistId = await _playlists.createPlaylist(name);
+    var added = 0;
+    for (final videoId in chosenIds) {
+      if (await _playlists.addVideo(playlistId, videoId)) added++;
+    }
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Playlist "$name" created with $added video${added == 1 ? '' : 's'}')),
+    );
+    Navigator.pop(context);
+  }
+
+  Future<Set<String>?> _showRequiredVideoPicker() async {
+    final selectedIds = <String>{..._selected};
+
+    return showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: AppColors.gray,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          return SafeArea(
+            child: SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * .72,
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 6),
+                    child: Text(
+                      'Choose videos for the playlist',
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Choose at least one video',
+                      style: TextStyle(color: Colors.white60),
+                    ),
+                  ),
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: .82,
+                      ),
+                      itemCount: widget.videos.length,
+                      itemBuilder: (_, index) {
+                        final video = widget.videos[index];
+                        final selected = selectedIds.contains(video.id);
+                        return GestureDetector(
+                          onTap: () {
+                            setSheetState(() {
+                              if (!selectedIds.add(video.id)) selectedIds.remove(video.id);
+                            });
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              VideoThumbnail(asset: video, width: double.infinity, height: double.infinity),
+                              if (selected)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black45,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: AppColors.blue, width: 3),
+                                  ),
+                                ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Icon(
+                                  selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                  color: selected ? AppColors.blue : Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: selectedIds.isEmpty
+                            ? null
+                            : () => Navigator.pop(sheetContext, selectedIds),
+                        child: Text(selectedIds.isEmpty ? 'Select a video' : 'Add ${selectedIds.length} video${selectedIds.length == 1 ? '' : 's'}'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _addToFavorites() async {
@@ -153,12 +277,11 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
       appBar: AppBar(
         title: Text(count == 0 ? 'Select videos' : '$count selected'),
         actions: [
-          if (count > 0)
-            IconButton(
-              tooltip: 'Select all',
-              onPressed: () => setState(() => _selected.addAll(widget.videos.map((v) => v.id))),
-              icon: const Icon(Icons.select_all_rounded),
-            ),
+          IconButton(
+            tooltip: 'Select all',
+            onPressed: () => setState(() => _selected.addAll(widget.videos.map((v) => v.id))),
+            icon: const Icon(Icons.select_all_rounded),
+          ),
         ],
       ),
       body: GridView.builder(
@@ -217,18 +340,56 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(child: FilledButton.icon(onPressed: count == 0 ? null : _addToPlaylist, icon: const Icon(Icons.playlist_add_rounded), label: const Text('Playlist'))),
-              const SizedBox(width: 8),
-              Expanded(child: FilledButton.icon(onPressed: count == 0 ? null : _addToFavorites, icon: const Icon(Icons.favorite_rounded), label: const Text('Favorites'))),
-              const SizedBox(width: 8),
-              Expanded(child: FilledButton.icon(onPressed: count == 0 ? null : _deleteSelected, icon: const Icon(Icons.delete_outline_rounded), label: const Text('Delete'))),
+              _ActionIcon(
+                icon: Icons.playlist_add_rounded,
+                tooltip: 'Playlist',
+                onPressed: count == 0 ? null : _addToPlaylist,
+              ),
+              _ActionIcon(
+                icon: Icons.favorite_rounded,
+                tooltip: 'Favorites',
+                onPressed: count == 0 ? null : _addToFavorites,
+              ),
+              _ActionIcon(
+                icon: Icons.delete_outline_rounded,
+                tooltip: 'Delete',
+                onPressed: count == 0 ? null : _deleteSelected,
+                destructive: true,
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final bool destructive;
+
+  const _ActionIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.destructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon),
+      color: destructive ? Colors.redAccent : Colors.white,
+      disabledColor: Colors.white30,
+      iconSize: 28,
     );
   }
 }
