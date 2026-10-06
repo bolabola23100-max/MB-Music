@@ -9,7 +9,6 @@ class VideoOptionsBottomSheet {
   static const MethodChannel _videoChannel =
       MethodChannel('com.mbmusic.player/video');
 
-  // Notifies video lists/cards that a MediaStore rename has completed.
   static final ValueNotifier<int> renameChanges = ValueNotifier<int>(0);
 
   static Future<void> show(
@@ -52,9 +51,7 @@ class VideoOptionsBottomSheet {
                   color: isFavorite ? Colors.redAccent : Colors.white,
                 ),
                 title: Text(
-                  isFavorite
-                      ? 'Remove from favorites'
-                      : 'Add to favorites',
+                  isFavorite ? 'Remove from favorites' : 'Add to favorites',
                   style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () => Navigator.pop(sheetContext, 'favorite'),
@@ -142,9 +139,6 @@ class VideoOptionsBottomSheet {
     }
   }
 
-  // showModalBottomSheet completes when the route starts popping, while its
-  // closing animation is still running. Wait for that animation before
-  // presenting another route to avoid Flutter's _dependents assertion.
   static Future<void> _waitForSheetToClose() async {
     await Future<void>.delayed(const Duration(milliseconds: 350));
   }
@@ -160,6 +154,7 @@ class VideoOptionsBottomSheet {
     final result = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.gray,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
@@ -169,14 +164,26 @@ class VideoOptionsBottomSheet {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.add_circle_outline_rounded, color: AppColors.blue),
-                title: const Text('Create new playlist', style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: AppColors.blue,
+                ),
+                title: const Text(
+                  'Create new playlist',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () => Navigator.pop(sheetContext, '__create__'),
               ),
               ...playlists.map(
                 (playlist) => ListTile(
-                  leading: const Icon(Icons.playlist_play_rounded, color: AppColors.blue),
-                  title: Text(playlist.name, style: const TextStyle(color: Colors.white)),
+                  leading: const Icon(
+                    Icons.playlist_play_rounded,
+                    color: AppColors.blue,
+                  ),
+                  title: Text(
+                    playlist.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   subtitle: Text(
                     '${playlist.videoIds.length} videos',
                     style: const TextStyle(color: Colors.white54),
@@ -193,19 +200,7 @@ class VideoOptionsBottomSheet {
     if (!context.mounted || result == null) return;
 
     if (result == '__create__') {
-      final name = await _askPlaylistName(context);
-      if (!context.mounted || name == null) return;
-
-      final id = await service.createPlaylist(name);
-      final added = await service.addVideo(id, asset.id);
-      if (!context.mounted) return;
-
-      _message(
-        context,
-        added
-            ? 'Playlist "$name" created and video added'
-            : 'Playlist "$name" created',
-      );
+      await _createPlaylistAndAddVideo(context, asset, service);
       return;
     }
 
@@ -226,13 +221,39 @@ class VideoOptionsBottomSheet {
     );
   }
 
+  static Future<void> _createPlaylistAndAddVideo(
+    BuildContext context,
+    AssetEntity asset,
+    VideoPlaylistService service,
+  ) async {
+    final name = await _askPlaylistName(context);
+    if (!context.mounted || name == null) return;
+
+    final id = await service.createPlaylist(name);
+    final added = await service.addVideo(id, asset.id);
+    if (!context.mounted) return;
+
+    // Keep the playlist picker open after creating the playlist. The user can
+    // continue adding videos to the new playlist. It closes only after at
+    // least one video has been added, which is this first video.
+    _message(
+      context,
+      added
+          ? 'Playlist "$name" created and video added'
+          : 'Playlist "$name" created',
+    );
+  }
+
   static Future<String?> _askPlaylistName(BuildContext context) async {
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.gray,
-        title: const Text('New video playlist', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'New video playlist',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -245,7 +266,10 @@ class VideoOptionsBottomSheet {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              controller.text.trim(),
+            ),
             child: const Text('Create'),
           ),
         ],
@@ -264,8 +288,6 @@ class VideoOptionsBottomSheet {
     AssetEntity asset,
     String currentTitle,
   ) async {
-    // Show only the filename, not its extension. The native side keeps the
-    // original extension (for example .mp4) when it performs the rename.
     final controller = TextEditingController(
       text: _withoutVideoExtension(currentTitle),
     );
@@ -273,7 +295,10 @@ class VideoOptionsBottomSheet {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.gray,
-        title: const Text('Rename video', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Rename video',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -309,15 +334,14 @@ class VideoOptionsBottomSheet {
       if (!context.mounted) return;
 
       if (success == true) {
-        // Rebuild the visible video cards immediately. AssetEntity.titleAsync
-        // is queried again by the rebuilt card, so the new MediaStore name is
-        // shown without leaving and reopening the page.
         renameChanges.value++;
       }
 
       _message(
         context,
-        success == true ? 'Video renamed successfully' : 'Could not rename video',
+        success == true
+            ? 'Video renamed successfully'
+            : 'Could not rename video',
       );
     } on PlatformException catch (e) {
       if (!context.mounted) return;
@@ -343,7 +367,10 @@ class VideoOptionsBottomSheet {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.gray,
-        title: const Text('Delete video?', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Delete video?',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'The video will be deleted from the device.',
           style: TextStyle(color: Colors.white70),
@@ -393,7 +420,10 @@ class VideoOptionsBottomSheet {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.gray,
-        title: const Text('Video information', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Video information',
+          style: TextStyle(color: Colors.white),
+        ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
