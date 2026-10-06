@@ -93,7 +93,7 @@ class SleepTimerWidget extends StatelessWidget {
         ),
         ValueListenableBuilder<Duration?>(
           valueListenable: audioService.sleepTimerRemainingNotifier,
-          builder: (_, remaining, __) => remaining == null
+          builder: (_, remaining, _) => remaining == null
               ? const SizedBox.shrink()
               : Text(
                   _format(remaining),
