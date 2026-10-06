@@ -9,6 +9,9 @@ class VideoOptionsBottomSheet {
   static const MethodChannel _videoChannel =
       MethodChannel('com.mbmusic.player/video');
 
+  // Notifies video lists/cards that a MediaStore rename has completed.
+  static final ValueNotifier<int> renameChanges = ValueNotifier<int>(0);
+
   static Future<void> show(
     BuildContext context, {
     required AssetEntity asset,
@@ -304,6 +307,14 @@ class VideoOptionsBottomSheet {
         {'videoId': asset.id, 'newName': name},
       );
       if (!context.mounted) return;
+
+      if (success == true) {
+        // Rebuild the visible video cards immediately. AssetEntity.titleAsync
+        // is queried again by the rebuilt card, so the new MediaStore name is
+        // shown without leaving and reopening the page.
+        renameChanges.value++;
+      }
+
       _message(
         context,
         success == true ? 'Video renamed successfully' : 'Could not rename video',
