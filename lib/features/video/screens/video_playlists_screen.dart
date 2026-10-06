@@ -20,9 +20,26 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
   void initState() {
     super.initState();
     _future = _service.getPlaylists();
+    _service.changes.addListener(_onPlaylistsChanged);
   }
 
-  void _reload() => setState(() => _future = _service.getPlaylists());
+  @override
+  void dispose() {
+    _service.changes.removeListener(_onPlaylistsChanged);
+    super.dispose();
+  }
+
+  void _onPlaylistsChanged() {
+    if (!mounted) return;
+    setState(() {
+      _future = _service.getPlaylists();
+    });
+  }
+
+  void _reload() {
+    if (!mounted) return;
+    setState(() => _future = _service.getPlaylists());
+  }
 
   Future<void> _createPlaylist() async {
     final controller = TextEditingController();
@@ -49,7 +66,6 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     });
     if (!mounted || name == null || name.isEmpty) return;
     await _service.createPlaylist(name);
-    _reload();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Playlist "$name" created')),
@@ -77,7 +93,6 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     });
     if (!mounted || name == null || name.isEmpty) return;
     await _service.renamePlaylist(playlist.id, name);
-    _reload();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Playlist renamed to "$name"')),
@@ -87,7 +102,6 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
 
   Future<void> _delete(VideoPlaylist playlist) async {
     await _service.deletePlaylist(playlist.id);
-    _reload();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Playlist "${playlist.name}" deleted')),
