@@ -3,8 +3,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:music/features/video/screens/video_player_screen.dart';
 import 'package:music/features/video/screens/video_multi_select_screen.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
-import 'package:music/features/video/widgets/video_thumbnail.dart';
-import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
+import 'package:music/features/video/widgets/video_grid_card.dart';
 
 class VideoFavoritesScreen extends StatefulWidget {
   const VideoFavoritesScreen({super.key});
@@ -105,57 +104,18 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
             itemCount: videos.length,
             itemBuilder: (context, index) {
               final asset = videos[index];
-              return InkWell(
+              return VideoGridCard(
+                asset: asset,
+                showFavoriteIcon: true,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset)),
+                  MaterialPageRoute(
+                    builder: (_) => VideoPlayerScreen(asset: asset),
+                  ),
                 ).then((_) {
                   if (mounted) setState(_load);
                 }),
                 onLongPress: () => _openMultiSelect(videos),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: VideoThumbnail(
-                        asset: asset,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                    ),
-                    const Positioned(
-                      left: 8,
-                      top: 8,
-                      child: Icon(Icons.favorite_rounded, color: Colors.redAccent),
-                    ),
-                    Positioned(
-                      right: 2,
-                      top: 2,
-                      child: IconButton(
-                        onPressed: () =>
-                            VideoOptionsBottomSheet.show(context, asset: asset),
-                        icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-                      ),
-                    ),
-                    Positioned(
-                      left: 8,
-                      right: 8,
-                      bottom: 8,
-                      child: FutureBuilder<String>(
-                        future: asset.titleAsync,
-                        builder: (context, snapshot) => Text(
-                          snapshot.data ?? 'Video',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            shadows: [Shadow(blurRadius: 5, color: Colors.black)],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               );
             },
           ),
