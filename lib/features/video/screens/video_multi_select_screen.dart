@@ -182,7 +182,7 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                               }
                             });
                           },
-                        )
+                        );
                       },
                     ),
                   ),
@@ -282,7 +282,7 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
             video: video,
             selected: selected,
             onTap: () => _toggle(video),
-          )
+          );
         },
       ),
       bottomNavigationBar: SafeArea(
