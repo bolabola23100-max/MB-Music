@@ -33,25 +33,7 @@ class MiniPlayerContent extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: GestureDetector(
-              onTap: () {
-                final index =
-                    audioService.currentIndexNotifier.value ?? 0;
-
-                Future<void> Function(List<SongModel>)? onDelete;
-
-                try {
-                  onDelete = context.read<HomeCubit>().onDeleteSongs;
-                } catch (_) {}
-
-                AppNavigator.push(
-                  context,
-                  PlayerScreen(
-                    songs: widget.songs,
-                    index: index,
-                    onDeleteSongs: onDelete,
-                  ),
-                );
-              },
+              onTap: onTap,
               child: Container(
                 height: 82,
                 decoration: BoxDecoration(
