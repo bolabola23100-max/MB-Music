@@ -9,6 +9,8 @@ import 'package:music/core/widgets/song_tile_widget.dart';
 import 'package:music/core/widgets/sort_button.dart';
 import 'package:music/features/home/widgets/mini_player_widget.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
+import 'package:music/features/playlist/widgets/playlist_details_header.dart';
+import 'package:music/features/playlist/widgets/playlist_songs_list.dart';
 import 'package:music/features/playlist/widgets/playlist_options_bottom_sheet.dart';
 import 'package:music/features/playlist/cubit/playlist_details_cubit.dart';
 import 'package:music/features/playlist/cubit/playlist_details_state.dart';
@@ -173,8 +175,28 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
                       ),
                       child: Column(
                         children: [
-                          _buildHeader(cubit, audioService),
-                          Expanded(child: _buildList(state, audioService)),
+                          PlaylistDetailsHeader(
+                            cubit: cubit,
+                            audioService: audioService,
+                          ),
+                          Expanded(
+                            child: PlaylistSongsList(
+                              state: state,
+                              audioService: audioService,
+                              cubit: cubit,
+                              onPlay: (index) => _playAndOpenPlayer(
+                                context,
+                                cubit,
+                                state.songs,
+                                index,
+                              ),
+                              onLongPress: (playlistSong) => _showOptions(
+                                context,
+                                playlistSong,
+                                widget.playlist.id!,
+                              ),
+                            ),
+                          ),
                           MiniPlayerWidget(
                             songs: state.songs,
                             audioService: audioService,
@@ -189,91 +211,4 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
     );
   }
 
-  Widget _buildHeader(PlaylistDetailsCubit cubit, AudioService audioService) {
-    return ValueListenableBuilder<PlaybackMode>(
-      valueListenable: audioService.playbackModeNotifier,
-      builder: (context, mode, _) {
-        final isShuffle = mode == PlaybackMode.shuffle;
-        return Padding(
-          padding: const EdgeInsets.only(right: 16, top: 4, bottom: 4),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: _buildPlayModeButton(
-              icon: isShuffle
-                  ? Icons.shuffle_rounded
-                  : Icons.play_arrow_rounded,
-              onTap: () {
-                if (cubit.state.songs.isNotEmpty) {
-                  if (isShuffle) {
-                    audioService.setPlaybackMode(PlaybackMode.sequential);
-                    cubit.sortSongs(SongSortOption.orderedPlay);
-                    cubit.play(0);
-                  } else {
-                    audioService.setPlaybackMode(PlaybackMode.shuffle);
-                    cubit.playRandom();
-                  }
-                }
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPlayModeButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.blue.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        onPressed: onTap,
-        icon: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Icon(
-            icon,
-            key: ValueKey(icon),
-            color: AppColors.blue,
-            size: 26,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildList(PlaylistDetailsState state, AudioService audioService) {
-    return BlocBuilder<PlaylistDetailsCubit, PlaylistDetailsState>(
-      builder: (context, state) {
-        final cubit = context.read<PlaylistDetailsCubit>();
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: state.songs.length,
-          itemBuilder: (context, index) {
-            final s = state.songs[index];
-            return SongTileWidget(
-              song: s,
-              audioService: audioService,
-              onTap: () => _playAndOpenPlayer(
-                context,
-                cubit,
-                state.songs,
-                index,
-              ),
-              onLongPress: () {
-                final ps = state.playlistSongs.firstWhere(
-                  (ps) => ps.songId == s.id,
-                  orElse: () => state.playlistSongs[index],
-                );
-                _showOptions(context, ps, widget.playlist.id!);
-              },
-            );
-          },
-        );
-      },
-    );
-  }
 }
