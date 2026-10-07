@@ -76,7 +76,7 @@ class AudioService {
     _handler = await as_pkg.AudioService.init(
       builder: () => MyAudioHandler(),
       config: const as_pkg.AudioServiceConfig(
-        androidNotificationChannelId: 'com.example.music.audio',
+        androidNotificationChannelId: 'com.mbmusic.player.media.silent',
         androidNotificationChannelName: 'MBMusic',
         androidNotificationChannelDescription: 'Music player controls',
         androidNotificationOngoing: true,
