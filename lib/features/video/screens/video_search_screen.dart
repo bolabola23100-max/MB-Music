@@ -4,8 +4,7 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/features/video/screens/video_player_screen.dart';
 import 'package:music/features/video/screens/video_multi_select_screen.dart';
 import 'package:music/features/video/services/video_library_service.dart';
-import 'package:music/features/video/widgets/video_thumbnail.dart';
-import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
+import 'package:music/features/video/widgets/video_grid_card.dart';
 
 class VideoSearchScreen extends StatefulWidget {
   const VideoSearchScreen({super.key});
@@ -124,7 +123,8 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                       itemCount: _results.length,
                       itemBuilder: (context, index) {
                         final asset = _results[index];
-                        return InkWell(
+                        return VideoGridCard(
+                          asset: asset,
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -132,49 +132,6 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                             ),
                           ),
                           onLongPress: _openMultiSelect,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: VideoThumbnail(
-                                  asset: asset,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
-                              Positioned(
-                                right: 2,
-                                top: 2,
-                                child: IconButton(
-                                  onPressed: () =>
-                                      VideoOptionsBottomSheet.show(context, asset: asset),
-                                  icon: const Icon(
-                                    Icons.more_vert_rounded,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 8,
-                                bottom: 8,
-                                right: 8,
-                                child: FutureBuilder<String>(
-                                  future: asset.titleAsync,
-                                  builder: (context, snapshot) => Text(
-                                    snapshot.data ?? 'Video',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      shadows: [
-                                        Shadow(blurRadius: 5, color: Colors.black),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         );
                       },
                     ),
