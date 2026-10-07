@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:music/core/constants/app_colors.dart';
+import 'package:music/features/video/widgets/video_options_menu.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
 import 'package:music/core/services/video/video_playlist_service.dart';
 
@@ -27,79 +28,10 @@ class VideoOptionsBottomSheet {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      builder: (sheetContext) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(
-                  isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: isFavorite ? Colors.redAccent : Colors.white,
-                ),
-                title: Text(
-                  isFavorite ? 'Remove from favorites' : 'Add to favorites',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                onTap: () => Navigator.pop(sheetContext, 'favorite'),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.playlist_add_rounded,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Add to playlist',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () => Navigator.pop(sheetContext, 'playlist'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_rounded, color: Colors.white),
-                title: const Text(
-                  'Rename video',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () => Navigator.pop(sheetContext, 'rename'),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Video information',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () => Navigator.pop(sheetContext, 'info'),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
-                ),
-                title: const Text(
-                  'Delete video from device',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
-                onTap: () => Navigator.pop(sheetContext, 'delete'),
-              ),
-            ],
-          ),
-        ),
+      builder: (sheetContext) => VideoOptionsMenu(
+        title: title,
+        isFavorite: isFavorite,
+        onAction: (action) => Navigator.pop(sheetContext, action),
       ),
     );
 
