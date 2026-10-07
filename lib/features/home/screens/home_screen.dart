@@ -6,6 +6,7 @@ import 'package:music/features/home/widgets/bottom_nav_bar.dart';
 import 'package:music/features/sounds/screens/sounds_screen.dart';
 import 'package:music/features/favorite/screens/favorites_screen.dart';
 import 'package:music/features/home/widgets/home_app_bar_widget.dart';
+import 'package:music/features/home/widgets/home_page_view.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'package:music/features/playlist/screens/playlists_screen.dart';
 import 'package:music/features/search/screens/search_screen.dart';
@@ -164,17 +165,25 @@ class _HomeViewState extends State<HomeView> {
                 Expanded(
                   child: RepaintBoundary(
                     child: _isVideoMode
-                        ? _buildVideoPageView()
+                        ? HomePageView(
+                            controller: _pageController,
+                            pages: _videoPages,
+                            onPageChanged: (index) =>
+                                setState(() => _localIndex = index),
+                          )
                         : BlocListener<HomeCubit, HomeState>(
                             listenWhen: (p, c) =>
                                 p.currentIndex != c.currentIndex,
                             listener: (context, state) {
                               _animateToPage(state.currentIndex);
                             },
-                            child: _buildMusicPageView(
-                              audioService,
-                              favoritesService,
-                              cubit,
+                            child: HomePageView(
+                              controller: _pageController,
+                              pages: _musicPages,
+                              onPageChanged: (index) {
+                                setState(() => _localIndex = index);
+                                cubit.updateCurrentIndex(index);
+                              },
                             ),
                           ),
                   ),
@@ -184,31 +193,6 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildVideoPageView() {
-    return PageView(
-      controller: _pageController,
-      physics: const BouncingScrollPhysics(),
-      onPageChanged: (index) => setState(() => _localIndex = index),
-      children: _videoPages,
-    );
-  }
-
-  Widget _buildMusicPageView(
-    AudioService audioService,
-    FavoritesService favoritesService,
-    HomeCubit cubit,
-  ) {
-    return PageView(
-      controller: _pageController,
-      physics: const BouncingScrollPhysics(),
-      onPageChanged: (index) {
-        setState(() => _localIndex = index);
-        cubit.updateCurrentIndex(index);
-      },
-      children: _musicPages,
     );
   }
 
