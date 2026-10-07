@@ -5,6 +5,7 @@ import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:music/core/widgets/dialog/my_snack_bar.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:music/features/playlist/widgets/add_songs_to_playlist_view.dart';
 
 class PlaylistDialogs {
   static final PlaylistService _playlistService = PlaylistService();
@@ -174,134 +175,10 @@ class PlaylistDialogs {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) => _AddSongsView(
+      builder: (context) => AddSongsToPlaylistView(
         playlistId: playlistId,
         allSongs: allSongs,
         onDone: onDone,
-      ),
-    );
-  }
-}
-
-class _AddSongsView extends StatefulWidget {
-  final int playlistId;
-  final List<SongModel> allSongs;
-  final VoidCallback onDone;
-
-  const _AddSongsView({
-    required this.playlistId,
-    required this.allSongs,
-    required this.onDone,
-  });
-
-  @override
-  State<_AddSongsView> createState() => _AddSongsViewState();
-}
-
-class _AddSongsViewState extends State<_AddSongsView> {
-  final Set<int> _selectedIds = {};
-  final PlaylistService _service = PlaylistService();
-  bool _isSaving = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "options.add_to_playlist".tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (_isSaving)
-                const CircularProgressIndicator(color: AppColors.blue)
-              else if (_selectedIds.isNotEmpty)
-                TextButton(
-                  onPressed: () async {
-                    setState(() => _isSaving = true);
-                    for (var id in _selectedIds) {
-                      final song = widget.allSongs.firstWhere(
-                        (s) => s.id == id,
-                      );
-                      await _service.addSongToPlaylist(widget.playlistId, song);
-                    }
-                    if (!context.mounted) return;
-                    final selectedCount = _selectedIds.length;
-                    Navigator.pop(context);
-                    widget.onDone();
-                    if (!context.mounted) return;
-                    MySnackBar(context: context).showSnackBar(
-                      "$selectedCount songs added to playlist!",
-                      AppColors.blue,
-                    );
-                  },
-                  child: Text(
-                    "common.save".tr(),
-                    style: const TextStyle(color: AppColors.blue, fontSize: 18),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.allSongs.length,
-              itemBuilder: (context, index) {
-                final song = widget.allSongs[index];
-                final isSelected = _selectedIds.contains(song.id);
-                return CheckboxListTile(
-                  value: isSelected,
-                  controlAffinity: ListTileControlAffinity.trailing,
-                  secondary: QueryArtworkWidget(
-                    id: song.id,
-                    type: ArtworkType.AUDIO,
-                    nullArtworkWidget: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.music_note,
-                        color: AppColors.blue,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    song.artist ?? "Unknown",
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                  ),
-                  activeColor: AppColors.blue,
-                  checkColor: Colors.black,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _selectedIds.add(song.id);
-                      } else {
-                        _selectedIds.remove(song.id);
-                      }
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
