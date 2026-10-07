@@ -3,7 +3,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
 import 'package:music/core/services/video/video_playlist_service.dart';
-import 'package:music/features/video/widgets/video_thumbnail.dart';
+import 'package:music/features/video/widgets/video_selection_grid_tile.dart';
 
 class VideoMultiSelectScreen extends StatefulWidget {
   final List<AssetEntity> videos;
@@ -171,36 +171,18 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                       itemBuilder: (_, index) {
                         final video = widget.videos[index];
                         final selected = selectedIds.contains(video.id);
-                        return GestureDetector(
+                        return VideoSelectionGridTile(
+                          video: video,
+                          selected: selected,
+                          showTitle: false,
                           onTap: () {
                             setSheetState(() {
-                              if (!selectedIds.add(video.id)) selectedIds.remove(video.id);
+                              if (!selectedIds.add(video.id)) {
+                                selectedIds.remove(video.id);
+                              }
                             });
                           },
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              VideoThumbnail(asset: video, width: double.infinity, height: double.infinity),
-                              if (selected)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.black45,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: AppColors.blue, width: 3),
-                                  ),
-                                ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Icon(
-                                  selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                  color: selected ? AppColors.blue : Colors.white,
-                                  size: 28,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
+                        )
                       },
                     ),
                   ),
@@ -296,46 +278,11 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
         itemBuilder: (context, index) {
           final video = widget.videos[index];
           final selected = _selected.contains(video.id);
-          return GestureDetector(
+          return VideoSelectionGridTile(
+            video: video,
+            selected: selected,
             onTap: () => _toggle(video),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                VideoThumbnail(asset: video, width: double.infinity, height: double.infinity),
-                if (selected)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.blue, width: 3),
-                    ),
-                  ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Icon(
-                    selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                    color: selected ? AppColors.blue : Colors.white,
-                    size: 28,
-                  ),
-                ),
-                Positioned(
-                  left: 8,
-                  right: 8,
-                  bottom: 8,
-                  child: FutureBuilder<String>(
-                    future: video.titleAsync,
-                    builder: (context, snapshot) => Text(
-                      snapshot.data ?? 'Video',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, shadows: [Shadow(blurRadius: 5, color: Colors.black)]),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          )
         },
       ),
       bottomNavigationBar: SafeArea(
