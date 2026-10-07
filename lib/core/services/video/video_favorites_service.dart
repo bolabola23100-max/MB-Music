@@ -11,7 +11,11 @@ class VideoFavoritesService {
 
   Future<void> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    favoriteIdsNotifier.value = (prefs.getStringList(_key) ?? const <String>[]).toSet();
+    final ids = (prefs.getStringList(_key) ?? const <String>[]).toSet();
+
+    if (!_setsEqual(favoriteIdsNotifier.value, ids)) {
+      favoriteIdsNotifier.value = ids;
+    }
   }
 
   bool isFavorite(String id) => favoriteIdsNotifier.value.contains(id);
@@ -36,5 +40,10 @@ class VideoFavoritesService {
     final ids = Set<String>.from(favoriteIdsNotifier.value)..removeAll(videoIds);
     favoriteIdsNotifier.value = ids;
     await prefs.setStringList(_key, ids.toList());
+  }
+
+  bool _setsEqual(Set<String> first, Set<String> second) {
+    if (first.length != second.length) return false;
+    return first.containsAll(second);
   }
 }
