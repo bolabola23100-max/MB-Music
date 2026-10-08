@@ -10,6 +10,8 @@ class VideoPlayerProgress extends StatelessWidget {
   final VoidCallback onFullscreen;
   final VoidCallback onLock;
   final Future<void> Function(int seconds) onSeek;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
 
   const VideoPlayerProgress({
     super.key,
@@ -19,6 +21,8 @@ class VideoPlayerProgress extends StatelessWidget {
     required this.onFullscreen,
     required this.onLock,
     required this.onSeek,
+    this.onPrevious,
+    this.onNext,
   });
 
   @override
@@ -95,6 +99,13 @@ class VideoPlayerProgress extends StatelessWidget {
                       onTap: onLock,
                     ),
                     const Spacer(),
+                    if (onPrevious != null)
+                      VideoPlayerButton(
+                        icon: Icons.skip_previous_rounded,
+                        size: 42,
+                        onTap: onPrevious!,
+                      ),
+                    const SizedBox(width: 6),
                     VideoPlayerButton(
                       icon: Icons.replay_10_rounded,
                       size: 44,
@@ -120,6 +131,13 @@ class VideoPlayerProgress extends StatelessWidget {
                       size: 44,
                       onTap: () => onSeek(10),
                     ),
+                    const SizedBox(width: 6),
+                    if (onNext != null)
+                      VideoPlayerButton(
+                        icon: Icons.skip_next_rounded,
+                        size: 42,
+                        onTap: onNext!,
+                      ),
                     const Spacer(),
                     VideoPlayerButton(
                       icon: fullscreen
