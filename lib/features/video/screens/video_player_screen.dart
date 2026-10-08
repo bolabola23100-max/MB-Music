@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 import '../services/video_player_manager.dart';
 import '../widgets/video_player_button.dart';
@@ -7,7 +8,7 @@ import '../widgets/video_player_controls.dart';
 import '../widgets/video_player_settings.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  final dynamic asset;
+  final AssetEntity asset;
 
   const VideoPlayerScreen({super.key, required this.asset});
 
