@@ -8,14 +8,24 @@ import 'package:music/features/video/widgets/video_selection_grid_tile.dart';
 class VideoMultiSelectScreen extends StatefulWidget {
   final List<AssetEntity> videos;
 
-  const VideoMultiSelectScreen({super.key, required this.videos});
+  final String? initiallySelectedVideoId;
+
+  const VideoMultiSelectScreen({
+    super.key,
+    required this.videos,
+    this.initiallySelectedVideoId,
+  });
 
   @override
   State<VideoMultiSelectScreen> createState() => _VideoMultiSelectScreenState();
 }
 
 class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
-  final Set<String> _selected = <String>{};
+  late final Set<String> _selected = <String>{
+    if (widget.initiallySelectedVideoId != null &&
+        widget.videos.any((video) => video.id == widget.initiallySelectedVideoId))
+      widget.initiallySelectedVideoId!,
+  };
   final _favorites = VideoFavoritesService();
   final _playlists = VideoPlaylistService();
 
