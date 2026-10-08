@@ -114,7 +114,7 @@ class _AlbumVideosPage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.78),
           itemCount: videos.length,
-          itemBuilder: (context, index) => _VideoCard(asset: videos[index], onLongPress: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)))),
+          itemBuilder: (context, index) => VideoAlbumVideoCard(asset: videos[index], onLongPress: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)))),
         );
       },
     ),
