@@ -27,10 +27,7 @@ class VideoPlayerProgress extends StatelessWidget {
       return Positioned(
         right: 18,
         bottom: 12,
-        child: VideoPlayerButton(
-          icon: Icons.lock_open_rounded,
-          onTap: onLock,
-        ),
+        child: VideoPlayerButton(icon: Icons.lock_open_rounded, onTap: onLock),
       );
     }
 
@@ -51,8 +48,8 @@ class VideoPlayerProgress extends StatelessWidget {
             final value = max <= 0
                 ? 0.0
                 : position.inMilliseconds
-                    .clamp(0, duration.inMilliseconds)
-                    .toDouble();
+                      .clamp(0, duration.inMilliseconds)
+                      .toDouble();
 
             return Column(
               children: [
@@ -83,19 +80,17 @@ class VideoPlayerProgress extends StatelessWidget {
                     value: max > 0 ? value : 0,
                     onChanged: max <= 0
                         ? null
-                        : (next) => player.seek(
-                              Duration(milliseconds: next.round()),
-                            ),
+                        : (next) =>
+                              player.seek(Duration(milliseconds: next.round())),
                   ),
                 ),
                 Row(
                   children: [
                     VideoPlayerButton(
-                      icon: fullscreen
-                          ? Icons.fullscreen_exit_rounded
-                          : Icons.fullscreen_rounded,
-                      onTap: onFullscreen,
+                      icon: Icons.lock_outline_rounded,
+                      onTap: onLock,
                     ),
+
                     const Spacer(),
                     VideoPlayerButton(
                       icon: Icons.replay_10_rounded,
@@ -103,6 +98,7 @@ class VideoPlayerProgress extends StatelessWidget {
                       onTap: () => onSeek(-10),
                     ),
                     const SizedBox(width: 12),
+
                     VideoPlayerButton(
                       icon: Icons.forward_10_rounded,
                       size: 44,
@@ -110,8 +106,10 @@ class VideoPlayerProgress extends StatelessWidget {
                     ),
                     const Spacer(),
                     VideoPlayerButton(
-                      icon: Icons.lock_outline_rounded,
-                      onTap: onLock,
+                      icon: fullscreen
+                          ? Icons.fullscreen_exit_rounded
+                          : Icons.fullscreen_rounded,
+                      onTap: onFullscreen,
                     ),
                   ],
                 ),
