@@ -136,7 +136,7 @@ class VideoPlayerProgress extends StatelessWidget {
                     if (onNext != null)
                       VideoPlayerButton(
                         icon: Icons.skip_next_rounded,
-                        size: 42,
+                        size: 36,
                         onTap: onNext!,
                       ),
                     const Spacer(),
