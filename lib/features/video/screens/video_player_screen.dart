@@ -7,6 +7,7 @@ import '../widgets/video_player_controls.dart';
 import '../widgets/video_player_progress.dart';
 import '../widgets/video_player_settings.dart';
 import '../widgets/video_gesture_indicator.dart';
+import '../widgets/video_player_error.dart';
 
 enum _GestureIndicatorSide { left, right }
 
@@ -137,7 +138,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         child: Scaffold(
           backgroundColor: Colors.black,
           body: _manager.loadFailed
-              ? const _VideoError()
+              ? const VideoPlayerError()
               : FutureBuilder<void>(
                   future: _manager.loadFuture,
                   builder: (context, snapshot) {
