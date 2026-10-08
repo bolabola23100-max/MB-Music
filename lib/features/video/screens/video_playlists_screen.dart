@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/video/video_playlist_service.dart';
-import 'package:music/features/video/screens/video_player_screen.dart';
 import 'package:music/features/video/widgets/video_thumbnail.dart';
-import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
+
+import 'video_playlist_details_screen.dart';
 
 class VideoPlaylistsScreen extends StatefulWidget {
   const VideoPlaylistsScreen({super.key});
@@ -280,4 +280,3 @@ class _VideoPlaylistsScreenState extends State<VideoPlaylistsScreen> {
     );
   }
 }
-
