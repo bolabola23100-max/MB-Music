@@ -5,7 +5,6 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/widgets/player_builder.dart';
-import 'package:music/core/widgets/song_tile_widget.dart';
 import 'package:music/core/widgets/sort_button.dart';
 import 'package:music/features/home/widgets/mini_player_widget.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
@@ -210,5 +209,4 @@ class _PlaylistDetailsViewState extends State<PlaylistDetailsView> {
       },
     );
   }
-
 }
