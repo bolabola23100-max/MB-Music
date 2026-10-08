@@ -152,6 +152,12 @@ class VideoPlayerManager extends ChangeNotifier {
     if (!locked) showControls();
   }
 
+  Future<void> adjustVolume(double delta) async {
+    if (locked) return;
+    final next = (player.state.volume + delta).clamp(0.0, 100.0).toDouble();
+    await player.setVolume(next);
+  }
+
   Future<void> setBrightness(double value) async {
     brightness = value.clamp(0.05, 1.0).toDouble();
     _notify();
@@ -159,6 +165,11 @@ class VideoPlayerManager extends ChangeNotifier {
       await ScreenBrightness.instance
           .setApplicationScreenBrightness(brightness);
     } catch (_) {}
+  }
+
+  Future<void> adjustBrightness(double delta) async {
+    if (locked) return;
+    await setBrightness(brightness + delta);
   }
 
   void setAspectRatio(double? ratio, BoxFit fit) {
