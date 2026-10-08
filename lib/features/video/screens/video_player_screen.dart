@@ -7,6 +7,8 @@ import '../widgets/video_player_controls.dart';
 import '../widgets/video_player_progress.dart';
 import '../widgets/video_player_settings.dart';
 
+enum _GestureIndicatorSide { left, right }
+
 class VideoPlayerScreen extends StatefulWidget {
   final AssetEntity asset;
 
@@ -18,6 +20,7 @@ class VideoPlayerScreen extends StatefulWidget {
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final VideoPlayerManager _manager;
+  _GestureIndicatorSide? _gestureIndicatorSide;
 
   @override
   void initState() {
@@ -46,6 +49,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _manager.showControls();
   }
 
+  void _handleVerticalDragStart(DragStartDetails details, double width) {
+    if (_manager.locked) return;
+    setState(() {
+      _gestureIndicatorSide = details.localPosition.dx < width / 2
+          ? _GestureIndicatorSide.left
+          : _GestureIndicatorSide.right;
+    });
+  }
+
   void _handleVerticalSwipe(DragUpdateDetails details, double width) {
     if (_manager.locked) return;
 
@@ -58,6 +70,78 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _manager.adjustBrightness(delta * 0.005);
     }
   }
+
+  void _handleVerticalDragEnd(DragEndDetails details) {
+    if (!mounted) return;
+    setState(() => _gestureIndicatorSide = null);
+  }
+
+  void _handleVerticalDragCancel() {
+    if (!mounted) return;
+    setState(() => _gestureIndicatorSide = null);
+  }
+
+  Widget _buildGestureIndicator() {
+    final isVolume = _gestureIndicatorSide == _GestureIndicatorSide.right;
+    final value = isVolume
+        ? (playerVolume / 100).clamp(0.0, 1.0)
+        : ((1.0 - 0.05) == 0
+              ? 0.0
+              : ((_manager.brightness - 0.05) / 0.95).clamp(0.0, 1.0));
+
+    return Positioned(
+      left: isVolume ? null : 28,
+      right: isVolume ? 28 : null,
+      top: 0,
+      bottom: 0,
+      child: IgnorePointer(
+        child: Center(
+          child: Container(
+            width: 42,
+            height: 190,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  isVolume
+                      ? (value <= 0
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_up_rounded)
+                      : Icons.brightness_6_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Container(color: Colors.white24),
+                        FractionallySizedBox(
+                          widthFactor: 1,
+                          heightFactor: value,
+                          child: Container(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  double get playerVolume => _manager.player.state.volume;
 
   @override
   void dispose() {
@@ -88,16 +172,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildPlayer() {
+    final width = MediaQuery.sizeOf(context).width;
     return Stack(
       fit: StackFit.expand,
       children: [
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _manager.toggleControls,
-          onVerticalDragUpdate: (details) => _handleVerticalSwipe(
-            details,
-            MediaQuery.sizeOf(context).width,
-          ),
+          onVerticalDragStart: (details) =>
+              _handleVerticalDragStart(details, width),
+          onVerticalDragUpdate: (details) =>
+              _handleVerticalSwipe(details, width),
+          onVerticalDragEnd: _handleVerticalDragEnd,
+          onVerticalDragCancel: _handleVerticalDragCancel,
           child: Video(
             controller: _manager.videoController,
             controls: NoVideoControls,
@@ -107,6 +194,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             wakelock: true,
           ),
         ),
+        if (_gestureIndicatorSide != null) _buildGestureIndicator(),
         if (_manager.locked)
           VideoPlayerProgress(
             player: _manager.player,
