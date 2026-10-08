@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 class VideoOptionsMenu extends StatelessWidget {
   final String title;
   final bool isFavorite;
+  final bool showFavorite;
+  final bool showPlaylist;
+  final bool showDelete;
   final ValueChanged<String> onAction;
 
   const VideoOptionsMenu({
     super.key,
     required this.title,
     required this.isFavorite,
+    this.showFavorite = true,
+    this.showPlaylist = true,
+    this.showDelete = true,
     required this.onAction,
   });
 
@@ -30,7 +36,8 @@ class VideoOptionsMenu extends StatelessWidget {
                 ),
               ),
             ),
-            ListTile(
+            if (showFavorite)
+              ListTile(
               leading: Icon(
                 isFavorite
                     ? Icons.favorite_rounded
@@ -48,7 +55,8 @@ class VideoOptionsMenu extends StatelessWidget {
               title: const Text('Share video', style: TextStyle(color: Colors.white)),
               onTap: () => onAction('share'),
             ),
-            ListTile(
+            if (showPlaylist)
+              ListTile(
               leading: const Icon(Icons.playlist_add_rounded, color: Colors.white),
               title: const Text('Add to playlist', style: TextStyle(color: Colors.white)),
               onTap: () => onAction('playlist'),
@@ -63,7 +71,8 @@ class VideoOptionsMenu extends StatelessWidget {
               title: const Text('Video information', style: TextStyle(color: Colors.white)),
               onTap: () => onAction('info'),
             ),
-            ListTile(
+            if (showDelete)
+              ListTile(
               leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
               title: const Text(
                 'Delete video from device',
