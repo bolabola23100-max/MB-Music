@@ -25,6 +25,11 @@ class VideoPlayerManager extends ChangeNotifier {
   BoxFit videoFit = BoxFit.contain;
   double? aspectRatio;
 
+  double? get originalAspectRatio {
+    if (asset.width <= 0 || asset.height <= 0) return null;
+    return asset.width / asset.height;
+  }
+
   VideoPlayerManager(this.asset) {
     player = Player();
     videoController = VideoController(player);
