@@ -11,8 +11,13 @@ enum _GestureIndicatorSide { left, right }
 
 class VideoPlayerScreen extends StatefulWidget {
   final AssetEntity asset;
+  final List<AssetEntity>? videos;
 
-  const VideoPlayerScreen({super.key, required this.asset});
+  const VideoPlayerScreen({
+    super.key,
+    required this.asset,
+    this.videos,
+  });
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -41,12 +46,33 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       context,
       _manager.aspectRatio,
       _manager.videoFit,
+      _manager.originalAspectRatio,
       (selection) => _manager.setAspectRatio(
         selection.ratio,
         selection.fit,
       ),
     );
     _manager.showControls();
+  }
+
+  List<AssetEntity> get _videos {
+    final videos = widget.videos;
+    if (videos == null || videos.isEmpty) return [widget.asset];
+    return videos;
+  }
+
+  Future<void> _playAdjacentVideo(int offset) async {
+    final videos = _videos;
+    final currentIndex = videos.indexWhere((video) => video.id == _manager.asset.id);
+    final nextIndex = currentIndex + offset;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= videos.length) return;
+
+    final nextAsset = videos[nextIndex];
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => VideoPlayerScreen(asset: nextAsset, videos: videos),
+      ),
+    );
   }
 
   void _handleVerticalDragStart(DragStartDetails details, double width) {
@@ -215,6 +241,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             onLock: _manager.lockPlayer,
             onFullscreen: _manager.toggleFullscreen,
             onSeek: _manager.seekBy,
+            onPrevious: () => _playAdjacentVideo(-1),
+            onNext: () => _playAdjacentVideo(1),
           ),
       ],
     );
