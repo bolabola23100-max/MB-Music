@@ -303,7 +303,6 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
           return VideoSelectionGridTile(
             video: video,
             selected: selected,
-            onMorePressed: () => VideoOptionsBottomSheet.show(context, asset: video),
             onTap: () => _toggle(video),
           );
         },
@@ -318,6 +317,18 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                 icon: Icons.playlist_add_rounded,
                 tooltip: 'Playlist',
                 onPressed: count == 0 ? null : _addToPlaylist,
+              ),
+              _ActionIcon(
+                icon: Icons.more_vert_rounded,
+                tooltip: count == 1
+                    ? 'Video options'
+                    : 'Select one video for more options',
+                onPressed: count == 1
+                    ? () => VideoOptionsBottomSheet.show(
+                          context,
+                          asset: _selectedVideos.single,
+                        )
+                    : null,
               ),
               _ActionIcon(
                 icon: Icons.favorite_rounded,
