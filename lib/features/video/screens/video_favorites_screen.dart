@@ -110,7 +110,7 @@ class _VideoFavoritesScreenState extends State<VideoFavoritesScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => VideoPlayerScreen(asset: asset, videos: videos),
+                    builder: (_) => VideoPlayerScreen(key: ValueKey(asset.id), asset: asset, videos: videos),
                   ),
                 ).then((_) {
                   if (mounted) setState(_load);
