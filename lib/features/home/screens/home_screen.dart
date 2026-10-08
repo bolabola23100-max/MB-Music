@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music/core/services/smart_review_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
@@ -37,13 +38,17 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   late PageController _pageController;
   int _localIndex = 0;
   bool _isVideoMode = false;
   final VideoLibraryService _videoService = const VideoLibraryService();
   late final List<Widget> _musicPages;
   late final List<Widget> _videoPages;
+  final SmartReviewService _smartReview = SmartReviewService.instance;
+  late final AudioService _reviewAudioService;
+  bool _appIsResumed = true;
+  bool _reviewListenersAttached = false;
 
   static const Duration _pageAnimDuration = Duration(milliseconds: 400);
   static const Curve _pageAnimCurve = Curves.easeInOutCubic;
@@ -51,18 +56,58 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _appIsResumed = WidgetsBinding.instance.lifecycleState ==
+        AppLifecycleState.resumed;
     _localIndex = context.read<HomeCubit>().state.currentIndex;
     _pageController = PageController(initialPage: _localIndex);
 
     final audioService = AudioService();
+    _reviewAudioService = audioService;
+    _initializeSmartReview();
     final favoritesService = FavoritesService();
     final cubit = context.read<HomeCubit>();
     _musicPages = _buildMusicPages(audioService, favoritesService, cubit);
     _videoPages = _buildVideoPages();
   }
 
+  Future<void> _initializeSmartReview() async {
+    try {
+      await _smartReview.initialize();
+      if (!mounted || _reviewListenersAttached) return;
+      _reviewListenersAttached = true;
+      _reviewAudioService.currentPathNotifier.addListener(_onCurrentSongChanged);
+      _reviewAudioService.isPlayingNotifier.addListener(_tryReviewAtQuietMoment);
+      _tryReviewAtQuietMoment();
+    } catch (_) {
+      // Rating requests are optional and must never affect app startup.
+    }
+  }
+
+  void _onCurrentSongChanged() {
+    _smartReview.recordSongStarted(_reviewAudioService.currentPathNotifier.value);
+  }
+
+  void _tryReviewAtQuietMoment() {
+    _smartReview.maybeRequestReview(
+      appIsResumed: _appIsResumed,
+      isPlaying: _reviewAudioService.isPlayingNotifier.value,
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appIsResumed = state == AppLifecycleState.resumed;
+    if (_appIsResumed) _tryReviewAtQuietMoment();
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (_reviewListenersAttached) {
+      _reviewAudioService.currentPathNotifier.removeListener(_onCurrentSongChanged);
+      _reviewAudioService.isPlayingNotifier.removeListener(_tryReviewAtQuietMoment);
+    }
     _pageController.dispose();
     super.dispose();
   }
