@@ -81,7 +81,10 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
               title: const Text('Play', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(sheetContext);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset)));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset, videos: [asset])),
+                );
               },
             ),
             ListTile(
@@ -122,7 +125,12 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
             itemBuilder: (context, index) {
               final asset = videos[index];
               return InkWell(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset))),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => VideoPlayerScreen(asset: asset, videos: videos),
+                  ),
+                ),
                 onLongPress: () => _showVideoMenu(asset),
                 child: Stack(
                   children: [
