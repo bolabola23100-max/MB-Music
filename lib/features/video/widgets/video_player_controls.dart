@@ -36,7 +36,7 @@ class VideoPlayerControls extends StatelessWidget {
         children: [
           const Positioned.fill(child: _PlayerGradient()),
           _buildTopBar(),
-          _buildCenterControls(),
+          _buildBottomPlayButton(),
           VideoPlayerProgress(
             player: player,
             fullscreen: fullscreen,
@@ -57,7 +57,11 @@ class VideoPlayerControls extends StatelessWidget {
       right: 12,
       child: Row(
         children: [
-          VideoPlayerButton(icon: Icons.arrow_back_rounded, onTap: onBack),
+          VideoPlayerButton(
+            icon: Icons.arrow_back_rounded,
+            onTap: onBack,
+            filled: false,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: FutureBuilder<String>(
@@ -74,16 +78,27 @@ class VideoPlayerControls extends StatelessWidget {
               ),
             ),
           ),
-          VideoPlayerButton(icon: Icons.speed_rounded, onTap: onSpeed),
+          VideoPlayerButton(
+            icon: Icons.speed_rounded,
+            onTap: onSpeed,
+            filled: false,
+          ),
           const SizedBox(width: 8),
-          VideoPlayerButton(icon: Icons.aspect_ratio_rounded, onTap: onAspect),
+          VideoPlayerButton(
+            icon: Icons.aspect_ratio_rounded,
+            onTap: onAspect,
+            filled: false,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCenterControls() {
-    return Positioned.fill(
+  Widget _buildBottomPlayButton() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 54,
       child: Center(
         child: StreamBuilder<bool>(
           stream: player.stream.playing,
@@ -92,8 +107,8 @@ class VideoPlayerControls extends StatelessWidget {
             icon: snapshot.data == true
                 ? Icons.pause_rounded
                 : Icons.play_arrow_rounded,
-            size: 76,
-            iconSize: 42,
+            size: 64,
+            iconSize: 36,
             filled: true,
             onTap: player.playOrPause,
           ),
@@ -115,7 +130,7 @@ class _PlayerGradient extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withValues(alpha: 0.62),
+              Colors.black.withValues(alpha: 0.42),
               Colors.transparent,
               Colors.black.withValues(alpha: 0.72),
             ],
