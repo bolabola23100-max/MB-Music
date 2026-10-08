@@ -142,7 +142,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               : FutureBuilder<void>(
                   future: _manager.loadFuture,
                   builder: (context, snapshot) {
-                    if (snapshot.hasError) return const _VideoError();
+                    if (snapshot.hasError) return const VideoPlayerError();
                     return _buildPlayer();
                   },
                 ),
