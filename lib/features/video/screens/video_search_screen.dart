@@ -128,7 +128,10 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => VideoPlayerScreen(asset: asset),
+                              builder: (_) => VideoPlayerScreen(
+                                asset: asset,
+                                videos: _results,
+                              ),
                             ),
                           ),
                           onLongPress: _openMultiSelect,
