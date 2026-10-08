@@ -52,11 +52,14 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
     });
   }
 
-  Future<void> _openMultiSelect() async {
+  Future<void> _openMultiSelect(AssetEntity initiallySelected) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => VideoMultiSelectScreen(videos: List<AssetEntity>.from(_results)),
+        builder: (_) => VideoMultiSelectScreen(
+          videos: List<AssetEntity>.from(_results),
+          initiallySelectedVideoId: initiallySelected.id,
+        ),
       ),
     );
     if (mounted) _loadVideos();
@@ -134,7 +137,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                               ),
                             ),
                           ),
-                          onLongPress: _openMultiSelect,
+                          onLongPress: () => _openMultiSelect(asset),
                         );
                       },
                     ),
