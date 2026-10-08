@@ -31,6 +31,7 @@ class VideoPlayerManager extends ChangeNotifier {
   }
 
   VideoPlayerManager(this.asset) {
+    aspectRatio = originalAspectRatio;
     player = Player();
     videoController = VideoController(player);
   }
