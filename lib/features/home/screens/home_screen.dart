@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/features/home/widgets/bottom_nav_bar.dart';
 import 'package:music/features/sounds/screens/sounds_screen.dart';
 import 'package:music/features/favorite/screens/favorites_screen.dart';
