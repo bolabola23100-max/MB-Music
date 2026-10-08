@@ -6,8 +6,9 @@ import 'package:music/core/services/video/video_favorites_service.dart';
 import 'package:music/core/services/video/video_playlist_service.dart';
 
 class VideoOptionsBottomSheet {
-  static const MethodChannel _videoChannel =
-      MethodChannel('com.mbmusic.player/video');
+  static const MethodChannel _videoChannel = MethodChannel(
+    'com.mbmusic.player/video',
+  );
 
   static final ValueNotifier<int> renameChanges = ValueNotifier<int>(0);
 
@@ -266,10 +267,8 @@ class VideoOptionsBottomSheet {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(
-              dialogContext,
-              controller.text.trim(),
-            ),
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('Create'),
           ),
         ],
@@ -327,10 +326,10 @@ class VideoOptionsBottomSheet {
     if (!context.mounted || name == null || name.isEmpty) return;
 
     try {
-      final success = await _videoChannel.invokeMethod<bool>(
-        'renameVideo',
-        {'videoId': asset.id, 'newName': name},
-      );
+      final success = await _videoChannel.invokeMethod<bool>('renameVideo', {
+        'videoId': asset.id,
+        'newName': name,
+      });
       if (!context.mounted) return;
 
       if (success == true) {
@@ -449,12 +448,12 @@ class VideoOptionsBottomSheet {
   }
 
   static Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Text(
-          '$label: $value',
-          style: const TextStyle(color: Colors.white70),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(
+      '$label: $value',
+      style: const TextStyle(color: Colors.white70),
+    ),
+  );
 
   static String _formatDuration(int seconds) {
     final duration = Duration(seconds: seconds);
@@ -481,8 +480,8 @@ class VideoOptionsBottomSheet {
   }
 
   static void _message(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }

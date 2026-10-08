@@ -28,7 +28,9 @@ class PlaybackModeSheet extends StatelessWidget {
       return queue.where((song) => song.id == id).toList();
     }
     if (mode == PlaybackMode.shuffle) {
-      return audioService.shuffledQueue.isEmpty ? queue : audioService.shuffledQueue;
+      return audioService.shuffledQueue.isEmpty
+          ? queue
+          : audioService.shuffledQueue;
     }
     return queue;
   }
@@ -74,23 +76,34 @@ class PlaybackModeSheet extends StatelessWidget {
           height: 78,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: selected ? AppColors.blue.withValues(alpha: .15) : AppColors.white.withValues(alpha: .05),
+            color: selected
+                ? AppColors.blue.withValues(alpha: .15)
+                : AppColors.white.withValues(alpha: .05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? AppColors.blue.withValues(alpha: .7) : AppColors.white.withValues(alpha: .06),
+              color: selected
+                  ? AppColors.blue.withValues(alpha: .7)
+                  : AppColors.white.withValues(alpha: .06),
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: selected ? AppColors.blue : AppColors.white.withValues(alpha: .45)),
+              Icon(
+                icon,
+                color: selected
+                    ? AppColors.blue
+                    : AppColors.white.withValues(alpha: .45),
+              ),
               const SizedBox(height: 6),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: selected ? AppColors.blue : AppColors.white.withValues(alpha: .5),
+                  color: selected
+                      ? AppColors.blue
+                      : AppColors.white.withValues(alpha: .5),
                   fontSize: 10,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -104,19 +117,28 @@ class PlaybackModeSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = (MediaQuery.sizeOf(context).height * .35).clamp(160.0, 350.0);
+    final height = (MediaQuery.sizeOf(context).height * .35).clamp(
+      160.0,
+      350.0,
+    );
 
     return Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width > 550 ? 500 : double.infinity),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width > 550
+              ? 500
+              : double.infinity,
+        ),
         child: SafeArea(
           top: false,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
             decoration: BoxDecoration(
               color: AppColors.gray,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               border: Border.all(color: AppColors.white.withValues(alpha: .08)),
             ),
             child: Column(
@@ -133,7 +155,11 @@ class PlaybackModeSheet extends StatelessWidget {
                 ),
                 Text(
                   'player.playback_mode'.tr(),
-                  style: const TextStyle(color: AppColors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 18),
                 ValueListenableBuilder<PlaybackMode>(
@@ -144,14 +170,18 @@ class PlaybackModeSheet extends StatelessWidget {
                         icon: Icons.repeat,
                         label: 'player.sequential'.tr(),
                         selected: mode == PlaybackMode.sequential,
-                        onTap: () => audioService.setPlaybackMode(PlaybackMode.sequential),
+                        onTap: () => audioService.setPlaybackMode(
+                          PlaybackMode.sequential,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _modeButton(
                         icon: Icons.repeat_one,
                         label: 'player.repeat_one'.tr(),
                         selected: mode == PlaybackMode.repeatOne,
-                        onTap: () => audioService.setPlaybackMode(PlaybackMode.repeatOne),
+                        onTap: () => audioService.setPlaybackMode(
+                          PlaybackMode.repeatOne,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _modeButton(
@@ -170,7 +200,11 @@ class PlaybackModeSheet extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: Text(
                       'player.playing_queue'.tr(),
-                      style: const TextStyle(color: AppColors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -178,41 +212,50 @@ class PlaybackModeSheet extends StatelessWidget {
                     height: height,
                     child: ValueListenableBuilder<List<SongModel>>(
                       valueListenable: audioService.currentQueueNotifier,
-                      builder: (context, _, _) => ValueListenableBuilder<List<SongModel>>(
-                        valueListenable: audioService.shuffledQueueNotifier,
-                        builder: (context, _, _) => ValueListenableBuilder<PlaybackMode>(
-                          valueListenable: audioService.playbackModeNotifier,
-                          builder: (context, mode, _) {
-                            final queue = _displayQueue(mode);
-                            return ListView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: queue.length,
-                              itemBuilder: (context, index) {
-                                final song = queue[index];
-                                return SongTileWidget(
-                                  song: song,
-                                  audioService: audioService,
-                                  onTap: () {
-                                    audioService.playSong(
-                                      song.data,
-                                      title: song.title,
-                                      artist: song.artist,
-                                      index: index,
-                                      songId: song.id,
-                                      queue: queue,
+                      builder: (context, _, _) =>
+                          ValueListenableBuilder<List<SongModel>>(
+                            valueListenable: audioService.shuffledQueueNotifier,
+                            builder: (context, _, _) =>
+                                ValueListenableBuilder<PlaybackMode>(
+                                  valueListenable:
+                                      audioService.playbackModeNotifier,
+                                  builder: (context, mode, _) {
+                                    final queue = _displayQueue(mode);
+                                    return ListView.builder(
+                                      physics: const BouncingScrollPhysics(),
+                                      itemCount: queue.length,
+                                      itemBuilder: (context, index) {
+                                        final song = queue[index];
+                                        return SongTileWidget(
+                                          song: song,
+                                          audioService: audioService,
+                                          onTap: () {
+                                            audioService.playSong(
+                                              song.data,
+                                              title: song.title,
+                                              artist: song.artist,
+                                              index: index,
+                                              songId: song.id,
+                                              queue: queue,
+                                            );
+                                            AppNavigator.pop(context);
+                                          },
+                                          onMoreTap: () {
+                                            AppNavigator.pop(context);
+                                            AppNavigator.push(
+                                              context,
+                                              PlayerScreen(
+                                                songs: queue,
+                                                index: index,
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
                                     );
-                                    AppNavigator.pop(context);
                                   },
-                                  onMoreTap: () {
-                                    AppNavigator.pop(context);
-                                    AppNavigator.push(context, PlayerScreen(songs: queue, index: index));
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
+                                ),
+                          ),
                     ),
                   ),
                 ],
