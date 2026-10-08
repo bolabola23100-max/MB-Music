@@ -67,7 +67,7 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Video removed from playlist')));
   }
 
-  void _showVideoMenu(AssetEntity asset) {
+  void _showVideoMenu(AssetEntity asset, List<AssetEntity> videos) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.gray,
@@ -83,7 +83,7 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
                 Navigator.pop(sheetContext);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset, videos: [asset])),
+                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset, videos: videos)),
                 );
               },
             ),
@@ -131,7 +131,7 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
                     builder: (_) => VideoPlayerScreen(asset: asset, videos: videos),
                   ),
                 ),
-                onLongPress: () => _showVideoMenu(asset),
+                onLongPress: () => _showVideoMenu(asset, videos),
                 child: Stack(
                   children: [
                     Positioned.fill(child: VideoThumbnail(asset: asset, width: double.infinity, height: double.infinity)),
@@ -139,7 +139,7 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
                       right: 2,
                       top: 2,
                       child: IconButton(
-                        onPressed: () => _showVideoMenu(asset),
+                        onPressed: () => _showVideoMenu(asset, videos),
                         icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                       ),
                     ),
