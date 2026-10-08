@@ -44,6 +44,11 @@ class VideoOptionsMenu extends StatelessWidget {
               onTap: () => onAction('favorite'),
             ),
             ListTile(
+              leading: const Icon(Icons.share_rounded, color: Colors.white),
+              title: const Text('Share video', style: TextStyle(color: Colors.white)),
+              onTap: () => onAction('share'),
+            ),
+            ListTile(
               leading: const Icon(Icons.playlist_add_rounded, color: Colors.white),
               title: const Text('Add to playlist', style: TextStyle(color: Colors.white)),
               onTap: () => onAction('playlist'),
