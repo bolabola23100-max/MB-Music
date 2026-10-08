@@ -156,6 +156,7 @@ class VideoPlayerManager extends ChangeNotifier {
     if (locked) return;
     final next = (player.state.volume + delta).clamp(0.0, 100.0).toDouble();
     await player.setVolume(next);
+    _notify();
   }
 
   Future<void> setBrightness(double value) async {
