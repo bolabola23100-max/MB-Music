@@ -257,12 +257,22 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
     final count = _selected.length;
     return Scaffold(
       appBar: AppBar(
-        title: Text(count == 0 ? 'Select videos' : '$count selected'),
+        title: Text('$count of ${widget.videos.length} videos selected'),
         actions: [
           IconButton(
             tooltip: 'Select all',
-            onPressed: () => setState(() => _selected.addAll(widget.videos.map((v) => v.id))),
-            icon: const Icon(Icons.select_all_rounded),
+            onPressed: () => setState(() {
+              if (_selected.length == widget.videos.length) {
+                _selected.clear();
+              } else {
+                _selected.addAll(widget.videos.map((v) => v.id));
+              }
+            }),
+            icon: Icon(
+              _selected.length == widget.videos.length
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+            ),
           ),
         ],
       ),
