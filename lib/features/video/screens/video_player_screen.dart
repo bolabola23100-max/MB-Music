@@ -3,8 +3,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../services/video_player_manager.dart';
-import '../widgets/video_player_button.dart';
 import '../widgets/video_player_controls.dart';
+import '../widgets/video_player_progress.dart';
 import '../widgets/video_player_settings.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -116,13 +116,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
         ),
         if (_manager.locked)
-          Positioned(
-            right: 18,
-            top: 18,
-            child: VideoPlayerButton(
-              icon: Icons.lock_rounded,
-              onTap: _manager.unlockPlayer,
-            ),
+          VideoPlayerProgress(
+            player: _manager.player,
+            fullscreen: _manager.fullscreen,
+            locked: true,
+            onFullscreen: _manager.toggleFullscreen,
+            onLock: _manager.unlockPlayer,
+            onSeek: _manager.seekBy,
           )
         else if (_manager.controlsVisible)
           VideoPlayerControls(
