@@ -6,19 +6,34 @@ import 'video_player_button.dart';
 class VideoPlayerProgress extends StatelessWidget {
   final Player player;
   final bool fullscreen;
+  final bool locked;
   final VoidCallback onFullscreen;
   final VoidCallback onLock;
+  final Future<void> Function(int seconds) onSeek;
 
   const VideoPlayerProgress({
     super.key,
     required this.player,
     required this.fullscreen,
+    required this.locked,
     required this.onFullscreen,
     required this.onLock,
+    required this.onSeek,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (locked) {
+      return Positioned(
+        right: 18,
+        bottom: 12,
+        child: VideoPlayerButton(
+          icon: Icons.lock_open_rounded,
+          onTap: onLock,
+        ),
+      );
+    }
+
     return Positioned(
       left: 18,
       right: 18,
@@ -80,6 +95,18 @@ class VideoPlayerProgress extends StatelessWidget {
                           ? Icons.fullscreen_exit_rounded
                           : Icons.fullscreen_rounded,
                       onTap: onFullscreen,
+                    ),
+                    const Spacer(),
+                    VideoPlayerButton(
+                      icon: Icons.replay_10_rounded,
+                      size: 44,
+                      onTap: () => onSeek(-10),
+                    ),
+                    const SizedBox(width: 12),
+                    VideoPlayerButton(
+                      icon: Icons.forward_10_rounded,
+                      size: 44,
+                      onTap: () => onSeek(10),
                     ),
                     const Spacer(),
                     VideoPlayerButton(
