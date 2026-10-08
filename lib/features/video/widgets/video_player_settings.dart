@@ -101,10 +101,11 @@ class VideoPlayerSettings {
     BuildContext context,
     double? currentRatio,
     BoxFit currentFit,
+    double? originalRatio,
     ValueChanged<({double? ratio, BoxFit fit})> onSelected,
   ) async {
-    const options = [
-      ('Original', null, BoxFit.contain),
+    final options = [
+      ('Original', originalRatio, BoxFit.contain),
       ('16:9', 16 / 9, BoxFit.contain),
       ('4:3', 4 / 3, BoxFit.contain),
       ('Fill screen', null, BoxFit.cover),
