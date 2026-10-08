@@ -15,6 +15,8 @@ class VideoPlayerControls extends StatelessWidget {
   final VoidCallback onLock;
   final VoidCallback onFullscreen;
   final Future<void> Function(int seconds) onSeek;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
 
   const VideoPlayerControls({
     super.key,
@@ -27,6 +29,8 @@ class VideoPlayerControls extends StatelessWidget {
     required this.onLock,
     required this.onFullscreen,
     required this.onSeek,
+    this.onPrevious,
+    this.onNext,
   });
 
   @override
@@ -43,6 +47,8 @@ class VideoPlayerControls extends StatelessWidget {
             onFullscreen: onFullscreen,
             onLock: onLock,
             onSeek: onSeek,
+            onPrevious: onPrevious,
+            onNext: onNext,
           ),
         ],
       ),
