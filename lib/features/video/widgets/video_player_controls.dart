@@ -10,8 +10,6 @@ class VideoPlayerControls extends StatelessWidget {
   final Player player;
   final bool fullscreen;
   final VoidCallback onBack;
-  final VoidCallback onBrightness;
-  final VoidCallback onVolume;
   final VoidCallback onSpeed;
   final VoidCallback onAspect;
   final VoidCallback onLock;
@@ -24,8 +22,6 @@ class VideoPlayerControls extends StatelessWidget {
     required this.player,
     required this.fullscreen,
     required this.onBack,
-    required this.onBrightness,
-    required this.onVolume,
     required this.onSpeed,
     required this.onAspect,
     required this.onLock,
@@ -40,7 +36,6 @@ class VideoPlayerControls extends StatelessWidget {
         children: [
           const Positioned.fill(child: _PlayerGradient()),
           _buildTopBar(),
-          _buildSideButtons(),
           _buildCenterControls(),
           VideoPlayerProgress(
             player: player,
@@ -84,41 +79,6 @@ class VideoPlayerControls extends StatelessWidget {
           VideoPlayerButton(icon: Icons.aspect_ratio_rounded, onTap: onAspect),
         ],
       ),
-    );
-  }
-
-  Widget _buildSideButtons() {
-    return Stack(
-      children: [
-        Positioned(
-          left: 14,
-          top: 0,
-          bottom: 0,
-          child: Center(
-            child: VideoPlayerButton(
-              icon: Icons.brightness_6_rounded,
-              onTap: onBrightness,
-            ),
-          ),
-        ),
-        Positioned(
-          right: 14,
-          top: 0,
-          bottom: 0,
-          child: Center(
-            child: StreamBuilder<double>(
-              stream: player.stream.volume,
-              initialData: player.state.volume,
-              builder: (context, snapshot) => VideoPlayerButton(
-                icon: (snapshot.data ?? 0) <= 0
-                    ? Icons.volume_off_rounded
-                    : Icons.volume_up_rounded,
-                onTap: onVolume,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
