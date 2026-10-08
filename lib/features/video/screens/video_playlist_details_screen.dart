@@ -83,7 +83,7 @@ class _VideoPlaylistDetailsScreenState extends State<VideoPlaylistDetailsScreen>
                 Navigator.pop(sheetContext);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset, videos: videos)),
+                  MaterialPageRoute(builder: (_) => VideoPlayerScreen(key: ValueKey(asset.id), asset: asset, videos: videos)),
                 );
               },
             ),
