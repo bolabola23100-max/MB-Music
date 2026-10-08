@@ -51,8 +51,11 @@ class _AllVideosState extends State<_AllVideos> {
   late Future<List<AssetEntity>> _videosFuture;
   @override void initState() { super.initState(); _videosFuture = widget.service.getAllVideos(); }
   Future<void> _refresh() async { setState(() => _videosFuture = widget.service.getAllVideos()); await _videosFuture; }
-  Future<void> _select(List<AssetEntity> videos) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)));
+  Future<void> _select(List<AssetEntity> videos, AssetEntity initiallySelected) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(
+      videos: videos,
+      initiallySelectedVideoId: initiallySelected.id,
+    )));
     if (mounted) _refresh();
   }
 
@@ -74,7 +77,7 @@ class _AllVideosState extends State<_AllVideos> {
           itemBuilder: (context, index) => VideoAlbumVideoCard(
             asset: videos[index],
             videos: videos,
-            onLongPress: () => _select(videos),
+            onLongPress: () => _select(videos, videos[index]),
           ),
         ),
       );
@@ -121,7 +124,10 @@ class _AlbumVideosPage extends StatelessWidget {
             asset: videos[index],
             videos: videos,
             onLongPress: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)),
+              MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(
+                videos: videos,
+                initiallySelectedVideoId: videos[index].id,
+              )),
             ),
           ),
         );
