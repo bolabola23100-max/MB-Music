@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/features/video/widgets/video_options_menu.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
@@ -38,6 +39,9 @@ class VideoOptionsBottomSheet {
     if (!context.mounted || action == null) return;
 
     switch (action) {
+      case 'share':
+        await _shareVideo(context, asset, title);
+        break;
       case 'favorite':
         await favorites.toggleFavorite(asset.id);
         if (!context.mounted) return;
@@ -68,6 +72,30 @@ class VideoOptionsBottomSheet {
         if (!context.mounted) return;
         await _deleteVideo(context, asset);
         break;
+    }
+  }
+
+  static Future<void> _shareVideo(
+    BuildContext context,
+    AssetEntity asset,
+    String title,
+  ) async {
+    try {
+      final file = await asset.file;
+      if (!context.mounted) return;
+      if (file == null) {
+        _message(context, 'Could not access this video');
+        return;
+      }
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: title,
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      _message(context, 'Could not share video');
     }
   }
 
