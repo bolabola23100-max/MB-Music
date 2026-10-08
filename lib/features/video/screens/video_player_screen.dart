@@ -6,6 +6,7 @@ import '../services/video_player_manager.dart';
 import '../widgets/video_player_controls.dart';
 import '../widgets/video_player_progress.dart';
 import '../widgets/video_player_settings.dart';
+import '../widgets/video_gesture_indicator.dart';
 
 enum _GestureIndicatorSide { left, right }
 
@@ -114,60 +115,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final isVolume = _gestureIndicatorSide == _GestureIndicatorSide.right;
     final value = isVolume
         ? (playerVolume / 100).clamp(0.0, 1.0)
-        : ((1.0 - 0.05) == 0
-              ? 0.0
-              : ((_manager.brightness - 0.05) / 0.95).clamp(0.0, 1.0));
+        : ((_manager.brightness - 0.05) / 0.95).clamp(0.0, 1.0);
 
-    return Positioned(
-      left: isVolume ? null : 28,
-      right: isVolume ? 28 : null,
-      top: 0,
-      bottom: 0,
-      child: IgnorePointer(
-        child: Center(
-          child: Container(
-            width: 42,
-            height: 190,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.58),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  isVolume
-                      ? (value <= 0
-                          ? Icons.volume_off_rounded
-                          : Icons.volume_up_rounded)
-                      : Icons.brightness_6_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Container(color: Colors.white24),
-                        FractionallySizedBox(
-                          widthFactor: 1,
-                          heightFactor: value,
-                          child: Container(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return VideoGestureIndicator(isVolume: isVolume, value: value);
   }
 
   double get playerVolume => _manager.player.state.volume;
@@ -257,16 +207,3 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 }
 
-class _VideoError extends StatelessWidget {
-  const _VideoError();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Unable to play this video',
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-}
