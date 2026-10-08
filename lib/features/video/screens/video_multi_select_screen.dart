@@ -4,6 +4,7 @@ import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/services/video/video_favorites_service.dart';
 import 'package:music/core/services/video/video_playlist_service.dart';
 import 'package:music/features/video/widgets/video_selection_grid_tile.dart';
+import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
 
 class VideoMultiSelectScreen extends StatefulWidget {
   final List<AssetEntity> videos;
@@ -185,6 +186,7 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                           video: video,
                           selected: selected,
                           showTitle: false,
+                          onMorePressed: () => VideoOptionsBottomSheet.show(context, asset: video),
                           onTap: () {
                             setSheetState(() {
                               if (!selectedIds.add(video.id)) {
@@ -301,6 +303,7 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
           return VideoSelectionGridTile(
             video: video,
             selected: selected,
+            onMorePressed: () => VideoOptionsBottomSheet.show(context, asset: video),
             onTap: () => _toggle(video),
           );
         },
