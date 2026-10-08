@@ -28,7 +28,7 @@ class _VideoAlbumsScreenState extends State<VideoAlbumsScreen> {
         final albums = snapshot.data ?? const <AssetPathEntity>[];
         if (albums.isEmpty) return const _Message(icon: Icons.video_library_outlined, text: 'No videos found on this device');
         if (widget.showAllVideos) {
-          return _AllVideos(service: widget.service, album: albums.firstWhere((a) => a.isAll, orElse: () => albums.first));
+          return _AllVideos(service: widget.service);
         }
         return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -43,15 +43,14 @@ class _VideoAlbumsScreenState extends State<VideoAlbumsScreen> {
 
 class _AllVideos extends StatefulWidget {
   final VideoLibraryService service;
-  final AssetPathEntity album;
-  const _AllVideos({required this.service, required this.album});
+  const _AllVideos({required this.service});
   @override State<_AllVideos> createState() => _AllVideosState();
 }
 
 class _AllVideosState extends State<_AllVideos> {
   late Future<List<AssetEntity>> _videosFuture;
-  @override void initState() { super.initState(); _videosFuture = widget.service.getAlbumVideos(widget.album); }
-  Future<void> _refresh() async { setState(() => _videosFuture = widget.service.getAlbumVideos(widget.album)); await _videosFuture; }
+  @override void initState() { super.initState(); _videosFuture = widget.service.getAllVideos(); }
+  Future<void> _refresh() async { setState(() => _videosFuture = widget.service.getAllVideos()); await _videosFuture; }
   Future<void> _select(List<AssetEntity> videos) async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => VideoMultiSelectScreen(videos: videos)));
     if (mounted) _refresh();
