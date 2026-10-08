@@ -1,8 +1,6 @@
 package com.mbmusic.player
 
 import android.app.Activity
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
@@ -26,22 +24,9 @@ class MainActivity : AudioServiceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ إنشاء Notification Channel للأندرويد 8+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "com.example.music.audio",
-                "Music Playback",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Music player controls"
-                setShowBadge(true)
-                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
-            }
-
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
+        // Media playback notification channels are created and configured by
+        // audio_service. Do not create a second channel here with a different
+        // ID/importance, otherwise Android can keep conflicting user settings.
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -198,7 +183,7 @@ class MainActivity : AudioServiceActivity() {
             val contentResolver = contentResolver
             val uris = mutableListOf<Uri>()
 
-            // ✅ Find MediaStore URIs for the song IDs
+            // Find MediaStore URIs for the song IDs.
             for (songId in songIds) {
                 val uri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -213,21 +198,24 @@ class MainActivity : AudioServiceActivity() {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // ✅ Android 11+ : Use createDeleteRequest (shows system dialog)
+                // Android 11+: use the system confirmation dialog.
                 deleteWithMediaStoreRequest(uris, result)
             } else {
-                // ✅ Android 10 and below : Use ContentResolver.delete directly
+                // Android 10 and below: use ContentResolver directly.
                 var deletedCount = 0
                 for (uri in uris) {
                     try {
                         val rows = contentResolver.delete(uri, null, null)
                         if (rows > 0) deletedCount++
                     } catch (e: Exception) {
-                        // Try file-based deletion as fallback
+                        // Try file-based deletion as a fallback.
                         try {
                             val cursor = contentResolver.query(
-                                uri, arrayOf(MediaStore.Audio.Media.DATA),
-                                null, null, null
+                                uri,
+                                arrayOf(MediaStore.Audio.Media.DATA),
+                                null,
+                                null,
+                                null
                             )
                             cursor?.use {
                                 if (it.moveToFirst()) {
@@ -235,13 +223,12 @@ class MainActivity : AudioServiceActivity() {
                                     val file = java.io.File(path)
                                     if (file.exists() && file.delete()) {
                                         deletedCount++
-                                        // Also remove from MediaStore
                                         contentResolver.delete(uri, null, null)
                                     }
                                 }
                             }
                         } catch (ex: Exception) {
-                            // ignore
+                            // Ignore the fallback failure and continue.
                         }
                     }
                 }
@@ -260,7 +247,10 @@ class MainActivity : AudioServiceActivity() {
             startIntentSenderForResult(
                 pendingIntent.intentSender,
                 DELETE_REQUEST_CODE,
-                null, 0, 0, 0
+                null,
+                0,
+                0,
+                0
             )
         } catch (e: Exception) {
             pendingResult = null
@@ -280,7 +270,6 @@ class MainActivity : AudioServiceActivity() {
                     if (resultCode == Activity.RESULT_OK) {
                         result.success(mapOf("deleted" to true, "count" to -1))
                     } else {
-                        // User canceled the delete request
                         result.success(mapOf("deleted" to false, "count" to 0))
                     }
                 }
