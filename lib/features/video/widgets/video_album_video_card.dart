@@ -26,6 +26,7 @@ class VideoAlbumVideoCard extends StatelessWidget {
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => VideoPlayerScreen(
+              key: ValueKey(asset.id),
               asset: asset,
               videos: videos ?? [asset],
             ),
