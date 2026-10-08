@@ -7,7 +7,6 @@ class VideoPlayerSettings {
     Player player,
     VoidCallback onChanged,
   ) async {
-    var value = player.state.volume.clamp(0.0, 100.0).toDouble();
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF171717),
@@ -15,13 +14,12 @@ class VideoPlayerSettings {
       builder: (context) => _SliderSheet(
         icon: Icons.volume_up_rounded,
         title: 'Volume',
-        value: value,
+        value: player.state.volume.clamp(0.0, 100.0).toDouble(),
         min: 0,
         max: 100,
-        suffix: '%',
-        onChanged: (next) {
-          value = next;
-          player.setVolume(next);
+        displayValue: (value) => '${value.round()}%',
+        onChanged: (value) {
+          player.setVolume(value);
           onChanged();
         },
       ),
@@ -33,7 +31,6 @@ class VideoPlayerSettings {
     double brightness,
     ValueChanged<double> onChanged,
   ) async {
-    var value = brightness;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF171717),
@@ -41,15 +38,11 @@ class VideoPlayerSettings {
       builder: (context) => _SliderSheet(
         icon: Icons.brightness_6_rounded,
         title: 'Brightness',
-        value: value,
+        value: brightness,
         min: 0.05,
         max: 1,
-        suffix: '%',
-        displayValue: (value * 100).round().toString(),
-        onChanged: (next) {
-          value = next;
-          onChanged(next);
-        },
+        displayValue: (value) => '${(value * 100).round()}%',
+        onChanged: onChanged,
       ),
     );
   }
@@ -148,14 +141,13 @@ class VideoPlayerSettings {
   }
 }
 
-class _SliderSheet extends StatelessWidget {
+class _SliderSheet extends StatefulWidget {
   final IconData icon;
   final String title;
   final double value;
   final double min;
   final double max;
-  final String suffix;
-  final String? displayValue;
+  final String Function(double) displayValue;
   final ValueChanged<double> onChanged;
 
   const _SliderSheet({
@@ -164,52 +156,54 @@ class _SliderSheet extends StatelessWidget {
     required this.value,
     required this.min,
     required this.max,
-    required this.suffix,
-    this.displayValue,
+    required this.displayValue,
     required this.onChanged,
   });
 
   @override
+  State<_SliderSheet> createState() => _SliderSheetState();
+}
+
+class _SliderSheetState extends State<_SliderSheet> {
+  late double _value = widget.value;
+
+  @override
   Widget build(BuildContext context) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(icon, color: Colors.white),
-                  const SizedBox(width: 10),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Slider(
-                value: value,
-                min: min,
-                max: max,
-                onChanged: (next) {
-                  setState(() {});
-                  onChanged(next);
-                },
-              ),
+              Icon(widget.icon, color: Colors.white),
+              const SizedBox(width: 10),
               Text(
-                displayValue ?? '${value.round()}$suffix',
-                style: const TextStyle(color: Colors.white70),
+                widget.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          Slider(
+            value: _value,
+            min: widget.min,
+            max: widget.max,
+            onChanged: (value) {
+              setState(() => _value = value);
+              widget.onChanged(value);
+            },
+          ),
+          Text(
+            widget.displayValue(_value),
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -221,11 +215,11 @@ class _SheetTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Align(
+    return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Playback speed',
-        style: TextStyle(
+        title,
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 17,
           fontWeight: FontWeight.w700,
