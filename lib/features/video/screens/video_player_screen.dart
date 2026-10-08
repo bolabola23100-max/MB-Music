@@ -75,7 +75,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final nextAsset = videos[nextIndex];
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => VideoPlayerScreen(asset: nextAsset, videos: videos),
+        builder: (_) => VideoPlayerScreen(
+          key: ValueKey(nextAsset.id),
+          asset: nextAsset,
+          videos: videos,
+        ),
       ),
     );
   }
