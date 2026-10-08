@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/core/models/playlist_model.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
