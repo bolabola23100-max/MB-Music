@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -14,6 +15,8 @@ class VideoPlayerManager extends ChangeNotifier {
 
   Timer? _hideControlsTimer;
   Future<void>? loadFuture;
+  bool _disposed = false;
+
   bool loadFailed = false;
   bool controlsVisible = true;
   bool locked = false;
@@ -27,12 +30,12 @@ class VideoPlayerManager extends ChangeNotifier {
     videoController = VideoController(player);
   }
 
-  Future<void> initialize() async {
+  void initialize() {
     loadFuture = _loadVideo();
-    _enterFullscreen();
-    _loadBrightness();
+    unawaited(_enterFullscreen());
+    unawaited(_loadBrightness());
     _scheduleControlsHide();
-    notifyListeners();
+    _notify();
   }
 
   Future<void> _loadVideo() async {
@@ -40,13 +43,13 @@ class VideoPlayerManager extends ChangeNotifier {
       final file = await asset.originFileWithSubtype;
       if (file == null) {
         loadFailed = true;
-        notifyListeners();
+        _notify();
         return;
       }
       await player.open(Media(file.path));
     } catch (_) {
       loadFailed = true;
-      notifyListeners();
+      _notify();
     }
   }
 
@@ -54,7 +57,7 @@ class VideoPlayerManager extends ChangeNotifier {
     try {
       final value = await ScreenBrightness.instance.application;
       brightness = value.clamp(0.05, 1.0);
-      notifyListeners();
+      _notify();
     } catch (_) {}
   }
 
@@ -65,7 +68,7 @@ class VideoPlayerManager extends ChangeNotifier {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    notifyListeners();
+    _notify();
   }
 
   Future<void> _exitFullscreen() async {
@@ -75,7 +78,7 @@ class VideoPlayerManager extends ChangeNotifier {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    notifyListeners();
+    _notify();
   }
 
   Future<void> toggleFullscreen() async {
@@ -92,13 +95,13 @@ class VideoPlayerManager extends ChangeNotifier {
     if (!controlsVisible || locked) return;
     _hideControlsTimer = Timer(const Duration(seconds: 4), () {
       controlsVisible = false;
-      notifyListeners();
+      _notify();
     });
   }
 
   void showControls() {
     controlsVisible = true;
-    notifyListeners();
+    _notify();
     _scheduleControlsHide();
   }
 
@@ -113,20 +116,20 @@ class VideoPlayerManager extends ChangeNotifier {
     } else {
       _hideControlsTimer?.cancel();
     }
-    notifyListeners();
+    _notify();
   }
 
   void lockPlayer() {
     _hideControlsTimer?.cancel();
     locked = true;
     controlsVisible = false;
-    notifyListeners();
+    _notify();
   }
 
   void unlockPlayer() {
     locked = false;
     controlsVisible = true;
-    notifyListeners();
+    _notify();
     _scheduleControlsHide();
   }
 
@@ -145,7 +148,7 @@ class VideoPlayerManager extends ChangeNotifier {
 
   Future<void> setBrightness(double value) async {
     brightness = value.clamp(0.05, 1.0).toDouble();
-    notifyListeners();
+    _notify();
     try {
       await ScreenBrightness.instance
           .setApplicationScreenBrightness(brightness);
@@ -155,22 +158,27 @@ class VideoPlayerManager extends ChangeNotifier {
   void setAspectRatio(double? ratio, BoxFit fit) {
     aspectRatio = ratio;
     videoFit = fit;
-    notifyListeners();
+    _notify();
   }
 
   void resetSystemUi() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations(const [
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+    unawaited(SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
-    ]);
+    ]));
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     _hideControlsTimer?.cancel();
     player.dispose();
-    ScreenBrightness.instance.resetApplicationScreenBrightness();
+    unawaited(ScreenBrightness.instance.resetApplicationScreenBrightness());
     resetSystemUi();
     super.dispose();
   }
