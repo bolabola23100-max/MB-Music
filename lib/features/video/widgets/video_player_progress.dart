@@ -25,7 +25,7 @@ class VideoPlayerProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     if (locked) {
       return Positioned(
-        right: 18,
+        left: 18,
         bottom: 12,
         child: VideoPlayerButton(
           icon: Icons.lock_open_rounded,
