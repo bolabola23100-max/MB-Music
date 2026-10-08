@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music/core/services/audio/audio_service.dart';
-import 'package:music/core/widgets/song_list_widget.dart';
+import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'package:music/features/playlist/cubit/playlist_details_cubit.dart';
 import 'package:music/features/playlist/widgets/playlist_play_mode_button.dart';
 
