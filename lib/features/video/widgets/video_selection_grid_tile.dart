@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/features/video/widgets/video_thumbnail.dart';
-import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
 
 class VideoSelectionGridTile extends StatelessWidget {
   final AssetEntity video;
@@ -46,8 +45,7 @@ class VideoSelectionGridTile extends StatelessWidget {
               left: 2,
               child: IconButton(
                 tooltip: 'Video options',
-                onPressed: onMorePressed ??
-                    () => VideoOptionsBottomSheet.show(context, asset: video),
+                onPressed: onMorePressed,
                 icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.black45,
