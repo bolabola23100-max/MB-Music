@@ -26,26 +26,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _manager.initialize();
   }
 
-  Future<void> _showVolume() async {
-    _manager.showControls();
-    await VideoPlayerSettings.showVolume(
-      context,
-      _manager.player,
-      _manager.showControls,
-    );
-    _manager.showControls();
-  }
-
-  Future<void> _showBrightness() async {
-    _manager.showControls();
-    await VideoPlayerSettings.showBrightness(
-      context,
-      _manager.brightness,
-      _manager.setBrightness,
-    );
-    _manager.showControls();
-  }
-
   Future<void> _showSpeed() async {
     _manager.showControls();
     await VideoPlayerSettings.showSpeed(context, _manager.player);
@@ -64,6 +44,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       ),
     );
     _manager.showControls();
+  }
+
+  void _handleVerticalSwipe(DragUpdateDetails details, double width) {
+    if (_manager.locked) return;
+
+    final isRightHalf = details.localPosition.dx >= width / 2;
+    final delta = -details.delta.dy;
+
+    if (isRightHalf) {
+      _manager.adjustVolume(delta * 0.5);
+    } else {
+      _manager.adjustBrightness(delta * 0.005);
+    }
   }
 
   @override
@@ -101,12 +94,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _manager.toggleControls,
-          onDoubleTap: _manager.locked ? null : _manager.player.playOrPause,
-          onDoubleTapDown: (details) {
-            if (_manager.locked) return;
-            final width = MediaQuery.sizeOf(context).width;
-            _manager.seekBy(details.localPosition.dx < width / 2 ? -10 : 10);
-          },
+          onVerticalDragUpdate: (details) => _handleVerticalSwipe(
+            details,
+            MediaQuery.sizeOf(context).width,
+          ),
           child: Video(
             controller: _manager.videoController,
             controls: NoVideoControls,
@@ -131,8 +122,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             player: _manager.player,
             fullscreen: _manager.fullscreen,
             onBack: () => Navigator.of(context).pop(),
-            onBrightness: _showBrightness,
-            onVolume: _showVolume,
             onSpeed: _showSpeed,
             onAspect: _showAspect,
             onLock: _manager.lockPlayer,
