@@ -61,9 +61,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     return videos;
   }
 
+  int get _currentVideoIndex =>
+      _videos.indexWhere((video) => video.id == _manager.asset.id);
+
   Future<void> _playAdjacentVideo(int offset) async {
     final videos = _videos;
-    final currentIndex = videos.indexWhere((video) => video.id == _manager.asset.id);
+    final currentIndex = _currentVideoIndex;
     final nextIndex = currentIndex + offset;
     if (currentIndex < 0 || nextIndex < 0 || nextIndex >= videos.length) return;
 
@@ -241,8 +244,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             onLock: _manager.lockPlayer,
             onFullscreen: _manager.toggleFullscreen,
             onSeek: _manager.seekBy,
-            onPrevious: () => _playAdjacentVideo(-1),
-            onNext: () => _playAdjacentVideo(1),
+            onPrevious: _currentVideoIndex > 0
+                ? () => _playAdjacentVideo(-1)
+                : null,
+            onNext: _currentVideoIndex >= 0 &&
+                    _currentVideoIndex < _videos.length - 1
+                ? () => _playAdjacentVideo(1)
+                : null,
           ),
       ],
     );
