@@ -45,8 +45,10 @@ class VideoPlayerControls extends StatelessWidget {
           VideoPlayerProgress(
             player: player,
             fullscreen: fullscreen,
+            locked: false,
             onFullscreen: onFullscreen,
             onLock: onLock,
+            onSeek: onSeek,
           ),
         ],
       ),
@@ -123,35 +125,18 @@ class VideoPlayerControls extends StatelessWidget {
   Widget _buildCenterControls() {
     return Positioned.fill(
       child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            VideoPlayerButton(
-              icon: Icons.replay_10_rounded,
-              size: 58,
-              onTap: () => onSeek(-10),
-            ),
-            const SizedBox(width: 26),
-            StreamBuilder<bool>(
-              stream: player.stream.playing,
-              initialData: player.state.playing,
-              builder: (context, snapshot) => VideoPlayerButton(
-                icon: snapshot.data == true
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                size: 76,
-                iconSize: 42,
-                filled: true,
-                onTap: player.playOrPause,
-              ),
-            ),
-            const SizedBox(width: 26),
-            VideoPlayerButton(
-              icon: Icons.forward_10_rounded,
-              size: 58,
-              onTap: () => onSeek(10),
-            ),
-          ],
+        child: StreamBuilder<bool>(
+          stream: player.stream.playing,
+          initialData: player.state.playing,
+          builder: (context, snapshot) => VideoPlayerButton(
+            icon: snapshot.data == true
+                ? Icons.pause_rounded
+                : Icons.play_arrow_rounded,
+            size: 76,
+            iconSize: 42,
+            filled: true,
+            onTap: player.playOrPause,
+          ),
         ),
       ),
     );
