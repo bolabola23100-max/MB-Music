@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/features/video/widgets/video_thumbnail.dart';
+import 'package:music/features/video/widgets/video_options_bottom_sheet.dart';
 
 class VideoSelectionGridTile extends StatelessWidget {
   final AssetEntity video;
   final bool selected;
   final VoidCallback onTap;
   final bool showTitle;
+  final VoidCallback? onMorePressed;
 
   const VideoSelectionGridTile({
     super.key,
@@ -15,6 +17,7 @@ class VideoSelectionGridTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.showTitle = true,
+    this.onMorePressed,
   });
 
   @override
@@ -35,6 +38,22 @@ class VideoSelectionGridTile extends StatelessWidget {
                 color: Colors.black45,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.blue, width: 3),
+              ),
+            ),
+          if (onMorePressed != null)
+            Positioned(
+              top: 2,
+              left: 2,
+              child: IconButton(
+                tooltip: 'Video options',
+                onPressed: onMorePressed ??
+                    () => VideoOptionsBottomSheet.show(context, asset: video),
+                icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black45,
+                  minimumSize: const Size(36, 36),
+                  padding: EdgeInsets.zero,
+                ),
               ),
             ),
           Positioned(
