@@ -4,6 +4,7 @@ import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
 import 'package:music/core/services/song_edit/song_edit_service.dart';
 import 'package:music/features/home/cubit/home_cubit.dart';
+import 'package:music/features/home/widgets/mini_player_content.dart';
 import 'package:music/features/player/screens/player_screen.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -32,16 +33,13 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
     super.initState();
 
     SongEditService().editNotifier.addListener(_onEditChanged);
-
     widget.audioService.currentSongIdNotifier.addListener(_onSongChanged);
   }
 
   @override
   void dispose() {
     SongEditService().editNotifier.removeListener(_onEditChanged);
-
     widget.audioService.currentSongIdNotifier.removeListener(_onSongChanged);
-
     super.dispose();
   }
 
@@ -61,7 +59,6 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
           _lastSongId = null;
         });
       }
-
       return;
     }
 
@@ -120,7 +117,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
               ),
             );
           },
-        )
+        );
       },
     );
   }
