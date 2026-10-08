@@ -101,8 +101,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _manager.toggleControls,
-          onDoubleTap: _manager.player.playOrPause,
+          onDoubleTap: _manager.locked ? null : _manager.player.playOrPause,
           onDoubleTapDown: (details) {
+            if (_manager.locked) return;
             final width = MediaQuery.sizeOf(context).width;
             _manager.seekBy(details.localPosition.dx < width / 2 ? -10 : 10);
           },
