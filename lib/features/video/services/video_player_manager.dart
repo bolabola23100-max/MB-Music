@@ -20,7 +20,7 @@ class VideoPlayerManager extends ChangeNotifier {
   bool loadFailed = false;
   bool controlsVisible = true;
   bool locked = false;
-  bool fullscreen = true;
+  bool fullscreen = false;
   double brightness = 1.0;
   BoxFit videoFit = BoxFit.contain;
   double? aspectRatio;
@@ -32,7 +32,7 @@ class VideoPlayerManager extends ChangeNotifier {
 
   void initialize() {
     loadFuture = _loadVideo();
-    unawaited(_enterFullscreen());
+    unawaited(_setPortraitMode());
     unawaited(_loadBrightness());
     _scheduleControlsHide();
     _notify();
@@ -61,6 +61,14 @@ class VideoPlayerManager extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> _setPortraitMode() async {
+    await SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
   Future<void> _enterFullscreen() async {
     fullscreen = true;
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -73,7 +81,7 @@ class VideoPlayerManager extends ChangeNotifier {
 
   Future<void> _exitFullscreen() async {
     fullscreen = false;
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     await SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -100,16 +108,14 @@ class VideoPlayerManager extends ChangeNotifier {
   }
 
   void showControls() {
+    if (locked) return;
     controlsVisible = true;
     _notify();
     _scheduleControlsHide();
   }
 
   void toggleControls() {
-    if (locked) {
-      unlockPlayer();
-      return;
-    }
+    if (locked) return;
     controlsVisible = !controlsVisible;
     if (controlsVisible) {
       _scheduleControlsHide();
@@ -143,7 +149,7 @@ class VideoPlayerManager extends ChangeNotifier {
             ? duration
             : target;
     await player.seek(clamped);
-    showControls();
+    if (!locked) showControls();
   }
 
   Future<void> setBrightness(double value) async {
