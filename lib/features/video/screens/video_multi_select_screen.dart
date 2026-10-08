@@ -327,6 +327,9 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                     ? () => VideoOptionsBottomSheet.show(
                           context,
                           asset: _selectedVideos.single,
+                          showFavorite: false,
+                          showPlaylist: false,
+                          showDelete: false,
                         )
                     : null,
               ),
