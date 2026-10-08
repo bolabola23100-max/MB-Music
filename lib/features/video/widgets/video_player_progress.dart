@@ -103,6 +103,20 @@ class VideoPlayerProgress extends StatelessWidget {
                       onTap: () => onSeek(-10),
                     ),
                     const SizedBox(width: 12),
+                    StreamBuilder<bool>(
+                      stream: player.stream.playing,
+                      initialData: player.state.playing,
+                      builder: (context, snapshot) => VideoPlayerButton(
+                        icon: snapshot.data == true
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 52,
+                        iconSize: 30,
+                        filled: true,
+                        onTap: player.playOrPause,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     VideoPlayerButton(
                       icon: Icons.forward_10_rounded,
                       size: 44,
