@@ -132,6 +132,7 @@ class _VideoSearchScreenState extends State<VideoSearchScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => VideoPlayerScreen(
+                                key: ValueKey(asset.id),
                                 asset: asset,
                                 videos: _results,
                               ),
