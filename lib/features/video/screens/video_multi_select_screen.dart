@@ -311,13 +311,9 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
           child: Row(
+            textDirection: TextDirection.ltr,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _ActionIcon(
-                icon: Icons.playlist_add_rounded,
-                tooltip: 'Playlist',
-                onPressed: count == 0 ? null : _addToPlaylist,
-              ),
               _ActionIcon(
                 icon: Icons.more_vert_rounded,
                 tooltip: count == 1
@@ -332,6 +328,11 @@ class _VideoMultiSelectScreenState extends State<VideoMultiSelectScreen> {
                           showDelete: false,
                         )
                     : null,
+              ),
+              _ActionIcon(
+                icon: Icons.playlist_add_rounded,
+                tooltip: 'Playlist',
+                onPressed: count == 0 ? null : _addToPlaylist,
               ),
               _ActionIcon(
                 icon: Icons.favorite_rounded,
