@@ -6,11 +6,13 @@ import 'package:music/features/video/widgets/video_thumbnail.dart';
 
 class VideoAlbumVideoCard extends StatelessWidget {
   final AssetEntity asset;
+  final List<AssetEntity>? videos;
   final VoidCallback? onLongPress;
 
   const VideoAlbumVideoCard({
     super.key,
     required this.asset,
+    this.videos,
     this.onLongPress,
   });
 
@@ -22,7 +24,12 @@ class VideoAlbumVideoCard extends StatelessWidget {
       builder: (context, _, _) => InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => VideoPlayerScreen(asset: asset)),
+          MaterialPageRoute(
+            builder: (_) => VideoPlayerScreen(
+              asset: asset,
+              videos: videos ?? [asset],
+            ),
+          ),
         ),
         onLongPress: onLongPress,
         child: Column(
