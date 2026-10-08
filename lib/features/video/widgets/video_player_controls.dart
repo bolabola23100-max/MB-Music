@@ -36,7 +36,6 @@ class VideoPlayerControls extends StatelessWidget {
         children: [
           const Positioned.fill(child: _PlayerGradient()),
           _buildTopBar(),
-          _buildBottomPlayButton(),
           VideoPlayerProgress(
             player: player,
             fullscreen: fullscreen,
@@ -90,29 +89,6 @@ class VideoPlayerControls extends StatelessWidget {
             filled: false,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomPlayButton() {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 54,
-      child: Center(
-        child: StreamBuilder<bool>(
-          stream: player.stream.playing,
-          initialData: player.state.playing,
-          builder: (context, snapshot) => VideoPlayerButton(
-            icon: snapshot.data == true
-                ? Icons.pause_rounded
-                : Icons.play_arrow_rounded,
-            size: 64,
-            iconSize: 36,
-            filled: true,
-            onTap: player.playOrPause,
-          ),
-        ),
       ),
     );
   }
