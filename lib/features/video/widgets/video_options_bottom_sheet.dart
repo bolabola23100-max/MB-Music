@@ -16,6 +16,9 @@ class VideoOptionsBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required AssetEntity asset,
+    bool showFavorite = true,
+    bool showPlaylist = true,
+    bool showDelete = true,
   }) async {
     final favorites = VideoFavoritesService();
     final playlists = VideoPlaylistService();
@@ -32,6 +35,9 @@ class VideoOptionsBottomSheet {
       builder: (sheetContext) => VideoOptionsMenu(
         title: title,
         isFavorite: isFavorite,
+        showFavorite: showFavorite,
+        showPlaylist: showPlaylist,
+        showDelete: showDelete,
         onAction: (action) => Navigator.pop(sheetContext, action),
       ),
     );
