@@ -28,6 +28,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late final VideoPlayerManager _manager;
   _GestureIndicatorSide? _gestureIndicatorSide;
+  bool _isSpeedLongPressing = false;
 
   @override
   void initState() {
@@ -85,7 +86,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _handleVerticalDragStart(DragStartDetails details, double width) {
-    if (_manager.locked) return;
+    if (_manager.locked || _isSpeedLongPressing) return;
     setState(() {
       _gestureIndicatorSide = details.localPosition.dx < width / 2
           ? _GestureIndicatorSide.left
@@ -94,7 +95,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _handleVerticalSwipe(DragUpdateDetails details, double width) {
-    if (_manager.locked) return;
+    if (_manager.locked || _isSpeedLongPressing) return;
 
     final isRightHalf = details.localPosition.dx >= width / 2;
     final delta = -details.delta.dy;
@@ -122,24 +123,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   ) async {
     if (_manager.locked) return;
 
-    final side = details.localPosition.dx < width / 2
-        ? _GestureIndicatorSide.left
-        : _GestureIndicatorSide.right;
-
-    setState(() => _gestureIndicatorSide = side);
+    setState(() {
+      _isSpeedLongPressing = true;
+      _gestureIndicatorSide = null;
+    });
     await _manager.setPlaybackRate(2.0);
   }
 
   Future<void> _handleLongPressEnd(LongPressEndDetails details) async {
     await _manager.setPlaybackRate(1.0);
     if (!mounted) return;
-    setState(() => _gestureIndicatorSide = null);
+    setState(() {
+      _isSpeedLongPressing = false;
+      _gestureIndicatorSide = null;
+    });
   }
 
   void _handleLongPressCancel() {
     _manager.setPlaybackRate(1.0);
     if (!mounted) return;
-    setState(() => _gestureIndicatorSide = null);
+    setState(() {
+      _isSpeedLongPressing = false;
+      _gestureIndicatorSide = null;
+    });
   }
 
   Widget _buildGestureIndicator() {
@@ -149,6 +155,30 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         : ((_manager.brightness - 0.05) / 0.95).clamp(0.0, 1.0);
 
     return VideoGestureIndicator(isVolume: isVolume, value: value);
+  }
+
+  Widget _buildSpeedIndicator() {
+    return IgnorePointer(
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 90),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: const Text(
+            'Speed 2x',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   double get playerVolume => _manager.player.state.volume;
@@ -208,7 +238,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             wakelock: true,
           ),
         ),
-        if (_gestureIndicatorSide != null) _buildGestureIndicator(),
+        if (_isSpeedLongPressing)
+          _buildSpeedIndicator()
+        else if (_gestureIndicatorSide != null)
+          _buildGestureIndicator(),
         if (_manager.locked)
           VideoPlayerProgress(
             player: _manager.player,
