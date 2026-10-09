@@ -165,6 +165,10 @@ class VideoPlayerManager extends ChangeNotifier {
     _notify();
   }
 
+  Future<void> setPlaybackRate(double rate) async {
+    await player.setRate(rate);
+  }
+
   Future<void> setBrightness(double value) async {
     brightness = value.clamp(0.05, 1.0).toDouble();
     _notify();
