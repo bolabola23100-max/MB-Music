@@ -159,20 +159,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Widget _buildSpeedIndicator() {
     return IgnorePointer(
-      child: Center(
+      child: Align(
+        alignment: const Alignment(0, -0.28),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 90),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white24),
           ),
           child: const Text(
             'Speed 2x',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 17,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
