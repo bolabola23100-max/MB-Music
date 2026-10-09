@@ -116,6 +116,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     setState(() => _gestureIndicatorSide = null);
   }
 
+  Future<void> _handleLongPressStart(
+    LongPressStartDetails details,
+    double width,
+  ) async {
+    if (_manager.locked) return;
+
+    final side = details.localPosition.dx < width / 2
+        ? _GestureIndicatorSide.left
+        : _GestureIndicatorSide.right;
+
+    setState(() => _gestureIndicatorSide = side);
+    await _manager.setPlaybackRate(2.0);
+  }
+
+  Future<void> _handleLongPressEnd(LongPressEndDetails details) async {
+    await _manager.setPlaybackRate(1.0);
+    if (!mounted) return;
+    setState(() => _gestureIndicatorSide = null);
+  }
+
+  void _handleLongPressCancel() {
+    _manager.setPlaybackRate(1.0);
+    if (!mounted) return;
+    setState(() => _gestureIndicatorSide = null);
+  }
+
   Widget _buildGestureIndicator() {
     final isVolume = _gestureIndicatorSide == _GestureIndicatorSide.right;
     final value = isVolume
@@ -163,6 +189,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _manager.toggleControls,
+          onLongPressStart: (details) =>
+              _handleLongPressStart(details, width),
+          onLongPressEnd: _handleLongPressEnd,
+          onLongPressCancel: _handleLongPressCancel,
           onVerticalDragStart: (details) =>
               _handleVerticalDragStart(details, width),
           onVerticalDragUpdate: (details) =>
@@ -211,4 +241,3 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 }
-
