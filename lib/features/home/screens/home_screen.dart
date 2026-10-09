@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:music/core/services/smart_review_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -50,7 +49,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   late final AudioService _reviewAudioService;
   bool _appIsResumed = true;
   bool _reviewListenersAttached = false;
-  bool _debugReviewDialogShown = false;
 
   static const Duration _pageAnimDuration = Duration(milliseconds: 400);
   static const Curve _pageAnimCurve = Curves.easeInOutCubic;
@@ -93,75 +91,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void _tryReviewAtQuietMoment() {
     final isPlaying = _reviewAudioService.isPlayingNotifier.value;
 
-    // Debug-only preview: lets us check the rating UI immediately without
-    // changing production review eligibility or requesting a real Play review.
-    if (kDebugMode && _appIsResumed && !isPlaying) {
-      if (!_debugReviewDialogShown && mounted) {
-        _debugReviewDialogShown = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _showDebugReviewPreview();
-        });
-      }
-      return;
-    }
-
     _smartReview.maybeRequestReview(
       appIsResumed: _appIsResumed,
       isPlaying: isPlaying,
-    );
-  }
-
-  Future<void> _showDebugReviewPreview() async {
-    int selectedRating = 0;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('قيّم MB Music'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('رأيك بيساعدنا نحسّن التطبيق.'),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (index) => IconButton(
-                    tooltip: 'تقييم ${index + 1} نجوم',
-                    onPressed: () =>
-                        setDialogState(() => selectedRating = index + 1),
-                    icon: Icon(
-                      index < selectedRating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 30,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'وضع اختبار Debug — لن يتم إرسال تقييم إلى Google Play.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('إغلاق'),
-            ),
-            FilledButton(
-              onPressed: selectedRating == 0
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(),
-              child: const Text('تم'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
