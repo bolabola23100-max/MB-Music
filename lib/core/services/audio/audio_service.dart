@@ -51,6 +51,10 @@ class AudioService {
     shuffledQueueNotifier.value = List<SongModel>.from(value);
   }
 
+  bool get isInitialized => _initialized;
+
+  Future<void> get ready => init();
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -66,6 +70,7 @@ class AudioService {
     try {
       await future;
     } finally {
+      // A failed initialization must be retryable without restarting the app.
       if (identical(_initializationFuture, future)) {
         _initializationFuture = null;
       }
@@ -113,10 +118,14 @@ class AudioService {
     String queueType = 'home',
     int? playlistId,
   }) async {
+    await init();
+
     if (queue != null) {
       currentQueue = queue;
 
-      if (originalQueue.isEmpty || queueType == 'playlist') {
+      // A new source queue must become the original queue. Keeping the old
+      // queue here causes Favorites/Playlists to inherit Home's shuffle state.
+      if (originalQueue.isEmpty || queueType != 'home') {
         originalQueue = List<SongModel>.from(queue);
       }
 
@@ -145,27 +154,58 @@ class AudioService {
     );
   }
 
-  Future<void> pause() async => _handler.pause();
-  Future<void> resume() async => _handler.play();
-  Future<void> stop() async => _handler.stop();
-  Future<void> seek(Duration position) async => _handler.seek(position);
-
-  Future<void> playNext() async => _handler.skipToNext();
-  Future<void> playPrevious() async => _handler.skipToPrevious();
-
-  Future<void> setSleepTimer(Duration duration) async =>
-      _handler.setSleepTimer(duration);
-
-  Future<void> stopSleepTimer() async => _handler.stopSleepTimer();
-
-  void addToPlayNext(SongModel song) => _handler.addToPlayNext(song);
-
-  void setPlaybackMode(PlaybackMode mode) {
-    playbackModeNotifier.value = mode;
-    _handler.setPlaybackMode(mode);
+  Future<void> pause() async {
+    await init();
+    await _handler.pause();
   }
 
-  void togglePlaybackMode() {
+  Future<void> resume() async {
+    await init();
+    await _handler.play();
+  }
+
+  Future<void> stop() async {
+    await init();
+    await _handler.stop();
+  }
+
+  Future<void> seek(Duration position) async {
+    await init();
+    await _handler.seek(position);
+  }
+
+  Future<void> playNext() async {
+    await init();
+    await _handler.skipToNext();
+  }
+
+  Future<void> playPrevious() async {
+    await init();
+    await _handler.skipToPrevious();
+  }
+
+  Future<void> setSleepTimer(Duration duration) async {
+    await init();
+    await _handler.setSleepTimer(duration);
+  }
+
+  Future<void> stopSleepTimer() async {
+    await init();
+    await _handler.stopSleepTimer();
+  }
+
+  Future<void> addToPlayNext(SongModel song) async {
+    await init();
+    await _handler.addToPlayNext(song);
+  }
+
+  Future<void> setPlaybackMode(PlaybackMode mode) async {
+    await init();
+    playbackModeNotifier.value = mode;
+    await _handler.setPlaybackMode(mode);
+  }
+
+  Future<void> togglePlaybackMode() async {
     final current = playbackModeNotifier.value;
     late PlaybackMode next;
 
@@ -181,17 +221,22 @@ class AudioService {
         break;
     }
 
-    setPlaybackMode(next);
+    await setPlaybackMode(next);
   }
 
-  void updateQueueAndKeepPlaying(List<SongModel> newQueue, int newIndex) {
+  Future<void> updateQueueAndKeepPlaying(
+    List<SongModel> newQueue,
+    int newIndex,
+  ) async {
+    await init();
     currentQueue = List<SongModel>.from(newQueue);
-    _handler.updateQueueAndIndex(newQueue, newIndex);
+    await _handler.updateQueueAndIndex(newQueue, newIndex);
   }
 
-  void setQueue(List<SongModel> queue) {
+  Future<void> setQueue(List<SongModel> queue) async {
+    await init();
     currentQueue = List<SongModel>.from(queue);
-    _handler.setQueue(queue);
+    await _handler.setQueue(queue);
   }
 
   bool get isPlaying => _handler.rawPlayer.playing;
