@@ -33,7 +33,6 @@ class AudioService {
   set originalQueue(List<SongModel> value) => originalQueueNotifier.value = List<SongModel>.from(value);
   List<SongModel> get shuffledQueue => shuffledQueueNotifier.value;
   set shuffledQueue(List<SongModel> value) => shuffledQueueNotifier.value = List<SongModel>.from(value);
-
   bool get isInitialized => _initialized;
   Future<void> get ready => init();
 
@@ -43,9 +42,7 @@ class AudioService {
     if (existing != null) { await existing; return; }
     final future = _initialize();
     _initializationFuture = future;
-    try { await future; } finally {
-      if (identical(_initializationFuture, future)) _initializationFuture = null;
-    }
+    try { await future; } finally { if (identical(_initializationFuture, future)) _initializationFuture = null; }
   }
 
   Future<void> _initialize() async {
@@ -56,7 +53,7 @@ class AudioService {
         androidNotificationChannelName: 'MBMusic',
         androidNotificationChannelDescription: 'Music player controls',
         androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
+        androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
       ),
@@ -82,15 +79,8 @@ class AudioService {
       _handler.setQueue(queue);
       await AudioPersistenceHelper.saveActiveQueueContext(type: queueType, playlistId: playlistId);
     }
-    await _handler.playSongFromQueue(
-      path: path,
-      index: index ?? 0,
-      title: title ?? 'Unknown',
-      artist: artist,
-      songId: songId,
-      duration: queue != null && index != null && index >= 0 && index < queue.length && queue[index].duration != null
-          ? Duration(milliseconds: queue[index].duration!) : null,
-    );
+    await _handler.playSongFromQueue(path: path, index: index ?? 0, title: title ?? 'Unknown', artist: artist, songId: songId,
+      duration: queue != null && index != null && index >= 0 && index < queue.length && queue[index].duration != null ? Duration(milliseconds: queue[index].duration!) : null);
   }
 
   Future<void> pause() async { await init(); await _handler.pause(); }
@@ -101,37 +91,17 @@ class AudioService {
   Future<void> playPrevious() async { await init(); await _handler.skipToPrevious(); }
   Future<void> setSleepTimer(Duration duration) async { await init(); await _handler.setSleepTimer(duration); }
   Future<void> stopSleepTimer() async { await init(); await _handler.stopSleepTimer(); }
-
   Future<void> addToPlayNext(SongModel song) async { await init(); _handler.addToPlayNext(song); }
 
-  Future<void> setPlaybackMode(PlaybackMode mode) async {
-    await init();
-    playbackModeNotifier.value = mode;
-    _handler.setPlaybackMode(mode);
-  }
+  Future<void> setPlaybackMode(PlaybackMode mode) async { await init(); playbackModeNotifier.value = mode; _handler.setPlaybackMode(mode); }
 
   Future<void> togglePlaybackMode() async {
-    late PlaybackMode next;
-    switch (playbackModeNotifier.value) {
-      case PlaybackMode.sequential: next = PlaybackMode.repeatOne; break;
-      case PlaybackMode.repeatOne: next = PlaybackMode.shuffle; break;
-      case PlaybackMode.shuffle: next = PlaybackMode.sequential; break;
-    }
+    final next = {PlaybackMode.sequential: PlaybackMode.repeatOne, PlaybackMode.repeatOne: PlaybackMode.shuffle, PlaybackMode.shuffle: PlaybackMode.sequential}[playbackModeNotifier.value]!;
     await setPlaybackMode(next);
   }
 
-  Future<void> updateQueueAndKeepPlaying(List<SongModel> newQueue, int newIndex) async {
-    await init();
-    currentQueue = List<SongModel>.from(newQueue);
-    _handler.updateQueueAndIndex(newQueue, newIndex);
-  }
-
-  Future<void> setQueue(List<SongModel> queue) async {
-    await init();
-    currentQueue = List<SongModel>.from(queue);
-    _handler.setQueue(queue);
-  }
-
+  Future<void> updateQueueAndKeepPlaying(List<SongModel> newQueue, int newIndex) async { await init(); currentQueue = List<SongModel>.from(newQueue); _handler.updateQueueAndIndex(newQueue, newIndex); }
+  Future<void> setQueue(List<SongModel> queue) async { await init(); currentQueue = List<SongModel>.from(queue); _handler.setQueue(queue); }
   bool get isPlaying => _handler.rawPlayer.playing;
   Duration? get duration => _handler.rawPlayer.duration;
   Duration get position => _handler.rawPlayer.position;
