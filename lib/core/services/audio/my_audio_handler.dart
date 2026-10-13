@@ -161,22 +161,53 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     unawaited(AudioPersistenceHelper.saveSongMetadata(path: path, title: finalTitle, artist: finalArtist, songId: songId, index: index, duration: duration));
     await _enqueuePlayback(request, () async {
       await _player.stop();
-      log('Loading audio source: $path');
-      await _setAudioSource(path);
-      if (request != _playbackRequestId) { await _player.stop(); return; }
-      await _player.play();
+      log('Loading audio source: $path (songId: $songId)');
+      await _setAudioSource(path, songId: songId);
+      if (request != _playbackRequestId) {
+        await _player.stop();
+        return;
+      }
+
+      // just_audio's play() future stays pending until playback ends or is
+      // interrupted. Do not hold the serialized source-loading queue open for
+      // the whole song, otherwise a later tap cannot replace the current track.
+      unawaited(_player.play().catchError((Object error, StackTrace stackTrace) {
+        log('Audio playback failed for "$path": $error', stackTrace: stackTrace);
+        _broadcastState(false);
+      }));
     });
   }
 
-  Future<void> _setAudioSource(String path) async {
+  Future<void> _setAudioSource(String path, {int? songId}) async {
+    // MediaStore content URIs work more reliably on Android versions that
+    // restrict direct filesystem access to shared audio files.
+    if (songId != null) {
+      final mediaStoreUri = Uri.parse('content://media/external/audio/media/$songId');
+      try {
+        await _player.setAudioSource(AudioSource.uri(mediaStoreUri));
+        return;
+      } catch (error, stackTrace) {
+        log('MediaStore URI failed for song $songId; trying path fallback: $error',
+            stackTrace: stackTrace);
+        await _player.stop();
+      }
+    }
+
     final uri = Uri.tryParse(path);
     if (uri != null &&
         (uri.scheme == 'content' || uri.scheme == 'file' ||
             uri.scheme == 'http' || uri.scheme == 'https')) {
-      await _player.setAudioSource(AudioSource.uri(uri));
-    } else {
-      await _player.setFilePath(path);
+      try {
+        await _player.setAudioSource(AudioSource.uri(uri));
+        return;
+      } catch (error, stackTrace) {
+        log('URI source failed for "$path": $error', stackTrace: stackTrace);
+        await _player.stop();
+      }
     }
+
+    // Final fallback for ordinary MediaStore filesystem paths.
+    await _player.setFilePath(path);
   }
 
   Future<void> _loadEditedMetadata(int request, int songId, MediaItem base) async {
@@ -312,7 +343,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       service.originalQueue = List<SongModel>.from(_queue);
       queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
     }
-    await _setAudioSource(path);
+    await _setAudioSource(path, songId: songId);
     if (position != null) await _player.seek(position);
     _requestedIndex = index;
     mediaItem.add(MediaItem(id: path, title: title, artist: artist, duration: duration, artUri: songId == null ? null : Uri.parse('content://media/external/audio/media/$songId/albumart'), extras: {'index': index, 'songId': songId}));
