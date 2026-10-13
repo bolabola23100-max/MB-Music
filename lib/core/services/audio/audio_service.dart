@@ -48,7 +48,7 @@ class AudioService {
   Future<void> _initialize() async {
     _handler = await as_pkg.AudioService.init(
       builder: () => MyAudioHandler(),
-      config: const as_pkg.AudioServiceConfig(
+      config:  as_pkg.AudioServiceConfig(
         androidNotificationChannelId: 'com.mbmusic.player.media.silent',
         androidNotificationChannelName: 'MBMusic',
         androidNotificationChannelDescription: 'Music player controls',
