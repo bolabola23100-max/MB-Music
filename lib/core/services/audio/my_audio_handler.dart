@@ -161,10 +161,22 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     unawaited(AudioPersistenceHelper.saveSongMetadata(path: path, title: finalTitle, artist: finalArtist, songId: songId, index: index, duration: duration));
     await _enqueuePlayback(request, () async {
       await _player.stop();
-      await _player.setFilePath(path);
+      log('Loading audio source: $path');
+      await _setAudioSource(path);
       if (request != _playbackRequestId) { await _player.stop(); return; }
       await _player.play();
     });
+  }
+
+  Future<void> _setAudioSource(String path) async {
+    final uri = Uri.tryParse(path);
+    if (uri != null &&
+        (uri.scheme == 'content' || uri.scheme == 'file' ||
+            uri.scheme == 'http' || uri.scheme == 'https')) {
+      await _player.setAudioSource(AudioSource.uri(uri));
+    } else {
+      await _player.setFilePath(path);
+    }
   }
 
   Future<void> _loadEditedMetadata(int request, int songId, MediaItem base) async {
@@ -182,7 +194,12 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     final done = Completer<void>();
     _playbackChain = previous.catchError((_) {}).then((_) async {
       if (request != _playbackRequestId) { if (!done.isCompleted) done.complete(); return; }
-      try { await action(); } catch (e, s) { log('Playback operation failed: $e', stackTrace: s); _broadcastState(false); }
+      try {
+        await action();
+      } catch (e, s) {
+        log('Playback operation failed for request $request: $e', stackTrace: s);
+        _broadcastState(false);
+      }
       if (!done.isCompleted) done.complete();
     });
     return done.future;
@@ -295,7 +312,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       service.originalQueue = List<SongModel>.from(_queue);
       queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
     }
-    await _player.setFilePath(path);
+    await _setAudioSource(path);
     if (position != null) await _player.seek(position);
     _requestedIndex = index;
     mediaItem.add(MediaItem(id: path, title: title, artist: artist, duration: duration, artUri: songId == null ? null : Uri.parse('content://media/external/audio/media/$songId/albumart'), extras: {'index': index, 'songId': songId}));
