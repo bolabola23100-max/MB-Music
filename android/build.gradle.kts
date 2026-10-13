@@ -15,7 +15,18 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 apply(from = "namespace-fix.gradle")
+
+subprojects {
+    afterEvaluate {
+        extensions.findByName("android")?.let { ext ->
+            (ext as com.android.build.gradle.BaseExtension).apply {
+                compileSdkVersion(36)
+            }
+        }
+    }
+}
 
 subprojects {
     project.evaluationDependsOn(":app")
