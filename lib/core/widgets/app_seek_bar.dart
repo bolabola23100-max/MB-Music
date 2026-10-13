@@ -24,6 +24,7 @@ class _AppSeekBarState extends State<AppSeekBar>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
 
   double _progress = 0;
   Duration _duration = Duration.zero;
@@ -43,6 +44,14 @@ class _AppSeekBarState extends State<AppSeekBar>
 
       _audioReady = true;
       _duration = widget.audioService.duration ?? Duration.zero;
+
+      _durationSubscription = widget.audioService.player.durationStream.listen((duration) {
+        if (!mounted || duration == null) return;
+        setState(() {
+          _duration = duration;
+          if (duration.inMilliseconds == 0) _progress = 0;
+        });
+      });
 
       _positionSubscription = widget.audioService.positionStream.listen((position) {
         if (!mounted) return;
@@ -79,6 +88,7 @@ class _AppSeekBarState extends State<AppSeekBar>
   @override
   void dispose() {
     _positionSubscription?.cancel();
+    _durationSubscription?.cancel();
     _ticker.dispose();
     super.dispose();
   }
