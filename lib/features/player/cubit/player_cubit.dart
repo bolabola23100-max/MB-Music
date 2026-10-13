@@ -14,14 +14,32 @@ class PlayerCubit extends Cubit<PlayerState> {
     _init();
   }
 
-  void _init() {
+  Future<void> _init() async {
     _audioService.currentIndexNotifier.addListener(_onIndexChanged);
     _audioService.currentQueueNotifier.addListener(_onQueueChanged);
-    _playingSubscription = _audioService.player.playingStream.listen((playing) {
-      emit(state.copyWith(isPlaying: playing));
-    });
     SongEditService().editNotifier.addListener(_onEditChanged);
-    loadEdit();
+
+    // AudioService._handler is initialized asynchronously. Do not access
+    // _audioService.player until initialization has completed.
+    try {
+      await _audioService.ready;
+      if (isClosed) return;
+
+      _playingSubscription = _audioService.player.playingStream.listen((playing) {
+        if (!isClosed) {
+          emit(state.copyWith(isPlaying: playing));
+        }
+      });
+
+      if (!isClosed) {
+        emit(state.copyWith(isPlaying: _audioService.isPlaying));
+        loadEdit();
+      }
+    } catch (_) {
+      if (!isClosed) {
+        loadEdit();
+      }
+    }
   }
 
   @override
