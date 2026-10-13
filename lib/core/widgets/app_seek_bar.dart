@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -21,34 +23,54 @@ class AppSeekBar extends StatefulWidget {
 class _AppSeekBarState extends State<AppSeekBar>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
+  StreamSubscription<Duration>? _positionSubscription;
 
   double _progress = 0;
   Duration _duration = Duration.zero;
+  bool _audioReady = false;
 
   @override
   void initState() {
     super.initState();
-
     _ticker = createTicker(_onTick)..start();
+    _initializeAudio();
+  }
 
-    widget.audioService.positionStream.listen((position) {
-      final duration = widget.audioService.duration ?? Duration.zero;
+  Future<void> _initializeAudio() async {
+    try {
+      await widget.audioService.ready;
+      if (!mounted) return;
 
-      if (duration.inMilliseconds > 0) {
-        _duration = duration;
-        _progress = position.inMilliseconds / duration.inMilliseconds;
-      }
-    });
+      _audioReady = true;
+      _duration = widget.audioService.duration ?? Duration.zero;
+
+      _positionSubscription = widget.audioService.positionStream.listen((position) {
+        if (!mounted) return;
+
+        final duration = widget.audioService.duration ?? Duration.zero;
+        if (duration.inMilliseconds > 0) {
+          setState(() {
+            _duration = duration;
+            _progress =
+                (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+          });
+        }
+      });
+
+      setState(() {});
+    } catch (_) {
+      // Keep the seek bar in its safe empty state if audio initialization fails.
+    }
   }
 
   void _onTick(Duration elapsed) {
-    if (_duration.inMilliseconds == 0) return;
+    if (!_audioReady || !mounted || _duration.inMilliseconds == 0) return;
 
     final isPlaying = widget.audioService.isPlaying;
 
     if (isPlaying) {
       setState(() {
-        _progress += (1 / _duration.inMilliseconds) * 16; // تقريبًا 60fps
+        _progress += (1 / _duration.inMilliseconds) * 16;
         _progress = _progress.clamp(0.0, 1.0);
       });
     }
@@ -56,6 +78,7 @@ class _AppSeekBarState extends State<AppSeekBar>
 
   @override
   void dispose() {
+    _positionSubscription?.cancel();
     _ticker.dispose();
     super.dispose();
   }
@@ -75,6 +98,8 @@ class _AppSeekBarState extends State<AppSeekBar>
             maxWidth: widget.maxWidth,
             progress: _progress,
             onSeek: (value) {
+              if (!_audioReady) return;
+
               final seekPosition = Duration(
                 milliseconds: (value * _duration.inMilliseconds).toInt(),
               );
