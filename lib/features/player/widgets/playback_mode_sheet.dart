@@ -37,8 +37,6 @@ class PlaybackModeSheet extends StatelessWidget {
   }
 
   Future<void> _enableShuffle() async {
-    // Update the playback mode as well as the queue so the selected state
-    // and the player button color reflect that shuffle is active.
     await audioService.setPlaybackMode(PlaybackMode.shuffle);
 
     final queue = List<SongModel>.from(audioService.currentQueue);
@@ -212,18 +210,16 @@ class PlaybackModeSheet extends StatelessWidget {
                                   },
                                   onMoreTap: () {
                                     final favoritesService = FavoritesService();
-                                    final homeCubit = context.read<HomeCubit>();
+                                    final homeCubit = BlocProvider.maybeOf<HomeCubit>(context);
 
                                     SongOptionsBottomSheet.show(
                                       context,
                                       song: song,
                                       index: index,
                                       audioService: audioService,
-                                      isFavoriteChecker: (item) =>
-                                          favoritesService.isFavorite(item.id),
-                                      onToggleFavorite: (item) =>
-                                          favoritesService.toggleFavorite(item.id),
-                                      onDeleteSongs: homeCubit.onDeleteSongs,
+                                      isFavoriteChecker: (item) => favoritesService.isFavorite(item.id),
+                                      onToggleFavorite: (item) => favoritesService.toggleFavorite(item.id),
+                                      onDeleteSongs: homeCubit?.onDeleteSongs,
                                     );
                                   },
                                 );
