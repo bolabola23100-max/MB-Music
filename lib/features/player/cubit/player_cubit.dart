@@ -61,23 +61,29 @@ class PlayerCubit extends Cubit<PlayerState> {
     }
 
     final currentSongId = _audioService.currentSongIdNotifier.value;
-    final stillExists = newQueue.any((s) => s.id == currentSongId);
 
     emit(state.copyWith(songs: newQueue));
 
-    if (!stillExists && newQueue.isNotEmpty) {
-      // The current song was deleted — play the next one in the new queue
-      final oldIndex = state.currentIndex;
-      final newIndex = oldIndex.clamp(0, newQueue.length - 1);
+    // Queue notifications can fire before the first tapped song has reached
+    // the audio handler. A null currentSongId does not mean the song was
+    // deleted; trying to autoplay here calls playSong again, updates the queue
+    // again, and can create a playback loop that prevents the selected local
+    // file from loading reliably.
+    if (currentSongId == null) return;
+
+    final stillExists = newQueue.any((song) => song.id == currentSongId);
+    if (!stillExists) {
+      // The current song was deleted — play the next one in the new queue.
+      final newIndex = state.currentIndex.clamp(0, newQueue.length - 1);
       final nextSong = newQueue[newIndex];
-      _audioService.playSong(
+      unawaited(_audioService.playSong(
         nextSong.data,
         title: nextSong.title,
         artist: nextSong.artist,
         index: newIndex,
         songId: nextSong.id,
         queue: newQueue,
-      );
+      ));
     } else {
       _onIndexChanged();
     }
