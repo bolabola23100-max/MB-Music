@@ -102,11 +102,11 @@ class AudioService {
 
   Future<void> updateQueueAndKeepPlaying(List<SongModel> newQueue, int newIndex) async { await init(); currentQueue = List<SongModel>.from(newQueue); _handler.updateQueueAndIndex(newQueue, newIndex); }
   Future<void> setQueue(List<SongModel> queue) async { await init(); currentQueue = List<SongModel>.from(queue); _handler.setQueue(queue); }
-  bool get isPlaying => _handler.rawPlayer.playing;
-  Duration? get duration => _handler.rawPlayer.duration;
-  Duration get position => _handler.rawPlayer.position;
-  Stream<Duration> get positionStream => _handler.rawPlayer.positionStream;
-  Stream<PlayerState> get playerStateStream => _handler.rawPlayer.playerStateStream;
+  bool get isPlaying => _initialized && _handler.rawPlayer.playing;
+  Duration? get duration => _initialized ? _handler.rawPlayer.duration : null;
+  Duration get position => _initialized ? _handler.rawPlayer.position : Duration.zero;
+  Stream<Duration> get positionStream => _initialized ? _handler.rawPlayer.positionStream : const Stream.empty();
+  Stream<PlayerState> get playerStateStream => _initialized ? _handler.rawPlayer.playerStateStream : const Stream.empty();
   AudioPlayer get player => _handler.rawPlayer;
   AndroidEqualizer get equalizer => _handler.equalizer;
 }

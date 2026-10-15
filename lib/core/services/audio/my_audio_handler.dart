@@ -250,7 +250,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  Future<void> _setAudioSource(String path, {int? songId}) async {
+  Future<void> _setAudioSource(String path, {int? songId, bool skipDurationCheck = false}) async {
     final trimmedPath = path.trim();
     final uri = Uri.tryParse(trimmedPath);
     final isUriPath = uri != null &&
@@ -321,29 +321,33 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
         // opened even though just_audio never obtained a usable duration.
         // Treat that as a failed candidate and try the next source instead
         // of leaving the player stuck at 00:00 with no audio.
-        var loadedDuration = _player.duration;
-        if (loadedDuration == null || loadedDuration == Duration.zero) {
-          try {
-            loadedDuration = await _player.durationStream
-                .firstWhere((duration) =>
-                    duration != null && duration > Duration.zero)
-                .timeout(const Duration(seconds: 2), onTimeout: () => null);
-          } catch (_) {
-            loadedDuration = null;
+        // skipDurationCheck=true is used during state restore so the player
+        // is not rejected when the device is slow to report duration.
+        if (!skipDurationCheck) {
+          var loadedDuration = _player.duration;
+          if (loadedDuration == null || loadedDuration == Duration.zero) {
+            try {
+              loadedDuration = await _player.durationStream
+                  .firstWhere((duration) =>
+                      duration != null && duration > Duration.zero)
+                  .timeout(const Duration(seconds: 5), onTimeout: () => null);
+            } catch (_) {
+              loadedDuration = null;
+            }
+          }
+
+          if (loadedDuration == null || loadedDuration == Duration.zero) {
+            lastError = StateError(
+              'Audio source loaded without a valid duration: ${attempt.label}',
+            );
+            lastStackTrace = StackTrace.current;
+            log('Audio source has no usable duration: ${attempt.label}');
+            await _player.stop();
+            continue;
           }
         }
 
-        if (loadedDuration == null || loadedDuration == Duration.zero) {
-          lastError = StateError(
-            'Audio source loaded without a valid duration: ${attempt.label}',
-          );
-          lastStackTrace = StackTrace.current;
-          log('Audio source has no usable duration: ${attempt.label}');
-          await _player.stop();
-          continue;
-        }
-
-        log('Audio source loaded successfully: ${attempt.label}; duration: $loadedDuration');
+        log('Audio source loaded successfully: ${attempt.label}; duration: ${_player.duration}');
         return;
       } catch (error, stackTrace) {
         lastError = error;
@@ -524,7 +528,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       service.originalQueue = List<SongModel>.from(_queue);
       queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
     }
-    await _setAudioSource(path, songId: songId);
+    await _setAudioSource(path, songId: songId, skipDurationCheck: true);
     if (position != null) await _player.seek(position);
     _requestedIndex = index;
     mediaItem.add(MediaItem(id: path, title: title, artist: artist, duration: duration, artUri: songId == null ? null : Uri.parse('content://media/external/audio/media/$songId/albumart'), extras: {'index': index, 'songId': songId}));
