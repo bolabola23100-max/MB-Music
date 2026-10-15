@@ -73,7 +73,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
     FavoritesService().favoriteIdsNotifier.addListener(() => _broadcastState(_player.playing));
     SongEditService().editNotifier.addListener(_onSongEdited);
-    try { await _restoreEqualizer(); } catch (e, s) { log('Equalizer restore failed: $e', stackTrace: s); }
+    unawaited(_restoreEqualizer());
     _broadcastState(false);
   }
 
@@ -271,12 +271,12 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     if (isContentUri || isRemoteUri) {
       attempts.add((
         label: 'URI "$trimmedPath"',
-        load: () => _player.setAudioSource(AudioSource.uri(uri!)),
+        load: () => _player.setAudioSource(AudioSource.uri(uri)),
       ));
     } else if (isFileUri) {
       attempts.add((
         label: 'file URI "$trimmedPath"',
-        load: () => _player.setFilePath(uri!.toFilePath()),
+        load: () => _player.setFilePath(uri.toFilePath()),
       ));
     } else {
       attempts.add((
