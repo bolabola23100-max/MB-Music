@@ -309,7 +309,16 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   @override
-  Future<void> play() async { await _player.play(); }
+  Future<void> play() async {
+    // just_audio's play future may remain pending for the entire track.
+    // Start playback without blocking the media-session command response.
+    unawaited(
+      _player.play().catchError((Object error, StackTrace stackTrace) {
+        log('Audio playback command failed: $error', stackTrace: stackTrace);
+        _broadcastState(false);
+      }),
+    );
+  }
 
   @override
   Future<void> pause() async {
