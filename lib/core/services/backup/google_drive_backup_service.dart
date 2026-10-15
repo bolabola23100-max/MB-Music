@@ -121,11 +121,17 @@ class GoogleDriveBackupService {
     final prefs = await SharedPreferences.getInstance();
     for (final entry in data.entries) {
       final value = entry.value;
-      if (value is String) await prefs.setString(entry.key, value);
-      else if (value is bool) await prefs.setBool(entry.key, value);
-      else if (value is int) await prefs.setInt(entry.key, value);
-      else if (value is double) await prefs.setDouble(entry.key, value);
-      else if (value is List && value.every((v) => v is String)) await prefs.setStringList(entry.key, value.cast<String>());
+      if (value is String) {
+        await prefs.setString(entry.key, value);
+      } else if (value is bool) {
+        await prefs.setBool(entry.key, value);
+      } else if (value is int) {
+        await prefs.setInt(entry.key, value);
+      } else if (value is double) {
+        await prefs.setDouble(entry.key, value);
+      } else if (value is List && value.every((v) => v is String)) {
+        await prefs.setStringList(entry.key, value.cast<String>());
+      }
     }
     await prefs.reload();
   }
