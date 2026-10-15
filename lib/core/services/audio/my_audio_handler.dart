@@ -310,13 +310,9 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     StackTrace? lastStackTrace;
     for (final attempt in attempts) {
       try {
-        await _player.setAudioSource(
-          // Stop any stale source before attempting the next fallback.
-          AudioSource.uri(Uri.parse('about:blank')),
-        );
+        await _player.stop();
       } catch (_) {
-        // A player may reject the placeholder URI; the actual load below
-        // replaces the source and its own error is what matters.
+        // Continue even if stopping the previous source fails.
       }
 
       try {
