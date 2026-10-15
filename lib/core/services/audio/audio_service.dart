@@ -59,6 +59,7 @@ class AudioService {
       ),
     );
     await _handler.ready;
+    debugPrint('AudioService initialized');
     _initialized = true;
     _handler.rawPlayer.playingStream.listen((playing) => isPlayingNotifier.value = playing);
     _handler.mediaItem.listen((item) {
