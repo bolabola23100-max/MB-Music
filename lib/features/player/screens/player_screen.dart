@@ -187,7 +187,13 @@ class PlayerView extends StatelessWidget {
               ValueListenableBuilder<PlaybackMode>(
                 valueListenable: audioService.playbackModeNotifier,
                 builder: (context, mode, _) => IconButton(
-                  icon: Icon(_modeIcon(mode), color: AppColors.white, size: 28),
+                  icon: Icon(
+                    _modeIcon(mode),
+                    color: mode == PlaybackMode.sequential
+                        ? AppColors.white
+                        : AppColors.blue,
+                    size: 28,
+                  ),
                   onPressed: () => PlaybackModeSheet.show(context, audioService),
                 ),
               ),
