@@ -1,11 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/core/constants/app_colors.dart';
 import 'package:music/core/routing/app_navigator.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/core/widgets/song_tile_widget.dart';
-import 'package:music/features/player/screens/player_screen.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
+import 'package:music/features/home/widgets/song_options_bottom_sheet.dart';
 
 class PlaybackModeSheet extends StatelessWidget {
   const PlaybackModeSheet({super.key, required this.audioService});
@@ -208,8 +211,20 @@ class PlaybackModeSheet extends StatelessWidget {
                                     AppNavigator.pop(context);
                                   },
                                   onMoreTap: () {
-                                    AppNavigator.pop(context);
-                                    AppNavigator.push(context, PlayerScreen(songs: queue, index: index));
+                                    final favoritesService = FavoritesService();
+                                    final homeCubit = context.read<HomeCubit>();
+
+                                    SongOptionsBottomSheet.show(
+                                      context,
+                                      song: song,
+                                      index: index,
+                                      audioService: audioService,
+                                      isFavoriteChecker: (item) =>
+                                          favoritesService.isFavorite(item.id),
+                                      onToggleFavorite: (item) =>
+                                          favoritesService.toggleFavorite(item.id),
+                                      onDeleteSongs: homeCubit.onDeleteSongs,
+                                    );
                                   },
                                 );
                               },
