@@ -20,16 +20,9 @@ Future<void> main() async {
   // CacheHelper is the only startup dependency because SplashScreen reads it.
   // All other services are initialized after the first Flutter frame so the
   // application can render even if a platform service is slow or unavailable.
-  try {
-    await CacheHelper.init();
-  } catch (e, s) {
-    developer.log(
-      'Cache initialization failed: $e',
-      name: 'MB-Music',
-      error: e,
-      stackTrace: s,
-    );
-  }
+  // CacheHelper is required by the splash screen and other synchronous
+  // preference getters. Do not continue into the UI with it uninitialized.
+  await CacheHelper.init();
 
   runApp(const _StartupApp());
 }
