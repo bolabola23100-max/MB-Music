@@ -10,10 +10,14 @@ import 'playlist_details_state.dart';
 class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
   final PlaylistService _service = PlaylistService();
   final AudioService _audioService = AudioService();
-  final OnAudioQuery _audioQuery = OnAudioQuery();
   final int playlistId;
+  List<SongModel> _allSongs;
 
-  PlaylistDetailsCubit({required this.playlistId}) : super(const PlaylistDetailsState()) {
+  PlaylistDetailsCubit({
+    required this.playlistId,
+    required List<SongModel> allSongs,
+  })  : _allSongs = List<SongModel>.from(allSongs),
+        super(const PlaylistDetailsState()) {
     loadSongs();
   }
 
@@ -21,14 +25,16 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
     emit(state.copyWith(status: PlaylistDetailsStatus.loading));
     try {
       final playlistSongs = await _service.getPlaylistSongs(playlistId);
-      List<SongModel> songs = [];
+      final songs = <SongModel>[];
 
-      if (playlistSongs.isNotEmpty) {
-        final allSongs = await _audioQuery.querySongs();
-        songs = allSongs.where((s) => playlistSongs.any((ps) => ps.songId == s.id)).toList();
-        songs.sort((a, b) => playlistSongs
-            .indexWhere((ps) => ps.songId == a.id)
-            .compareTo(playlistSongs.indexWhere((ps) => ps.songId == b.id)));
+      for (final playlistSong in playlistSongs) {
+        final song = _allSongs.cast<SongModel?>().firstWhere(
+              (candidate) => candidate?.id == playlistSong.songId,
+              orElse: () => null,
+            );
+        if (song != null) {
+          songs.add(song);
+        }
       }
 
       emit(state.copyWith(
@@ -39,6 +45,11 @@ class PlaylistDetailsCubit extends Cubit<PlaylistDetailsState> {
     } catch (e) {
       emit(state.copyWith(status: PlaylistDetailsStatus.failure));
     }
+  }
+
+  void updateAllSongs(List<SongModel> allSongs) {
+    _allSongs = List<SongModel>.from(allSongs);
+    loadSongs();
   }
 
   void play(int index) {
