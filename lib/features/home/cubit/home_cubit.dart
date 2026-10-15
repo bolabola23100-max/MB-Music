@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:music/core/services/audio/audio_service.dart';
@@ -5,6 +7,7 @@ import 'package:music/core/services/audio/permission_service.dart';
 import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/core/services/hidden_songs_service.dart';
+import 'package:music/core/services/media_change_service.dart';
 import 'package:music/core/services/playlist/playlist_service.dart';
 import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'home_state.dart';
@@ -13,7 +16,15 @@ class HomeCubit extends Cubit<HomeState> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final AudioService _audioService = AudioService();
   final FavoritesService _favoritesService = FavoritesService();
-  HomeCubit() : super(const HomeState());
+  StreamSubscription<void>? _mediaChangeSubscription;
+  bool _silentRefreshRunning = false;
+  bool _silentRefreshPending = false;
+
+  HomeCubit() : super(const HomeState()) {
+    _mediaChangeSubscription = MediaChangeService().changes.listen((_) {
+      unawaited(silentRefresh());
+    });
+  }
 
   List<SongModel> _restoreDisplayOrder(List<SongModel> songs, List<int> ids) {
     if (ids.isEmpty) {
@@ -32,7 +43,11 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<List<SongModel>> _querySongs() async {
-    final queried = await _audioQuery.querySongs(sortType: SongSortType.DATE_ADDED, orderType: OrderType.DESC_OR_GREATER, uriType: UriType.EXTERNAL);
+    final queried = await _audioQuery.querySongs(
+      sortType: SongSortType.DATE_ADDED,
+      orderType: OrderType.DESC_OR_GREATER,
+      uriType: UriType.EXTERNAL,
+    );
     return HiddenSongsService().filterHidden(queried, (s) => s.id);
   }
 
@@ -44,8 +59,19 @@ class HomeCubit extends Cubit<HomeState> {
       final all = await _querySongs();
       final filtered = all.where((s) => (s.duration ?? 0) >= 60000).toList();
       final sounds = all.where((s) => (s.duration ?? 0) < 60000).toList();
-      final display = _restoreDisplayOrder(filtered, await AudioPersistenceHelper.getDisplayOrder());
-      emit(state.copyWith(status: HomeStatus.success, originalSongs: List<SongModel>.from(filtered), songs: List<SongModel>.from(filtered), displaySongs: display, sounds: List<SongModel>.from(sounds)));
+      final display = _restoreDisplayOrder(
+        filtered,
+        await AudioPersistenceHelper.getDisplayOrder(),
+      );
+      emit(
+        state.copyWith(
+          status: HomeStatus.success,
+          originalSongs: List<SongModel>.from(filtered),
+          songs: List<SongModel>.from(filtered),
+          displaySongs: display,
+          sounds: List<SongModel>.from(sounds),
+        ),
+      );
       if (!await AudioPersistenceHelper.isPlaylistQueueActive()) {
         _audioService.originalQueue = List<SongModel>.from(filtered);
         _audioService.currentQueue = List<SongModel>.from(display);
@@ -56,6 +82,24 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> silentRefresh() async {
+    if (_silentRefreshRunning) {
+      _silentRefreshPending = true;
+      return;
+    }
+
+    _silentRefreshRunning = true;
+    try {
+      await _performSilentRefresh();
+    } finally {
+      _silentRefreshRunning = false;
+      if (_silentRefreshPending) {
+        _silentRefreshPending = false;
+        await silentRefresh();
+      }
+    }
+  }
+
+  Future<void> _performSilentRefresh() async {
     try {
       final all = await _querySongs();
       final filtered = all.where((s) => (s.duration ?? 0) >= 60000).toList();
@@ -104,7 +148,14 @@ class HomeCubit extends Cubit<HomeState> {
         }
       }
       display.addAll(map.values);
-      emit(state.copyWith(originalSongs: List<SongModel>.from(filtered), songs: List<SongModel>.from(filtered), displaySongs: display, sounds: List<SongModel>.from(sounds)));
+      emit(
+        state.copyWith(
+          originalSongs: List<SongModel>.from(filtered),
+          songs: List<SongModel>.from(filtered),
+          displaySongs: display,
+          sounds: List<SongModel>.from(sounds),
+        ),
+      );
       await AudioPersistenceHelper.saveDisplayOrder(display);
       if (!await AudioPersistenceHelper.isPlaylistQueueActive()) {
         _audioService.originalQueue = List<SongModel>.from(filtered);
@@ -114,6 +165,8 @@ class HomeCubit extends Cubit<HomeState> {
       // the home queue here; playlist changes are handled by PlaylistService.
       if (!await AudioPersistenceHelper.isPlaylistQueueActive()) {
         final currentQueue = _audioService.currentQueue;
+        final activeSongId = _audioService.currentSongIdNotifier.value;
+
         if (currentQueue.isNotEmpty) {
           final updatedById = <int, SongModel>{
             for (final song in filtered) song.id: song,
@@ -137,43 +190,52 @@ class HomeCubit extends Cubit<HomeState> {
               }).any((changed) => changed);
 
           if (queueChanged) {
-            final activeSongId = _audioService.currentSongIdNotifier.value;
-            final activeIndex = updatedQueue.indexWhere(
-              (song) => song.id == activeSongId,
-            );
-            if (activeIndex >= 0) {
-              await _audioService.updateQueueAndKeepPlaying(
-                updatedQueue,
-                activeIndex,
+            if (activeSongId != null) {
+              final activeIndex = updatedQueue.indexWhere(
+                (song) => song.id == activeSongId,
               );
-            } else if (updatedQueue.isNotEmpty) {
-              final nextSong = updatedQueue.first;
-              await _audioService.playSong(
-                nextSong.data,
-                title: nextSong.title,
-                artist: nextSong.artist,
-                index: 0,
-                songId: nextSong.id,
-                queue: updatedQueue,
-              );
+              if (activeIndex >= 0) {
+                await _audioService.updateQueueAndKeepPlaying(
+                  updatedQueue,
+                  activeIndex,
+                );
+              } else if (updatedQueue.isNotEmpty) {
+                final nextSong = updatedQueue.first;
+                await _audioService.playSong(
+                  nextSong.data,
+                  title: nextSong.title,
+                  artist: nextSong.artist,
+                  index: 0,
+                  songId: nextSong.id,
+                  queue: updatedQueue,
+                );
+              } else {
+                await _audioService.stop();
+                await _audioService.setQueue([]);
+              }
             } else {
-              await _audioService.stop();
-              await _audioService.setQueue([]);
+              await _audioService.setQueue(updatedQueue);
             }
           }
+        } else if (activeSongId == null) {
+          await _audioService.setQueue(filtered);
         }
       }
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      debugPrint('HomeCubit.silentRefresh failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> handleSort(SongSortOption option) async {
-    var list = List<SongModel>.from(state.displaySongs.isNotEmpty ? state.displaySongs : state.songs);
+    var list = List<SongModel>.from(
+      state.displaySongs.isNotEmpty ? state.displaySongs : state.songs,
+    );
     if (option == SongSortOption.newestFirst) {
       list = List<SongModel>.from(state.originalSongs);
     } else if (option == SongSortOption.oldestFirst) {
       list = List<SongModel>.from(state.originalSongs.reversed);
-    }
-    else if (option == SongSortOption.shufflePlay) {
+    } else if (option == SongSortOption.shufflePlay) {
       final id = _audioService.currentSongIdNotifier.value;
       SongModel? current;
       for (final s in list) {
@@ -208,7 +270,14 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> playAtIndex(int index) async {
     if (index < 0 || index >= state.displaySongs.length) return;
     final s = state.displaySongs[index];
-    await _audioService.playSong(s.data, title: s.title, artist: s.artist, index: index, songId: s.id, queue: state.displaySongs);
+    await _audioService.playSong(
+      s.data,
+      title: s.title,
+      artist: s.artist,
+      index: index,
+      songId: s.id,
+      queue: state.displaySongs,
+    );
   }
 
   Future<void> onDeleteSongs(List<SongModel> deletedSongs) async {
@@ -229,11 +298,22 @@ class HomeCubit extends Cubit<HomeState> {
       await playlists.removeSongFromAllPlaylists(s.id);
     }
     await HiddenSongsService().hideSongs(deleted);
-    final original = state.originalSongs.where((s) => !deleted.contains(s.id)).toList();
+    final original = state.originalSongs
+        .where((s) => !deleted.contains(s.id))
+        .toList();
     final songs = state.songs.where((s) => !deleted.contains(s.id)).toList();
-    final display = state.displaySongs.where((s) => !deleted.contains(s.id)).toList();
+    final display = state.displaySongs
+        .where((s) => !deleted.contains(s.id))
+        .toList();
     final sounds = state.sounds.where((s) => !deleted.contains(s.id)).toList();
-    emit(state.copyWith(originalSongs: original, songs: songs, displaySongs: display, sounds: sounds));
+    emit(
+      state.copyWith(
+        originalSongs: original,
+        songs: songs,
+        displaySongs: display,
+        sounds: sounds,
+      ),
+    );
     await AudioPersistenceHelper.saveDisplayOrder(display);
     final activeQueue = queueBeforeDelete
         .where((song) => !deleted.contains(song.id))
@@ -289,11 +369,20 @@ class HomeCubit extends Cubit<HomeState> {
     } else {
       await _audioService.setQueue(activeQueue);
     }
+
+    await silentRefresh();
   }
 
   void updateCurrentIndex(int index) => emit(state.copyWith(currentIndex: index));
+
   void updateDisplaySongs(List<SongModel> sorted) {
     emit(state.copyWith(displaySongs: List<SongModel>.from(sorted)));
     AudioPersistenceHelper.saveDisplayOrder(sorted);
+  }
+
+  @override
+  Future<void> close() async {
+    await _mediaChangeSubscription?.cancel();
+    return super.close();
   }
 }
