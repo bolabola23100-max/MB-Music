@@ -47,13 +47,16 @@ class VideoPlayerManager extends ChangeNotifier {
   Future<void> _loadVideo() async {
     try {
       final file = await asset.originFileWithSubtype;
+      if (_disposed) return;
       if (file == null) {
         loadFailed = true;
         _notify();
         return;
       }
       await player.open(Media(file.path));
+      if (_disposed) return;
     } catch (_) {
+      if (_disposed) return;
       loadFailed = true;
       _notify();
     }
