@@ -293,14 +293,16 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       ));
     }
 
-    if (isAndroid && songId != null) addMediaStoreAttempt();
+    // Match the known-working playback implementation from gpt1/gpt2b:
+    // load the song's indexed data path first. A MediaStore URI is only a
+    // fallback, because a content URI can resolve differently across Android
+    // versions/devices and may leave the player without a usable duration.
     if (isUriPath) {
       addUriAttempt();
-      if (!isAndroid && songId != null) addMediaStoreAttempt();
     } else {
       addPathAttempt();
-      if (!isAndroid && songId != null) addMediaStoreAttempt();
     }
+    addMediaStoreAttempt();
 
     if (attempts.isEmpty) {
       throw ArgumentError.value(path, 'path', 'Audio path is empty or unsupported');
