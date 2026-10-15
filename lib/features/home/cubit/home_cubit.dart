@@ -104,16 +104,56 @@ class HomeCubit extends Cubit<HomeState> {
       await AudioPersistenceHelper.saveDisplayOrder(display);
       if (!await AudioPersistenceHelper.isPlaylistQueueActive()) _audioService.originalQueue = List<SongModel>.from(filtered);
 
-      final currentQueue = _audioService.currentQueue;
-      if (currentQueue.isNotEmpty) {
-        final updatedQueue = currentQueue.where((s) => ids.contains(s.id)).toList();
-        if (updatedQueue.length != currentQueue.length) {
-          final currentId = _audioService.currentSongIdNotifier.value;
-          final index = updatedQueue.indexWhere((s) => s.id == currentId);
-          if (index >= 0) {
-            await _audioService.updateQueueAndKeepPlaying(updatedQueue, index);
-          } else {
-            await _audioService.setQueue(updatedQueue);
+      // A playlist queue has its own membership and ordering. Only reconcile
+      // the home queue here; playlist changes are handled by PlaylistService.
+      if (!await AudioPersistenceHelper.isPlaylistQueueActive()) {
+        final currentQueue = _audioService.currentQueue;
+        if (currentQueue.isNotEmpty) {
+          final updatedById = <int, SongModel>{
+            for (final song in filtered) song.id: song,
+          };
+          final updatedQueue = currentQueue
+              .where((song) => updatedById.containsKey(song.id))
+              .map((song) => updatedById[song.id]!)
+              .toList();
+          final queueChanged = updatedQueue.length != currentQueue.length ||
+              List.generate(updatedQueue.length, (index) {
+                final oldSong = index < currentQueue.length
+                    ? currentQueue[index]
+                    : null;
+                final newSong = updatedQueue[index];
+                return oldSong == null ||
+                    oldSong.id != newSong.id ||
+                    oldSong.data != newSong.data ||
+                    oldSong.title != newSong.title ||
+                    oldSong.artist != newSong.artist ||
+                    oldSong.duration != newSong.duration;
+              }).any((changed) => changed);
+
+          if (queueChanged) {
+            final activeSongId = _audioService.currentSongIdNotifier.value;
+            final activeIndex = updatedQueue.indexWhere(
+              (song) => song.id == activeSongId,
+            );
+            if (activeIndex >= 0) {
+              await _audioService.updateQueueAndKeepPlaying(
+                updatedQueue,
+                activeIndex,
+              );
+            } else if (updatedQueue.isNotEmpty) {
+              final nextSong = updatedQueue.first;
+              await _audioService.playSong(
+                nextSong.data,
+                title: nextSong.title,
+                artist: nextSong.artist,
+                index: 0,
+                songId: nextSong.id,
+                queue: updatedQueue,
+              );
+            } else {
+              await _audioService.stop();
+              await _audioService.setQueue([]);
+            }
           }
         }
       }
@@ -163,6 +203,9 @@ class HomeCubit extends Cubit<HomeState> {
     final deleted = deletedSongs.map((s) => s.id).toSet();
     final playlists = PlaylistService();
     final currentId = _audioService.currentSongIdNotifier.value;
+    final oldCurrentIndex = currentId == null
+        ? state.currentIndex
+        : state.displaySongs.indexWhere((song) => song.id == currentId);
     final deletingCurrent = currentId != null && deleted.contains(currentId);
     for (final s in deletedSongs) {
       if (_favoritesService.isFavorite(s.id)) await _favoritesService.toggleFavorite(s.id);
@@ -181,7 +224,7 @@ class HomeCubit extends Cubit<HomeState> {
         await _audioService.stop();
         await _audioService.setQueue([]);
       } else {
-        final nextIndex = (state.currentIndex).clamp(0, display.length - 1);
+        final nextIndex = oldCurrentIndex.clamp(0, display.length - 1);
         final nextSong = display[nextIndex];
         await _audioService.playSong(
           nextSong.data,
