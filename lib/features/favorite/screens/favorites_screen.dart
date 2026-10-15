@@ -7,6 +7,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:music/features/favorite/cubit/favorite_cubit.dart';
 import 'package:music/features/favorite/cubit/favorite_state.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
+import 'package:music/features/home/cubit/home_state.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({
@@ -24,10 +26,16 @@ class FavoritesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => FavoriteCubit(allSongs: allSongs),
-      child: FavoritesContextHandler(
-        allSongs: allSongs,
-        audioService: audioService,
-        onDeleteSongs: onDeleteSongs,
+      child: BlocListener<HomeCubit, HomeState>(
+        listenWhen: (previous, current) => previous.songs != current.songs,
+        listener: (context, state) {
+          context.read<FavoriteCubit>().updateAllSongs(state.songs);
+        },
+        child: FavoritesContextHandler(
+          allSongs: allSongs,
+          audioService: audioService,
+          onDeleteSongs: onDeleteSongs,
+        ),
       ),
     );
   }
