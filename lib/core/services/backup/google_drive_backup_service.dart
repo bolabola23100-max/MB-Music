@@ -37,7 +37,9 @@ class GoogleDriveBackupService {
 
   Future<void> _initialize() async {
     const serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
-    if (serverClientId.isEmpty) throw const GoogleDriveBackupException('Google Drive is not configured yet. Set GOOGLE_SERVER_CLIENT_ID before building the app.');
+    if (serverClientId.isEmpty) {
+      throw const GoogleDriveBackupException('Google Drive is not configured yet. Set GOOGLE_SERVER_CLIENT_ID before building the app.');
+    }
     await _googleSignIn.initialize(serverClientId: serverClientId);
   }
 
@@ -108,7 +110,9 @@ class GoogleDriveBackupService {
     final bytes = <int>[];
     await for (final chunk in response.stream) bytes.addAll(chunk);
     final decoded = jsonDecode(utf8.decode(bytes));
-    if (decoded is! Map<String, dynamic> || decoded['format'] != 'mb_music_backup' || decoded['version'] != _backupVersion || decoded['data'] is! Map<String, dynamic>) throw const GoogleDriveBackupException('This file is not a valid MB Music backup.');
+    if (decoded is! Map<String, dynamic> || decoded['format'] != 'mb_music_backup' || decoded['version'] != _backupVersion || decoded['data'] is! Map<String, dynamic>) {
+      throw const GoogleDriveBackupException('This file is not a valid MB Music backup.');
+    }
     await _restorePreferences(Map<String, dynamic>.from(decoded['data'] as Map));
     return true;
   }
