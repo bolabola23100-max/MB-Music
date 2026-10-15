@@ -251,24 +251,28 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> _setAudioSource(String path, {int? songId}) async {
-    // MediaStore content URIs work more reliably on Android versions that
-    // restrict direct filesystem access to shared audio files.
-    if (songId != null) {
-      final mediaStoreUri = Uri.parse('content://media/external/audio/media/$songId');
+    final uri = Uri.tryParse(path);
+    final isUriPath = uri != null &&
+        (uri.scheme == 'content' ||
+            uri.scheme == 'file' ||
+            uri.scheme == 'http' ||
+            uri.scheme == 'https');
+
+    // Use the exact path returned by the media library first for normal file
+    // paths. Some devices expose MediaStore IDs that do not resolve correctly
+    // through a reconstructed content URI, which can leave duration at 00:00.
+    if (!isUriPath && path.trim().isNotEmpty) {
       try {
-        await _player.setAudioSource(AudioSource.uri(mediaStoreUri));
+        await _player.setFilePath(path);
         return;
       } catch (error, stackTrace) {
-        log('MediaStore URI failed for song $songId; trying path fallback: $error',
+        log('File path source failed for "$path"; trying URI fallbacks: $error',
             stackTrace: stackTrace);
         await _player.stop();
       }
     }
 
-    final uri = Uri.tryParse(path);
-    if (uri != null &&
-        (uri.scheme == 'content' || uri.scheme == 'file' ||
-            uri.scheme == 'http' || uri.scheme == 'https')) {
+    if (isUriPath) {
       try {
         await _player.setAudioSource(AudioSource.uri(uri));
         return;
@@ -278,7 +282,24 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     }
 
-    // Final fallback for ordinary MediaStore filesystem paths.
+    if (songId != null) {
+      final mediaStoreUri =
+          Uri.parse('content://media/external/audio/media/$songId');
+      try {
+        await _player.setAudioSource(AudioSource.uri(mediaStoreUri));
+        return;
+      } catch (error, stackTrace) {
+        log('MediaStore URI fallback failed for song $songId: $error',
+            stackTrace: stackTrace);
+        await _player.stop();
+      }
+    }
+
+    // Let the player surface the final error instead of silently keeping an
+    // empty source with no duration.
+    if (path.trim().isEmpty) {
+      throw ArgumentError.value(path, 'path', 'Audio path is empty');
+    }
     await _player.setFilePath(path);
   }
 
