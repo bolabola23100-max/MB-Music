@@ -100,7 +100,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _appIsResumed = state == AppLifecycleState.resumed;
-    if (_appIsResumed) _tryReviewAtQuietMoment();
+    if (_appIsResumed) {
+      unawaited(context.read<HomeCubit>().silentRefresh());
+      _tryReviewAtQuietMoment();
+    }
   }
 
   @override
@@ -296,25 +299,19 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           onDeleteSongs: cubit.onDeleteSongs,
         ),
       ),
-      BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (p, c) => p.songs != c.songs,
-        builder: (context, state) => FavoritesScreen(
-          key: const PageStorageKey("favs_screen"),
-          allSongs: state.songs,
-          audioService: audioService,
-          onDeleteSongs: cubit.onDeleteSongs,
-        ),
+      FavoritesScreen(
+        key: const PageStorageKey("favs_screen"),
+        allSongs: cubit.state.songs,
+        audioService: audioService,
+        onDeleteSongs: cubit.onDeleteSongs,
       ),
       const PlaylistsScreen(
         key: PageStorageKey("playlists_screen"),
       ),
-      BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (p, c) => p.songs != c.songs,
-        builder: (context, state) => SearchScreen(
-          key: const PageStorageKey("search_screen"),
-          allSongs: state.songs,
-          onDeleteSongs: cubit.onDeleteSongs,
-        ),
+      SearchScreen(
+        key: const PageStorageKey("search_screen"),
+        allSongs: cubit.state.songs,
+        onDeleteSongs: cubit.onDeleteSongs,
       ),
     ];
   }
