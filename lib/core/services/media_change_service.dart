@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class MediaChangeService {
@@ -12,8 +11,10 @@ class MediaChangeService {
 
   late final Stream<void> changes = _channel
       .receiveBroadcastStream()
+      .map<void>((_) {})
+      .asBroadcastStream()
       .handleError((Object error, StackTrace stackTrace) {
-        // Keep the stream alive if the native observer reports an error.
-      })
-      .map<void>((_) {});
+        debugPrint('MediaChangeService error: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      });
 }
