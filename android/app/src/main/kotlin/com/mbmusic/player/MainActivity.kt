@@ -1,15 +1,20 @@
 package com.mbmusic.player
 
 import android.app.Activity
+import android.content.ContentObserver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
+import android.database.Cursor
 import androidx.annotation.RequiresApi
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import com.ryanheise.audioservice.AudioServiceActivity
 
@@ -17,10 +22,18 @@ class MainActivity : AudioServiceActivity() {
 
     private val CHANNEL = "com.mbmusic.player/delete"
     private val VIDEO_CHANNEL = "com.mbmusic.player/video"
+    private val MEDIA_CHANGE_CHANNEL = "com.mbmusic.player/media_changes"
     private var pendingResult: MethodChannel.Result? = null
     private var pendingRenameResult: MethodChannel.Result? = null
     private var pendingRenameUri: Uri? = null
     private var pendingRenameName: String? = null
+
+    private val mediaChangeHandler = Handler(Looper.getMainLooper())
+    private var mediaChangeSink: EventChannel.EventSink? = null
+    private var mediaChangeObserver: ContentObserver? = null
+    private val mediaChangeRunnable = Runnable {
+        mediaChangeSink?.success(null)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +44,36 @@ class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, MEDIA_CHANGE_CHANNEL)
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    unregisterMediaChangeObserver()
+                    mediaChangeSink = events
+                    mediaChangeObserver = object : ContentObserver(mediaChangeHandler) {
+                        override fun onChange(selfChange: Boolean) {
+                            scheduleMediaChangeEvent()
+                        }
+
+                        override fun onChange(
+                            selfChange: Boolean,
+                            uri: Uri?
+                        ) {
+                            scheduleMediaChangeEvent()
+                        }
+                    }
+
+                    contentResolver.registerContentObserver(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        true,
+                        mediaChangeObserver!!
+                    )
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    unregisterMediaChangeObserver()
+                }
+            })
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -62,6 +105,29 @@ class MainActivity : AudioServiceActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private fun scheduleMediaChangeEvent() {
+        mediaChangeHandler.removeCallbacks(mediaChangeRunnable)
+        mediaChangeHandler.postDelayed(mediaChangeRunnable, 800L)
+    }
+
+    private fun unregisterMediaChangeObserver() {
+        mediaChangeHandler.removeCallbacks(mediaChangeRunnable)
+        mediaChangeObserver?.let { observer ->
+            try {
+                contentResolver.unregisterContentObserver(observer)
+            } catch (_: Exception) {
+                // The observer may already have been unregistered by Android.
+            }
+        }
+        mediaChangeObserver = null
+        mediaChangeSink = null
+    }
+
+    override fun onDestroy() {
+        unregisterMediaChangeObserver()
+        super.onDestroy()
     }
 
     private fun renameVideo(videoId: String, newName: String, result: MethodChannel.Result) {
