@@ -106,8 +106,25 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void _setQueue(List<SongModel> songs) {
     _queue = List<SongModel>.from(songs);
-    queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
-    unawaited(AudioPersistenceHelper.saveQueue(_queue.map((s) => {'_id': s.id, '_data': s.data, 'title': s.title, 'artist': s.artist, 'duration': s.duration}).toList()));
+    app_service.AudioService().currentQueue = _queue;
+    queue.add(
+      _queue
+          .map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist))
+          .toList(),
+    );
+    unawaited(
+      AudioPersistenceHelper.saveQueue(
+        _queue
+            .map((s) => {
+                  '_id': s.id,
+                  '_data': s.data,
+                  'title': s.title,
+                  'artist': s.artist,
+                  'duration': s.duration,
+                })
+            .toList(),
+      ),
+    );
   }
 
   void setQueue(List<SongModel> songs) => _setQueue(songs);
@@ -121,8 +138,25 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     final current = _requestedIndex ?? mediaItem.value?.extras?['index'] as int? ?? 0;
     final insert = (current + 1).clamp(0, _queue.length);
     _queue.insert(insert, song);
-    queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
-    unawaited(AudioPersistenceHelper.saveQueue(_queue.map((s) => {'_id': s.id, '_data': s.data, 'title': s.title, 'artist': s.artist, 'duration': s.duration}).toList()));
+    app_service.AudioService().currentQueue = _queue;
+    queue.add(
+      _queue
+          .map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist))
+          .toList(),
+    );
+    unawaited(
+      AudioPersistenceHelper.saveQueue(
+        _queue
+            .map((s) => {
+                  '_id': s.id,
+                  '_data': s.data,
+                  'title': s.title,
+                  'artist': s.artist,
+                  'duration': s.duration,
+                })
+            .toList(),
+      ),
+    );
   }
 
   void updateQueueAndIndex(List<SongModel> newQueue, int newIndex) {
@@ -134,15 +168,53 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void setPlaybackMode(app_service.PlaybackMode mode) {
     _playbackMode = mode;
+    final service = app_service.AudioService();
+
     if (mode == app_service.PlaybackMode.sequential) {
-      final service = app_service.AudioService();
       if (service.originalQueue.isNotEmpty) {
         _setQueue(service.originalQueue);
-        service.currentQueue = service.originalQueue;
+        service.shuffledQueue = [];
+      }
+    } else if (mode == app_service.PlaybackMode.shuffle) {
+      final source = service.currentQueue.isNotEmpty
+          ? service.currentQueue
+          : _queue;
+      if (source.isNotEmpty) {
+        final shuffled = List<SongModel>.from(source);
+        final currentSongId = mediaItem.value?.extras?['songId'] as int?;
+        SongModel? currentSong;
+        if (currentSongId != null) {
+          final currentIndex =
+              shuffled.indexWhere((song) => song.id == currentSongId);
+          if (currentIndex >= 0) {
+            currentSong = shuffled.removeAt(currentIndex);
+          }
+        }
+        shuffled.shuffle();
+        if (currentSong != null) {
+          shuffled.insert(0, currentSong);
+          _requestedIndex = 0;
+          final item = mediaItem.value;
+          if (item != null) {
+            mediaItem.add(item.copyWith(extras: {
+              ...item.extras ?? <String, dynamic>{},
+              'index': 0,
+            }));
+          }
+        }
+        service.shuffledQueue = shuffled;
+        _setQueue(shuffled);
       }
     }
-    unawaited(_player.setLoopMode(mode == app_service.PlaybackMode.repeatOne ? LoopMode.one : LoopMode.off));
-    app_service.AudioService().playbackModeNotifier.value = mode;
+
+    unawaited(
+      _player.setLoopMode(
+        mode == app_service.PlaybackMode.repeatOne
+            ? LoopMode.one
+            : LoopMode.off,
+      ),
+    );
+    service.playbackModeNotifier.value = mode;
     unawaited(AudioPersistenceHelper.savePlaybackMode(mode.index));
   }
 
@@ -264,10 +336,29 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   Future<void> _handleSkip(int offset) async {
     if (_queue.isEmpty) return;
-    final current = _requestedIndex ?? mediaItem.value?.extras?['index'] as int? ?? 0;
+
+    final current =
+        _requestedIndex ?? mediaItem.value?.extras?['index'] as int? ?? 0;
+
+    if (_playbackMode == app_service.PlaybackMode.sequential &&
+        offset > 0 &&
+        current >= _queue.length - 1) {
+      await stop();
+      return;
+    }
+
     final next = (current + offset + _queue.length) % _queue.length;
     final song = _queue[next];
-    await playSongFromQueue(path: song.data, index: next, title: song.title, artist: song.artist, songId: song.id, duration: song.duration == null ? null : Duration(milliseconds: song.duration!));
+    await playSongFromQueue(
+      path: song.data,
+      index: next,
+      title: song.title,
+      artist: song.artist,
+      songId: song.id,
+      duration: song.duration == null
+          ? null
+          : Duration(milliseconds: song.duration!),
+    );
   }
 
   void _broadcastState(bool playing) => playbackState.add(playbackState.value.copyWith(
