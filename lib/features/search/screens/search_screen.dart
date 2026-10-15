@@ -7,6 +7,8 @@ import 'package:music/features/home/widgets/song_list_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:music/features/search/cubit/search_cubit.dart';
 import 'package:music/features/search/cubit/search_state.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
+import 'package:music/features/home/cubit/home_state.dart';
 
 class SearchScreen extends StatelessWidget {
   final List<SongModel> allSongs;
@@ -18,9 +20,15 @@ class SearchScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => SearchCubit(allSongs: allSongs),
-      child: SearchContextHandler(
-        allSongs: allSongs,
-        onDeleteSongs: onDeleteSongs,
+      child: BlocListener<HomeCubit, HomeState>(
+        listenWhen: (previous, current) => previous.songs != current.songs,
+        listener: (context, state) {
+          context.read<SearchCubit>().updateAllSongs(state.songs);
+        },
+        child: SearchContextHandler(
+          allSongs: allSongs,
+          onDeleteSongs: onDeleteSongs,
+        ),
       ),
     );
   }
