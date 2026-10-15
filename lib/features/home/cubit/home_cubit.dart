@@ -21,7 +21,9 @@ class HomeCubit extends Cubit<HomeState> {
     final result = <SongModel>[];
     for (final id in ids) {
       final song = map.remove(id);
-      if (song != null) result.add(song);
+      if (song != null) {
+        result.add(song);
+      }
     }
     result.addAll(map.values);
     return result;
@@ -60,7 +62,9 @@ class HomeCubit extends Cubit<HomeState> {
       final soundIds = sounds.map((s) => s.id).toSet();
       final oldIds = state.songs.map((s) => s.id).toSet();
       final oldSoundIds = state.sounds.map((s) => s.id).toSet();
-      if (ids.length == oldIds.length && ids.containsAll(oldIds) && soundIds.length == oldSoundIds.length && soundIds.containsAll(oldSoundIds)) return;
+      if (ids.length == oldIds.length && ids.containsAll(oldIds) && soundIds.length == oldSoundIds.length && soundIds.containsAll(oldSoundIds)) {
+        return;
+      }
 
       final map = <int, SongModel>{for (final s in filtered) s.id: s};
       final display = <SongModel>[];
@@ -79,8 +83,11 @@ class HomeCubit extends Cubit<HomeState> {
         if (updatedQueue.length != currentQueue.length) {
           final currentId = _audioService.currentSongIdNotifier.value;
           final index = updatedQueue.indexWhere((s) => s.id == currentId);
-          if (index >= 0) await _audioService.updateQueueAndKeepPlaying(updatedQueue, index);
-          else await _audioService.setQueue(updatedQueue);
+          if (index >= 0) {
+            await _audioService.updateQueueAndKeepPlaying(updatedQueue, index);
+          } else {
+            await _audioService.setQueue(updatedQueue);
+          }
         }
       }
     } catch (_) {}
@@ -88,15 +95,25 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> handleSort(SongSortOption option) async {
     var list = List<SongModel>.from(state.displaySongs.isNotEmpty ? state.displaySongs : state.songs);
-    if (option == SongSortOption.newestFirst) list = List<SongModel>.from(state.originalSongs);
-    else if (option == SongSortOption.oldestFirst) list = List<SongModel>.from(state.originalSongs.reversed);
+    if (option == SongSortOption.newestFirst) {
+      list = List<SongModel>.from(state.originalSongs);
+    } else if (option == SongSortOption.oldestFirst) {
+      list = List<SongModel>.from(state.originalSongs.reversed);
+    }
     else if (option == SongSortOption.shufflePlay) {
       final id = _audioService.currentSongIdNotifier.value;
       SongModel? current;
-      for (final s in list) { if (s.id == id) { current = s; break; } }
+      for (final s in list) {
+        if (s.id == id) {
+          current = s;
+          break;
+        }
+      }
       if (current != null) list.removeWhere((s) => s.id == id);
       list.shuffle();
-      if (current != null) list.insert(0, current);
+      if (current != null) {
+        list.insert(0, current);
+      }
       _audioService.originalQueue = List<SongModel>.from(state.originalSongs);
       _audioService.currentQueue = List<SongModel>.from(list);
     } else if (option == SongSortOption.orderedPlay) {
