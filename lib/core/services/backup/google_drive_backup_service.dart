@@ -116,7 +116,9 @@ class GoogleDriveBackupService {
       throw const GoogleDriveBackupException('The backup file could not be downloaded.');
     }
     final bytes = <int>[];
-    await for (final chunk in response.stream) bytes.addAll(chunk);
+    await for (final chunk in response.stream) {
+      bytes.addAll(chunk);
+    }
     final decoded = jsonDecode(utf8.decode(bytes));
     if (decoded is! Map<String, dynamic> ||
         decoded['format'] != 'mb_music_backup' ||
