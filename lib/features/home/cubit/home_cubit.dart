@@ -62,7 +62,34 @@ class HomeCubit extends Cubit<HomeState> {
       final soundIds = sounds.map((s) => s.id).toSet();
       final oldIds = state.songs.map((s) => s.id).toSet();
       final oldSoundIds = state.sounds.map((s) => s.id).toSet();
-      if (ids.length == oldIds.length && ids.containsAll(oldIds) && soundIds.length == oldSoundIds.length && soundIds.containsAll(oldSoundIds)) {
+      final songMetadataUnchanged =
+          state.songs.length == filtered.length &&
+          state.songs.every((oldSong) {
+            final updatedSong = filtered.where((song) => song.id == oldSong.id);
+            if (updatedSong.isEmpty) return false;
+            final updated = updatedSong.first;
+            return oldSong.data == updated.data &&
+                oldSong.title == updated.title &&
+                oldSong.artist == updated.artist &&
+                oldSong.duration == updated.duration;
+          });
+      final soundMetadataUnchanged =
+          state.sounds.length == sounds.length &&
+          state.sounds.every((oldSound) {
+            final updatedSound = sounds.where((sound) => sound.id == oldSound.id);
+            if (updatedSound.isEmpty) return false;
+            final updated = updatedSound.first;
+            return oldSound.data == updated.data &&
+                oldSound.title == updated.title &&
+                oldSound.artist == updated.artist &&
+                oldSound.duration == updated.duration;
+          });
+      if (ids.length == oldIds.length &&
+          ids.containsAll(oldIds) &&
+          soundIds.length == oldSoundIds.length &&
+          soundIds.containsAll(oldSoundIds) &&
+          songMetadataUnchanged &&
+          soundMetadataUnchanged) {
         return;
       }
 
@@ -150,13 +177,31 @@ class HomeCubit extends Cubit<HomeState> {
     await AudioPersistenceHelper.saveDisplayOrder(display);
     _audioService.originalQueue = List<SongModel>.from(original);
     if (deletingCurrent) {
-      if (display.isEmpty) { await _audioService.stop(); await _audioService.setQueue([]); }
-      else _audioService.currentQueue = List<SongModel>.from(display);
+      if (display.isEmpty) {
+        await _audioService.stop();
+        await _audioService.setQueue([]);
+      } else {
+        final nextIndex = (state.currentIndex).clamp(0, display.length - 1);
+        final nextSong = display[nextIndex];
+        await _audioService.playSong(
+          nextSong.data,
+          title: nextSong.title,
+          artist: nextSong.artist,
+          index: nextIndex,
+          songId: nextSong.id,
+          queue: display,
+        );
+      }
     } else if (currentId != null) {
       final index = display.indexWhere((s) => s.id == currentId);
-      if (index >= 0) await _audioService.updateQueueAndKeepPlaying(display, index);
-      else await _audioService.setQueue(display);
-    } else await _audioService.setQueue(display);
+      if (index >= 0) {
+        await _audioService.updateQueueAndKeepPlaying(display, index);
+      } else {
+        await _audioService.setQueue(display);
+      }
+    } else {
+      await _audioService.setQueue(display);
+    }
   }
 
   void updateCurrentIndex(int index) => emit(state.copyWith(currentIndex: index));
