@@ -221,9 +221,6 @@ class HomeCubit extends Cubit<HomeState> {
     final oldQueueIndex = currentId == null
         ? 0
         : queueBeforeDelete.indexWhere((song) => song.id == currentId);
-    final oldCurrentIndex = currentId == null
-        ? state.currentIndex
-        : state.displaySongs.indexWhere((song) => song.id == currentId);
     final deletingCurrent = currentId != null && deleted.contains(currentId);
     for (final s in deletedSongs) {
       if (_favoritesService.isFavorite(s.id)) {
