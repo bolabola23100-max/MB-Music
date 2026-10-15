@@ -249,7 +249,7 @@ class HomeCubit extends Cubit<HomeState> {
       } else {
         final nextIndex = oldQueueIndex < 0
             ? 0
-            : oldQueueIndex.clamp(0, activeQueue.length - 1);
+            : oldQueueIndex.clamp(0, activeQueue.length - 1).toInt();
         final nextSong = activeQueue[nextIndex];
         await _audioService.playSong(
           nextSong.data,
