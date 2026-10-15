@@ -77,9 +77,13 @@ class GoogleDriveBackupService {
     await prefs.reload();
     final data = <String, dynamic>{};
     for (final key in prefs.getKeys()) {
-      if (_shouldSkipKey(key)) continue;
+      if (_shouldSkipKey(key)) {
+        continue;
+      }
       final value = prefs.get(key);
-      if (value is String || value is int || value is double || value is bool || value is List<String>) data[key] = value;
+      if (value is String || value is int || value is double || value is bool || value is List<String>) {
+        data[key] = value;
+      }
     }
     return {'format': 'mb_music_backup', 'version': _backupVersion, 'createdAt': DateTime.now().toUtc().toIso8601String(), 'data': data};
   }
@@ -104,13 +108,20 @@ class GoogleDriveBackupService {
     final api = await _createDriveApi();
     final result = await api.files.list(q: "name = '$_backupFileName' and trashed = false", spaces: 'drive', pageSize: 10, orderBy: 'modifiedTime desc', $fields: 'files(id,name,modifiedTime)');
     final files = result.files ?? <drive.File>[];
-    if (files.isEmpty || files.first.id == null) return false;
+    if (files.isEmpty || files.first.id == null) {
+      return false;
+    }
     final response = await api.files.get(files.first.id!, downloadOptions: drive.DownloadOptions.fullMedia);
-    if (response is! drive.Media) throw const GoogleDriveBackupException('The backup file could not be downloaded.');
+    if (response is! drive.Media) {
+      throw const GoogleDriveBackupException('The backup file could not be downloaded.');
+    }
     final bytes = <int>[];
     await for (final chunk in response.stream) bytes.addAll(chunk);
     final decoded = jsonDecode(utf8.decode(bytes));
-    if (decoded is! Map<String, dynamic> || decoded['format'] != 'mb_music_backup' || decoded['version'] != _backupVersion || decoded['data'] is! Map<String, dynamic>) {
+    if (decoded is! Map<String, dynamic> ||
+        decoded['format'] != 'mb_music_backup' ||
+        decoded['version'] != _backupVersion ||
+        decoded['data'] is! Map<String, dynamic>) {
       throw const GoogleDriveBackupException('This file is not a valid MB Music backup.');
     }
     await _restorePreferences(Map<String, dynamic>.from(decoded['data'] as Map));
