@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
@@ -251,56 +253,94 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> _setAudioSource(String path, {int? songId}) async {
-    final uri = Uri.tryParse(path);
+    final trimmedPath = path.trim();
+    final uri = Uri.tryParse(trimmedPath);
     final isUriPath = uri != null &&
         (uri.scheme == 'content' ||
             uri.scheme == 'file' ||
             uri.scheme == 'http' ||
             uri.scheme == 'https');
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
 
-    // Use the exact path returned by the media library first for normal file
-    // paths. Some devices expose MediaStore IDs that do not resolve correctly
-    // through a reconstructed content URI, which can leave duration at 00:00.
-    if (!isUriPath && path.trim().isNotEmpty) {
-      try {
-        await _player.setFilePath(path);
-        return;
-      } catch (error, stackTrace) {
-        log('File path source failed for "$path"; trying URI fallbacks: $error',
-            stackTrace: stackTrace);
-        await _player.stop();
-      }
-    }
+    // Android scoped storage can expose a readable MediaStore item while the
+    // filesystem path itself is not directly readable by the player. Prefer
+    // the canonical MediaStore content URI when the song ID is available.
+    final attempts = <({String label, Future<void> Function() load})>[];
 
-    if (isUriPath) {
-      try {
-        await _player.setAudioSource(AudioSource.uri(uri));
-        return;
-      } catch (error, stackTrace) {
-        log('URI source failed for "$path": $error', stackTrace: stackTrace);
-        await _player.stop();
-      }
-    }
-
-    if (songId != null) {
+    void addMediaStoreAttempt() {
+      if (songId == null) return;
       final mediaStoreUri =
           Uri.parse('content://media/external/audio/media/$songId');
+      attempts.add((
+        label: 'MediaStore URI $mediaStoreUri',
+        load: () => _player.setAudioSource(AudioSource.uri(mediaStoreUri)),
+      ));
+    }
+
+    void addPathAttempt() {
+      if (trimmedPath.isEmpty) return;
+      attempts.add((
+        label: 'file path "$trimmedPath"',
+        load: () => _player.setFilePath(trimmedPath),
+      ));
+    }
+
+    void addUriAttempt() {
+      if (!isUriPath) return;
+      attempts.add((
+        label: 'URI "$uri"',
+        load: () => _player.setAudioSource(AudioSource.uri(uri)),
+      ));
+    }
+
+    if (isAndroid && songId != null) addMediaStoreAttempt();
+    if (isUriPath) {
+      addUriAttempt();
+      if (!isAndroid && songId != null) addMediaStoreAttempt();
+    } else {
+      addPathAttempt();
+      if (!isAndroid && songId != null) addMediaStoreAttempt();
+    }
+
+    if (attempts.isEmpty) {
+      throw ArgumentError.value(path, 'path', 'Audio path is empty or unsupported');
+    }
+
+    Object? lastError;
+    StackTrace? lastStackTrace;
+    for (final attempt in attempts) {
       try {
-        await _player.setAudioSource(AudioSource.uri(mediaStoreUri));
+        await _player.setAudioSource(
+          // Stop any stale source before attempting the next fallback.
+          AudioSource.uri(Uri.parse('about:blank')),
+        );
+      } catch (_) {
+        // A player may reject the placeholder URI; the actual load below
+        // replaces the source and its own error is what matters.
+      }
+
+      try {
+        log('Trying audio source: ${attempt.label}');
+        await attempt.load();
+        final loadedDuration = _player.duration;
+        log('Audio source loaded successfully: ${attempt.label}; duration: $loadedDuration');
         return;
       } catch (error, stackTrace) {
-        log('MediaStore URI fallback failed for song $songId: $error',
-            stackTrace: stackTrace);
-        await _player.stop();
+        lastError = error;
+        lastStackTrace = stackTrace;
+        log('Audio source failed: ${attempt.label}: $error', stackTrace: stackTrace);
+        try {
+          await _player.stop();
+        } catch (_) {
+          // Continue to the next candidate even if stop itself fails.
+        }
       }
     }
 
-    // Let the player surface the final error instead of silently keeping an
-    // empty source with no duration.
-    if (path.trim().isEmpty) {
-      throw ArgumentError.value(path, 'path', 'Audio path is empty');
-    }
-    await _player.setFilePath(path);
+    Error.throwWithStackTrace(
+      lastError ?? StateError('No audio source could be loaded for "$path"'),
+      lastStackTrace ?? StackTrace.current,
+    );
   }
 
   Future<void> _loadEditedMetadata(int request, int songId, MediaItem base) async {
