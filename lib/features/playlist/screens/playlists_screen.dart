@@ -113,7 +113,12 @@ class PlaylistsView extends StatelessWidget {
       thumbnails: state.thumbnails,
       onTap: (p) => Navigator.push(
         context,
-        MaterialPageRoute(builder: (c) => PlaylistDetailsScreen(playlist: p)),
+        MaterialPageRoute(
+          builder: (c) => BlocProvider.value(
+            value: context.read<HomeCubit>(),
+            child: PlaylistDetailsScreen(playlist: p),
+          ),
+        ),
       ).then((_) {
         if (!context.mounted) return;
         context.read<PlaylistCubit>().loadPlaylists();
