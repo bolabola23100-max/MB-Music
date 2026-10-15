@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:music/core/services/audio/audio_service.dart';
+import 'package:music/core/services/audio/permission_service.dart';
 import 'package:music/core/services/audio/helpers/audio_persistence_helper.dart';
 import 'package:music/core/services/favorites/favorites_service.dart';
 import 'package:music/core/services/hidden_songs_service.dart';
@@ -39,7 +39,7 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> initData() async {
     emit(state.copyWith(status: HomeStatus.loading));
     try {
-      await [Permission.storage, Permission.audio, Permission.notification].request();
+      await PermissionService.requestAudioPermissions();
       await HiddenSongsService().init();
       final all = await _querySongs();
       final filtered = all.where((s) => (s.duration ?? 0) >= 60000).toList();
