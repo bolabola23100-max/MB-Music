@@ -33,7 +33,11 @@ class PlaybackModeSheet extends StatelessWidget {
     return queue;
   }
 
-  void _enableShuffle() {
+  Future<void> _enableShuffle() async {
+    // Update the playback mode as well as the queue so the selected state
+    // and the player button color reflect that shuffle is active.
+    await audioService.setPlaybackMode(PlaybackMode.shuffle);
+
     final queue = List<SongModel>.from(audioService.currentQueue);
     final currentId = audioService.currentSongIdNotifier.value;
     SongModel? current;
