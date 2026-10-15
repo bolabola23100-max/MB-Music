@@ -250,114 +250,77 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  Future<void> _setAudioSource(String path, {int? songId, bool skipDurationCheck = false}) async {
+  Future<void> _setAudioSource(String path, {int? songId}) async {
     final trimmedPath = path.trim();
-    final uri = Uri.tryParse(trimmedPath);
-    final isUriPath = uri != null &&
-        (uri.scheme == 'content' ||
-            uri.scheme == 'file' ||
-            uri.scheme == 'http' ||
-            uri.scheme == 'https');
-    // Android scoped storage can expose a readable MediaStore item while the
-    // filesystem path itself is not directly readable by the player. Prefer
-    // the canonical MediaStore content URI when the song ID is available.
-    final attempts = <({String label, Future<void> Function() load})>[];
-
-    void addMediaStoreAttempt() {
-      if (songId == null) return;
-      final mediaStoreUri =
-          Uri.parse('content://media/external/audio/media/$songId');
-      attempts.add((
-        label: 'MediaStore URI $mediaStoreUri',
-        load: () => _player.setAudioSource(AudioSource.uri(mediaStoreUri)),
-      ));
+    if (trimmedPath.isEmpty) {
+      throw ArgumentError.value(path, 'path', 'Audio path is empty');
     }
 
-    void addPathAttempt() {
-      if (trimmedPath.isEmpty) return;
+    final uri = Uri.tryParse(trimmedPath);
+    final isContentUri = uri != null && uri.scheme == 'content';
+    final isFileUri = uri != null && uri.scheme == 'file';
+    final isRemoteUri = uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https');
+
+    // Keep the same primary loading path as the main branch: local songs
+    // returned by on_audio_query are filesystem paths and should be loaded
+    // directly. Do not reject a successfully opened source just because the
+    // duration stream has not emitted yet.
+    final attempts = <({String label, Future<void> Function() load})>[];
+
+    if (isContentUri || isRemoteUri) {
       attempts.add((
-        label: 'file path "$trimmedPath"',
+        label: 'URI "$trimmedPath"',
+        load: () => _player.setAudioSource(AudioSource.uri(uri!)),
+      ));
+    } else if (isFileUri) {
+      attempts.add((
+        label: 'file URI "$trimmedPath"',
+        load: () => _player.setFilePath(uri!.toFilePath()),
+      ));
+    } else {
+      attempts.add((
+        label: 'local file "$trimmedPath"',
         load: () => _player.setFilePath(trimmedPath),
       ));
     }
 
-    void addUriAttempt() {
-      if (!isUriPath) return;
+    // MediaStore is only a fallback when loading the primary local source
+    // throws an actual error, not when duration metadata is slow.
+    if (songId != null && !isContentUri) {
+      final mediaStoreUri =
+          Uri.parse('content://media/external/audio/media/$songId');
       attempts.add((
-        label: 'URI "$uri"',
-        load: () => _player.setAudioSource(AudioSource.uri(uri)),
+        label: 'MediaStore URI "$mediaStoreUri"',
+        load: () => _player.setAudioSource(AudioSource.uri(mediaStoreUri)),
       ));
-    }
-
-    // Match the known-working playback implementation from gpt1/gpt2b:
-    // load the song's indexed data path first. A MediaStore URI is only a
-    // fallback, because a content URI can resolve differently across Android
-    // versions/devices and may leave the player without a usable duration.
-    if (isUriPath) {
-      addUriAttempt();
-    } else {
-      addPathAttempt();
-    }
-    addMediaStoreAttempt();
-
-    if (attempts.isEmpty) {
-      throw ArgumentError.value(path, 'path', 'Audio path is empty or unsupported');
     }
 
     Object? lastError;
     StackTrace? lastStackTrace;
+
     for (final attempt in attempts) {
       try {
-        await _player.stop();
-      } catch (_) {
-        // Continue even if stopping the previous source fails.
-      }
-
-      try {
-        log('Trying audio source: ${attempt.label}');
-        await attempt.load();
-
-        // Some Android devices report that a local MediaStore source was
-        // opened even though just_audio never obtained a usable duration.
-        // Treat that as a failed candidate and try the next source instead
-        // of leaving the player stuck at 00:00 with no audio.
-        // skipDurationCheck=true is used during state restore so the player
-        // is not rejected when the device is slow to report duration.
-        if (!skipDurationCheck) {
-          var loadedDuration = _player.duration;
-          if (loadedDuration == null || loadedDuration == Duration.zero) {
-            try {
-              loadedDuration = await _player.durationStream
-                  .firstWhere((duration) =>
-                      duration != null && duration > Duration.zero)
-                  .timeout(const Duration(seconds: 5), onTimeout: () => null);
-            } catch (_) {
-              loadedDuration = null;
-            }
-          }
-
-          if (loadedDuration == null || loadedDuration == Duration.zero) {
-            lastError = StateError(
-              'Audio source loaded without a valid duration: ${attempt.label}',
-            );
-            lastStackTrace = StackTrace.current;
-            log('Audio source has no usable duration: ${attempt.label}');
-            await _player.stop();
-            continue;
-          }
+        try {
+          await _player.stop();
+        } catch (_) {
+          // A failed stop must not prevent loading the next source.
         }
 
-        log('Audio source loaded successfully: ${attempt.label}; duration: ${_player.duration}');
+        log('Trying audio source: ${attempt.label}');
+        await attempt.load();
+        log(
+          'Audio source loaded: ${attempt.label}; '
+          'duration: ${_player.duration}',
+        );
         return;
       } catch (error, stackTrace) {
         lastError = error;
         lastStackTrace = stackTrace;
-        log('Audio source failed: ${attempt.label}: $error', stackTrace: stackTrace);
-        try {
-          await _player.stop();
-        } catch (_) {
-          // Continue to the next candidate even if stop itself fails.
-        }
+        log(
+          'Audio source failed: ${attempt.label}: $error',
+          stackTrace: stackTrace,
+        );
       }
     }
 
@@ -528,7 +491,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       service.originalQueue = List<SongModel>.from(_queue);
       queue.add(_queue.map((s) => MediaItem(id: s.data, title: s.title, artist: s.artist)).toList());
     }
-    await _setAudioSource(path, songId: songId, skipDurationCheck: true);
+    await _setAudioSource(path, songId: songId);
     if (position != null) await _player.seek(position);
     _requestedIndex = index;
     mediaItem.add(MediaItem(id: path, title: title, artist: artist, duration: duration, artUri: songId == null ? null : Uri.parse('content://media/external/audio/media/$songId/albumart'), extras: {'index': index, 'songId': songId}));
