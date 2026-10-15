@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
-
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
@@ -260,8 +258,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
             uri.scheme == 'file' ||
             uri.scheme == 'http' ||
             uri.scheme == 'https');
-    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
-
     // Android scoped storage can expose a readable MediaStore item while the
     // filesystem path itself is not directly readable by the player. Prefer
     // the canonical MediaStore content URI when the song ID is available.
