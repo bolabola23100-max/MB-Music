@@ -316,7 +316,33 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       try {
         log('Trying audio source: ${attempt.label}');
         await attempt.load();
-        final loadedDuration = _player.duration;
+
+        // Some Android devices report that a local MediaStore source was
+        // opened even though just_audio never obtained a usable duration.
+        // Treat that as a failed candidate and try the next source instead
+        // of leaving the player stuck at 00:00 with no audio.
+        var loadedDuration = _player.duration;
+        if (loadedDuration == null || loadedDuration == Duration.zero) {
+          try {
+            loadedDuration = await _player.durationStream
+                .firstWhere((duration) =>
+                    duration != null && duration > Duration.zero)
+                .timeout(const Duration(seconds: 2), onTimeout: () => null);
+          } catch (_) {
+            loadedDuration = null;
+          }
+        }
+
+        if (loadedDuration == null || loadedDuration == Duration.zero) {
+          lastError = StateError(
+            'Audio source loaded without a valid duration: ${attempt.label}',
+          );
+          lastStackTrace = StackTrace.current;
+          log('Audio source has no usable duration: ${attempt.label}');
+          await _player.stop();
+          continue;
+        }
+
         log('Audio source loaded successfully: ${attempt.label}; duration: $loadedDuration');
         return;
       } catch (error, stackTrace) {
