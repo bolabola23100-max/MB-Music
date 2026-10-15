@@ -107,7 +107,10 @@ class CacheHelper {
   static set equalizerEnabled(bool value) => _prefs.setBool(equalizerEnabledKey, value);
 
   static List<double> get equalizerGains =>
-      (_prefs.getStringList(equalizerGainsKey) ?? []).map(double.parse).toList();
+      (_prefs.getStringList(equalizerGainsKey) ?? [])
+          .map(double.tryParse)
+          .whereType<double>()
+          .toList();
 
   static set equalizerGains(List<double> value) =>
       _prefs.setStringList(equalizerGainsKey, value.map((e) => e.toString()).toList());
