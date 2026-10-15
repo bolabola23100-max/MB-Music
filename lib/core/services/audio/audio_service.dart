@@ -53,7 +53,7 @@ class AudioService {
         androidNotificationChannelName: 'MBMusic',
         androidNotificationChannelDescription: 'Music player controls',
         androidNotificationOngoing: true,
-        androidStopForegroundOnPause: false,
+        androidStopForegroundOnPause: true,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: false,
       ),
