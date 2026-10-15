@@ -13,6 +13,8 @@ import 'package:music/features/playlist/widgets/playlist_songs_list.dart';
 import 'package:music/features/playlist/widgets/playlist_options_bottom_sheet.dart';
 import 'package:music/features/playlist/cubit/playlist_details_cubit.dart';
 import 'package:music/features/playlist/cubit/playlist_details_state.dart';
+import 'package:music/features/home/cubit/home_cubit.dart';
+import 'package:music/features/home/cubit/home_state.dart';
 
 class PlaylistDetailsScreen extends StatefulWidget {
   final PlaylistModels playlist;
@@ -41,12 +43,21 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
         ),
       );
     }
+    final homeCubit = context.read<HomeCubit>();
     return BlocProvider(
-      create: (context) =>
-          PlaylistDetailsCubit(playlistId: widget.playlist.id!),
-      child: PlaylistDetailsView(
-        playlist: widget.playlist,
-        onOptionSelected: widget.onOptionSelected,
+      create: (context) => PlaylistDetailsCubit(
+        playlistId: widget.playlist.id!,
+        allSongs: homeCubit.state.songs,
+      ),
+      child: BlocListener<HomeCubit, HomeState>(
+        listenWhen: (previous, current) => previous.songs != current.songs,
+        listener: (context, state) {
+          context.read<PlaylistDetailsCubit>().updateAllSongs(state.songs);
+        },
+        child: PlaylistDetailsView(
+          playlist: widget.playlist,
+          onOptionSelected: widget.onOptionSelected,
+        ),
       ),
     );
   }
