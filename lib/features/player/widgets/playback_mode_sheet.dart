@@ -210,7 +210,12 @@ class PlaybackModeSheet extends StatelessWidget {
                                   },
                                   onMoreTap: () {
                                     final favoritesService = FavoritesService();
-                                    final homeCubit = BlocProvider.maybeOf<HomeCubit>(context);
+                                    HomeCubit? homeCubit;
+                                    try {
+                                      homeCubit = context.read<HomeCubit>();
+                                    } on ProviderNotFoundException {
+                                      homeCubit = null;
+                                    }
 
                                     SongOptionsBottomSheet.show(
                                       context,
